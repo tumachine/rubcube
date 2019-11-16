@@ -1,0 +1,42 @@
+import * as THREE from './someFolder/build/three.module.js'
+
+const boxWidth = 0.95
+const boxHeight = 0.95
+const boxDepth = 0.95
+
+const blue = 0x0000FF
+const red = 0xFF0000
+const yellow = 0xFFFF00
+const green = 0x008000
+const white = 0xFFFFFF
+const orange = 0xFFA500
+// white, yellow, orange, red,  green,  blue
+// front, top,    back,   left, bottom, right
+const colors = [green, blue, orange, red, white, yellow]
+    // const faceSides = {
+    //     left: 0,
+    //     right: 2,
+    //     top: 4,
+    //     bottom: 6,
+    //     front: 8,
+    //     back: 10,
+    // }
+
+export default class Cube {
+    constructor(x, y, z) {
+        this.material = new THREE.MeshPhongMaterial({color: 0xFFFFFF, vertexColors: THREE.FaceColors})
+        this.geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth)
+        this.cube = new THREE.Mesh(this.geometry, this.material)
+        this.cube.position.set(x, y, z)
+    }
+
+    setColor(faceSide, color) {
+        this.geometry.faces[faceSide].color.setHex(colors[color])
+        this.geometry.faces[faceSide+1].color.setHex(colors[color])
+        this.cube = new THREE.Mesh(this.geometry, this.material)
+    }
+
+    getCube() {
+        return this.cube
+    }
+}
