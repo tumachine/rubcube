@@ -11,7 +11,131 @@ class RubikView {
     this.cubes = this.createGraphicRubik();
     this.cubes.map((cube) => (cube ? this.rubik.add(cube.getCube()) : null));
 
+
+    // TODO: encapsulate each transition into a "Move" object, and keep a stack of moves
+    // - that will allow us to easily generalise to other states like a "hello" state which
+    // could animate the cube, or a "complete" state which could do an animation to celebrate
+    // solving.
+
+    // Maintain a queue of moves so we can perform compound actions like shuffle and solve
+    this.moveQueue = [];
+    this.completedMoveStack = [];
+    this.currentMove = null;
+
+    // Are we in the middle of a transition?
+    this.isMoving = false;
+    this.moveAxis = null;
+    this.moveN = null;
+    this.moveDirection = null;
+    this.rotationSpeed = 0.2;
+
+    // http://stackoverflow.com/questions/20089098/three-js-adding-and-removing-children-of-rotated-objects
+    this.pivot = new THREE.Object3D();
+    this.activeGroup = [];
     this.colorizeRubik();
+  }
+
+
+  nearlyEqual = (a, b, d) => {
+    d = d || 0.001;
+    return Math.abs(a - b) <= d;
+  }
+
+  // Select the plane of cubes that aligns with clickVector
+  // on the given axis
+  setActiveGroup = (axis) => {
+    if (this.clickVector) {
+      this.activeGroup = [];
+
+      this.allCubes.forEach((cube) => {
+        if (this.nearlyEqual(cube.rubikPosition[axis], this.clickVector[axis])) { 
+          this.activeGroup.push(cube);
+        }
+      });
+    } else {
+      console.log('Nothing to move!');
+    }
+  }
+
+  pushMove = (cube, clickVector, axis, direction) => {
+    this.moveQueue.push(
+      {
+        cube, vector: clickVector, axis, direction,
+      },
+    );
+  }
+
+  startNextMove = () => {
+    const nextMove = this.moveQueue.pop();
+
+    if (nextMove) {
+      this.clickVector = nextMove.vector;
+
+      const direction = nextMove.direction || 1;
+      const { axis } = nextMove;
+
+      if (this.clickVector) {
+        if (!this.isMoving) {
+          this.isMoving = true;
+          this.moveAxis = axis;
+          this.moveDirection = direction;
+
+          this.setActiveGroup(axis);
+
+          this.pivot.rotation.set(0, 0, 0);
+          this.pivot.updateMatrixWorld();
+          this.scene.add(this.pivot);
+
+          this.activeGroup.forEach((e) => {
+            THREE.SceneUtils.attach(e, this.scene, this.pivot);
+          });
+
+          this.currentMove = nextMove;
+        } else {
+          console.log('Already moving!');
+        }
+      } else {
+        console.log('Nothing to move!');
+      }
+    }
+  }
+
+  doMove = () => {
+    // Move a quarter turn then stop
+    if (this.pivot.rotation[this.moveAxis] >= Math.PI / 2) {
+      // Compensate for overshoot. TODO: use a tweening library
+      this.pivot.rotation[this.moveAxis] = Math.PI / 2;
+      this.moveComplete();
+    } else if (this.pivot.rotation[this.moveAxis] <= Math.PI / -2) {
+      this.pivot.rotation[this.moveAxis] = Math.PI / -2;
+      this.moveComplete();
+    } else {
+      this.pivot.rotation[this.moveAxis] += (this.moveDirection * this.rotationSpeed);
+    }
+  }
+
+  moveComplete = () => {
+    this.isMoving = false;
+    this.moveAxis = undefined;
+    this.moveN = undefined;
+    this.moveDirection = undefined;
+    this.clickVector = undefined;
+
+    this.pivot.updateMatrixWorld();
+    this.scene.remove(this.pivot);
+    this.activeGroup.forEach((cube) => {
+      cube.updateMatrixWorld();
+
+      cube.rubikPosition = cube.position.clone();
+      cube.rubikPosition.applyMatrix4(this.pivot.matrixWorld);
+
+      THREE.SceneUtils.detach(cube, this.pivot, this.scene);
+    });
+
+    this.completedMoveStack.push(this.currentMove);
+
+    // Are there any more queued moves?
+    this.startNextMove();
   }
 
   createGraphicRubik = () => {

@@ -8,13 +8,24 @@ class RubikModel {
     this.matrixReference = this.createMatrixReference(sideLength * sideLength * sideLength);
 
 
-    this.posHor = this.PositionHorizontal();
-    this.posVer = this.PositionVertical();
-    this.posDep = this.PositionDepth();
+    // this.posHor = this.PositionHorizontal();
+    // this.posVer = this.PositionVertical();
+    // this.posDep = this.PositionDepth();
+    // this.posClockwise = this.PositionFaceClockwise();
+    // this.posAnticlockwise = this.PositioinFaceAnticlockwise();
+    this.posHor = null;
+    this.posVer = null;
+    this.posDep = null;
+    this.posClockwise = null;
+    this.posAnticlockwise = null;
+    this.generatePositions();
 
     this.sequenceHor = [sides.front, sides.left, sides.back, sides.right, sides.front];
     this.sequenceVer = [sides.top, sides.back, sides.bottom, sides.front, sides.top];
     this.sequenceDep = [sides.left, sides.top, sides.right, sides.bottom, sides.left];
+    this.sequenceHorRev = [...this.sequenceHor].reverse();
+    this.sequenceVerRev = [...this.sequenceVer].reverse();
+    this.sequenceDepRev = [...this.sequenceDep].reverse();
 
     //   rotate(matrix, posVer, sequenceVert, 0);
     // this.rotate(this.posDep, this.sequenceDep, 0);
@@ -22,15 +33,20 @@ class RubikModel {
 
   rotateVer = (slice) => {
     this.rotate(this.posVer, this.sequenceVer, slice);
+    this.rotateFaceReal(slice, sides.left, sides.right, this.posClockwise);
+    // conso
   }
 
   rotateHor = (slice) => {
     this.rotate(this.posHor, this.sequenceHor, slice);
+    this.rotateFaceReal(slice, sides.bottom, sides.top, this.posClockwise);
   }
 
   rotateDep = (slice) => {
     this.rotate(this.posDep, this.sequenceDep, slice);
+    this.rotateFaceReal(slice, sides.back, sides.front, this.posAnticlockwise);
   }
+
 
     createMatrix = () => {
       const totalColors = this.sideLength * this.sideLength;
@@ -88,13 +104,11 @@ class RubikModel {
           matrixRubic[sides.front].push(cube + lastSide);
         }
       }
-      console.log(matrixRubic)
       return matrixRubic;
     }
 
     rotate = (slices, sequence, slice) => {
       const layer = slices[slice];
-      console.log(slices);
       let first = layer[0];
       // save values of first face
       const firstFace = layer[0].map((i) => this.matrix[sequence[0]][i]);
@@ -108,7 +122,6 @@ class RubikModel {
       }
 
       const lastFace = sequence[sequence.length - 2];
-      //   console.log(lastFace)
       for (let i = 0; i < layer[0].length; i += 1) {
         // matrix[lastFace][layer[lastFace][i]] = firstFace[i];
         this.matrix[lastFace][layer[3][i]] = firstFace[i];
@@ -131,16 +144,96 @@ class RubikModel {
       return slices;
     }
 
+
+    rotateFaceReal = (slice, bottom, top, clockwiseArr) => {
+      if (slice === 0) {
+        this.rotateFace(bottom, clockwiseArr);
+        console.log('making face rotation');
+      } else if (slice === this.sideLength - 1) {
+        this.rotateFace(top, clockwiseArr);
+        console.log('making face rotation');
+      }
+    }
+
+    rotateFace = (face, positionFace) => {
+      const faceCopy = [...this.matrix[face]];
+      for (let i = 0; i < this.totalColors; i += 1) {
+        this.matrix[face][i] = faceCopy[positionFace[i]];
+      }
+    }
+
+    PositionFaceClockwise = () => {
+      const clockwise = [];
+      for (let i = 0; i < this.sideLength; i += 1) {
+        for (let j = 0; j < this.sideLength; j += 1) {
+          clockwise.push((this.sideLength - i - 1) + j * this.sideLength);
+        }
+      }
+      return clockwise;
+    }
+
+    PositioinFaceAnticlockwise = () => {
+      const anticlockwise = [];
+      for (let i = 0; i < this.sideLength; i += 1) {
+        for (let j = 0; j < this.sideLength; j += 1) {
+          anticlockwise.push(i + (this.sideLength - 1 - j) * this.sideLength);
+        }
+      }
+      return anticlockwise;
+    }
+
+    generatePositions = () => {
+      this.posHor = this.createEmptySlices();
+      this.posVer = this.createEmptySlices();
+      this.posDep = this.createEmptySlices();
+
+      for (let slice = 0; slice < this.posHor.length; slice += 1) {
+        for (let m = 0; m < this.sideLength; m += 1) {
+          // horizontal
+          this.posHor[slice][0].push(slice * this.sideLength + m);
+          this.posHor[slice][1].push(slice * this.sideLength + m);
+          // vertical
+          this.posVer[slice][0].push(slice + this.sideLength * m);
+          this.posVer[slice][1].push(slice + this.sideLength * m);
+          // depth
+          this.posDep[slice][0].push(slice + this.sideLength * m);
+          this.posDep[slice][1].push(slice * this.sideLength + m);
+        }
+        // horizontal
+        const horCopy = [...this.posHor[slice][0]].reverse();
+        this.posHor[slice][2] = horCopy;
+        this.posHor[slice][3] = horCopy;
+        // vertical
+        const verCopy = [...this.posVer[slice][0]].reverse();
+        this.posVer[slice][2] = verCopy;
+        this.posVer[slice][3] = verCopy;
+        // depth
+        const depCopyOne = [...this.posDep[slice][0]].reverse();
+        const depCopyTwo = [...this.posDep[slice][1]].reverse();
+        this.posDep[slice][2] = depCopyOne;
+        this.posDep[slice][3] = depCopyTwo;
+      }
+
+      this.posClockwise = [];
+      this.posAnticlockwise = [];
+      for (let i = 0; i < this.sideLength; i += 1) {
+        for (let j = 0; j < this.sideLength; j += 1) {
+          this.posClockwise.push((this.sideLength - i - 1) + j * this.sideLength);
+          this.posAnticlockwise.push(i + (this.sideLength - 1 - j) * this.sideLength);
+        }
+      }
+    }
+
     PositionHorizontal = () => {
       const slices = this.createEmptySlices();
       for (let slice = 0; slice < slices.length; slice += 1) {
-        const sliceStart = slice * this.sideLength;
-        const sliceEnd = sliceStart + this.sideLength;
-        for (let face = 0; face < slices[slice].length; face += 1) {
-          for (let m = sliceStart; m < sliceEnd; m += 1) {
-            slices[slice][face].push(m);
-          }
+        for (let m = 0; m < this.sideLength; m += 1) {
+          slices[slice][0].push(slice * this.sideLength + m);
+          slices[slice][1].push(slice * this.sideLength + m);
         }
+        const copy = [...slices[slice][0]].reverse();
+        slices[slice][2] = copy;
+        slices[slice][3] = copy;
       }
       return slices;
     }
@@ -148,11 +241,13 @@ class RubikModel {
     PositionVertical = () => {
       const slices = this.createEmptySlices();
       for (let slice = 0; slice < slices.length; slice += 1) {
-        for (let face = 0; face < slices[slice].length; face += 1) {
-          for (let m = 0; m < this.sideLength; m += 1) {
-            slices[slice][face].push(slice + this.sideLength * m);
-          }
+        for (let m = 0; m < this.sideLength; m += 1) {
+          slices[slice][0].push(slice + this.sideLength * m);
+          slices[slice][1].push(slice + this.sideLength * m);
         }
+        const copy = [...slices[slice][0]].reverse();
+        slices[slice][2] = copy;
+        slices[slice][3] = copy;
       }
       return slices;
     }
@@ -160,27 +255,14 @@ class RubikModel {
     PositionDepth = () => {
       const slices = this.createEmptySlices();
       for (let slice = 0; slice < slices.length; slice += 1) {
-        // sideLength = 3
-        // slice 0
-        // [0, 3, 6]
-        // second
-        // [0, 1, 2]
-        // first reversed
-        // second reversed
-        // slice 1
-        // [1,4,7]
-        // [3,4,5]
-        // slice 2
-        // [2,5,8]
-        // [6,7,8]
         for (let m = 0; m < this.sideLength; m += 1) {
           slices[slice][0].push(slice + this.sideLength * m);
           slices[slice][1].push(slice * this.sideLength + m);
         }
-        // slices[slice][2] = slices[slice][0].reverse();
-        // slices[slice][3] = slices[slice][1].reverse();
-        slices[slice][2] = slices[slice][0].reverse();
-        slices[slice][3] = slices[slice][1].reverse();
+        const copyOne = [...slices[slice][0]].reverse();
+        const copyTwo = [...slices[slice][1]].reverse();
+        slices[slice][2] = copyOne;
+        slices[slice][3] = copyTwo;
       }
       return slices;
     }

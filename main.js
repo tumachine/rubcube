@@ -42,28 +42,21 @@ class Main {
     this.scene.add(this.light);
 
     const rubicModel = new RubikModel(3);
-    // for (let i = 0; i < 5; i += 1) {
-    //   const randomLayer = Math.floor(Math.random() * 3);
-    //   const randomOperation = Math.floor(Math.random() * 3);
-    //   console.log(randomLayer, randomOperation)
-    //   if (randomOperation === 0) {
-    //     // rubicModel.rotateDep(randomLayer);
-    //     // console.log("Depth: " + randomLayer)
-    //   } else if (randomOperation === 1) {
-    //     rubicModel.rotateVer(randomLayer);
-    //     console.log("Vertical: " + randomLayer)
-    //   } else {
-    //     rubicModel.rotateHor(randomLayer);
-    //     console.log("Horizontal: " + randomLayer)
-    //   }
-    // }
-    rubicModel.rotateHor(0) // anti-clockvise
-    rubicModel.rotateVer(0)
-    // rubicModel.rotateHor(2)
-    // rubicModel.rotateVer(2)
-    // rubicModel.rotateHor(0)
-    // rubicModel.rotateVer(2)
-
+    for (let i = 0; i < 10; i += 1) {
+      const randomLayer = Math.floor(Math.random() * 3);
+      const randomOperation = Math.floor(Math.random() * 3);
+      console.log(randomLayer, randomOperation)
+      if (randomOperation === 0) {
+        rubicModel.rotateDep(randomLayer);
+        console.log("Depth: " + randomLayer)
+      } else if (randomOperation === 1) {
+        rubicModel.rotateVer(randomLayer);
+        console.log("Vertical: " + randomLayer)
+      } else {
+        rubicModel.rotateHor(randomLayer);
+        console.log("Horizontal: " + randomLayer)
+      }
+    }
     const rubikView = new RubikView(rubicModel);
     this.scene.add(rubikView.rubik);
     this.objects.push(rubikView.rubik);
