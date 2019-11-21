@@ -11,13 +11,8 @@ class RubikView {
     this.cubes = this.createGraphicRubik();
     this.cubes.map((cube) => (cube ? this.rubik.add(cube.getCube()) : null));
 
+    this.colorizeRubik();
 
-    // TODO: encapsulate each transition into a "Move" object, and keep a stack of moves
-    // - that will allow us to easily generalise to other states like a "hello" state which
-    // could animate the cube, or a "complete" state which could do an animation to celebrate
-    // solving.
-
-    // Maintain a queue of moves so we can perform compound actions like shuffle and solve
     this.moveQueue = [];
     this.completedMoveStack = [];
     this.currentMove = null;
@@ -25,78 +20,85 @@ class RubikView {
     // Are we in the middle of a transition?
     this.isMoving = false;
     this.moveAxis = null;
-    this.moveN = null;
+    this.moveSlice = 0;
     this.moveDirection = null;
     this.rotationSpeed = 0.2;
 
     // http://stackoverflow.com/questions/20089098/three-js-adding-and-removing-children-of-rotated-objects
     this.pivot = new THREE.Object3D();
     this.activeGroup = [];
-    this.colorizeRubik();
   }
 
-
-  nearlyEqual = (a, b, d) => {
-    d = d || 0.001;
-    return Math.abs(a - b) <= d;
-  }
-
-  // Select the plane of cubes that aligns with clickVector
-  // on the given axis
-  setActiveGroup = (axis) => {
-    if (this.clickVector) {
-      this.activeGroup = [];
-
-      this.allCubes.forEach((cube) => {
-        if (this.nearlyEqual(cube.rubikPosition[axis], this.clickVector[axis])) { 
-          this.activeGroup.push(cube);
-        }
-      });
-    } else {
-      console.log('Nothing to move!');
+  // select cubes that are to be rotated
+  // need to give:
+  //     slice
+  //     hor, dep or ver
+  //     clockwose, anticlockwise
+  // setRotationCubes = (side, slice, clockwise) => {
+  //   this.activeGroup = [];
+  //   this.rubikModel.getCubesHor(slice).forEach((i) => this.activeGroup.push(this.cubes[i]));
+  // }
+  // axis for x, y or z
+  setActiveGroup = (slice, axis) => {
+    this.activeGroup = [];
+    let cubes = [];
+    if (axis === 'x') {
+      cubes = this.rubikModel.getCubesVer(slice);
+      // this.rubikModel.rotateVer(slice);
+    } else if (axis === 'y') {
+      cubes = this.rubikModel.getCubesHor(slice);
+      // this.rubikModel.rotateHor(slice);
+    } else if (axis === 'z') {
+      cubes = this.rubikModel.getCubesDep(slice);
+      // this.rubikModel.rotateDep(slice);
     }
+    cubes.forEach((i) => this.activeGroup.push(this.cubes[i].cube));
+    console.log(cubes)
+
+
+    console.log(this.rubikModel.matrixReference)
   }
 
-  pushMove = (cube, clickVector, axis, direction) => {
-    this.moveQueue.push(
-      {
-        cube, vector: clickVector, axis, direction,
-      },
-    );
+  // axis 'x', 'y' or 'z'
+  // direction '-1' or '1'
+  // cube might be not needed
+  pushMove = (axis, direction, slice) => {
+    this.moveQueue.push({
+      axis, direction, slice,
+    });
   }
 
   startNextMove = () => {
     const nextMove = this.moveQueue.pop();
 
+    console.log('starting');
     if (nextMove) {
-      this.clickVector = nextMove.vector;
-
       const direction = nextMove.direction || 1;
-      const { axis } = nextMove;
+      const { axis, slice } = nextMove;
 
-      if (this.clickVector) {
-        if (!this.isMoving) {
-          this.isMoving = true;
-          this.moveAxis = axis;
-          this.moveDirection = direction;
+      if (!this.isMoving) {
+        this.isMoving = true;
+        this.moveAxis = axis;
+        this.moveSlice = slice;
+        this.moveDirection = direction;
 
-          this.setActiveGroup(axis);
+        // change it later
+        this.setActiveGroup(slice, axis);
 
-          this.pivot.rotation.set(0, 0, 0);
-          this.pivot.updateMatrixWorld();
-          this.scene.add(this.pivot);
+        this.pivot.rotation.set(0, 0, 0);
+        this.pivot.updateMatrixWorld();
+        this.rubik.add(this.pivot);
 
-          this.activeGroup.forEach((e) => {
-            THREE.SceneUtils.attach(e, this.scene, this.pivot);
-          });
+        this.activeGroup.forEach((e) => {
+          this.pivot.attach(e);
+        });
 
-          this.currentMove = nextMove;
-        } else {
-          console.log('Already moving!');
-        }
+        // this.currentMove = nextMove;
       } else {
-        console.log('Nothing to move!');
+        console.log('Already moving!');
       }
+    } else {
+      console.log('NOTHING');
     }
   }
 
@@ -116,27 +118,53 @@ class RubikView {
 
   moveComplete = () => {
     this.isMoving = false;
-    this.moveAxis = undefined;
-    this.moveN = undefined;
+    this.moveN = null;
     this.moveDirection = undefined;
     this.clickVector = undefined;
 
     this.pivot.updateMatrixWorld();
-    this.scene.remove(this.pivot);
+    this.rubik.remove(this.pivot);
+
+
     this.activeGroup.forEach((cube) => {
       cube.updateMatrixWorld();
 
-      cube.rubikPosition = cube.position.clone();
-      cube.rubikPosition.applyMatrix4(this.pivot.matrixWorld);
-
-      THREE.SceneUtils.detach(cube, this.pivot, this.scene);
+      // THREE.SceneUtils.detach(cube, this.pivot, scene);
+      this.rubik.attach(cube);
     });
 
-    this.completedMoveStack.push(this.currentMove);
+    if (this.moveAxis === 'x') {
+      this.rubikModel.rotateVer(this.moveSlice);
+    } else if (this.moveAxis === 'y') {
+      this.rubikModel.rotateHor(this.moveSlice);
+    } else if (this.moveAxis === 'z') {
+      this.rubikModel.rotateDep(this.moveSlice);
+    }
+    this.moveAxis = null;
+    this.rubikModel.testGreenWhiteCross();
 
-    // Are there any more queued moves?
     this.startNextMove();
   }
+
+
+  render = () => {
+    // States
+    // TODO: generalise to something like "activeState.tick()" - see comments
+    // on encapsulation above
+    if (this.isMoving) {
+      this.doMove();
+    }
+  }
+
+  // select cubes that are to be rotated
+  // need to give:
+  //     slice
+  //     hor, dep or ver
+  //     clockwose, anticlockwise
+  // setRotationCubes = (side, slice, clockwise) => {
+  //   this.activeGroup = [];
+  //   this.rubikModel.getCubesHor(slice).forEach((i) => this.activeGroup.push(this.cubes[i]));
+  // }
 
   createGraphicRubik = () => {
     const cubes = [];
@@ -169,6 +197,7 @@ class RubikView {
       back: 10,
     };
 
+    // maybe there is a simpler way of representing rubik graphically
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
       // color bottom
       this.cubes[this.rubikModel.matrixReference[sides.bottom][cube]].setColor(faceSides.bottom, this.rubikModel.matrix[sides.bottom][cube]);

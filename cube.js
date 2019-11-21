@@ -24,7 +24,6 @@ export default class Cube {
   setColor(faceSide, color) {
     this.geometry.faces[faceSide].color.setHex(colors[color]);
     this.geometry.faces[faceSide + 1].color.setHex(colors[color]);
-    this.cube = new THREE.Mesh(this.geometry, this.material);
   }
 
   getCube() {

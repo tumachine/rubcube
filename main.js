@@ -2,6 +2,7 @@ import * as THREE from './someFolder/build/three.module.js';
 import { OrbitControls } from './someFolder/examples/jsm/controls/OrbitControls.js';
 import RubikView from './rubikView.js';
 import RubikModel from './rubikModel.js';
+import { sides } from './variables.js';
 
 function createLight() {
   const color = 0xFFFFFF;
@@ -42,31 +43,79 @@ class Main {
     this.scene.add(this.light);
 
     const rubicModel = new RubikModel(3);
-    for (let i = 0; i < 10; i += 1) {
-      const randomLayer = Math.floor(Math.random() * 3);
-      const randomOperation = Math.floor(Math.random() * 3);
-      console.log(randomLayer, randomOperation)
-      if (randomOperation === 0) {
-        rubicModel.rotateDep(randomLayer);
-        console.log("Depth: " + randomLayer)
-      } else if (randomOperation === 1) {
-        rubicModel.rotateVer(randomLayer);
-        console.log("Vertical: " + randomLayer)
-      } else {
-        rubicModel.rotateHor(randomLayer);
-        console.log("Horizontal: " + randomLayer)
-      }
-    }
-    const rubikView = new RubikView(rubicModel);
-    this.scene.add(rubikView.rubik);
-    this.objects.push(rubikView.rubik);
+    // rubicModel.matrix = rubicModel.createOrderedByColor();
+    // for (let i = 0; i < 10; i += 1) {
+    //   const randomLayer = Math.floor(Math.random() * 3);
+    //   const randomOperation = Math.floor(Math.random() * 3);
+    //   // console.log(randomLayer, randomOperation)
+    //   if (randomOperation === 0) {
+    //     rubicModel.rotateDep(randomLayer);
+    //     console.log("Depth: " + randomLayer)
+    //   } else if (randomOperation === 1) {
+    //     rubicModel.rotateVer(randomLayer);
+    //     console.log("Vertical: " + randomLayer)
+    //   } else {
+    //     rubicModel.rotateHor(randomLayer);
+    //     console.log("Horizontal: " + randomLayer)
+    //   }
+    // }
+    // rubicModel.rotateHor(0)
+    this.rubikView = new RubikView(rubicModel, this.scene);
+    // rubicModel.rotateCubeVer(1);
+    this.scene.add(this.rubikView.rubik);
+    // this.objects.push(this.rubikView.rubik);
 
-    this.objects.forEach((node) => {
-      const axes = new THREE.AxesHelper();
-      axes.material.depthTest = false;
-      axes.renderOrder = 1;
-      node.add(axes);
-    });
+    // this.objects.forEach((node) => {
+    //   const axes = new THREE.AxesHelper();
+    //   axes.material.depthTest = false;
+    //   axes.renderOrder = 1;
+    //   node.add(axes);
+    // });
+
+    // this.rubikView.move(1, 'y');
+    // this.rubikView.move(1, 'y');
+    // this.rubikView.move(1, 'y');
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+    function randomAxis() {
+      return ['x', 'y', 'z'][randomInt(0, 2)];
+    }
+
+    function randomDirection() {
+      let x = randomInt(0, 1);
+      if (x === 0) {
+        x = -1;
+      }
+      return x;
+    }
+
+    // for (let i = 0; i < 2; i += 1) {
+    //   this.rubikView.pushMove(randomAxis(), -1);
+    // }
+    // this.rubikView.pushMove('x', -1);
+    // y -1 clockwise
+    // this.rubikView.pushMove('y', -1);
+    // y 1 counterclockwise
+    // this.rubikView.pushMove('x', 1);
+    // this.rubikView.pushMove('y', 1);
+    // z -1 clockwise
+    // for (let i = 0; i < 50; i += 1) {
+    //   this.rubikView.pushMove(randomAxis(), -1, randomInt(0, 2));
+    // }
+    // this.rubikView.pushMove('y', -1, 0);
+    this.rubikView.pushMove('z', -1, 2);
+    this.rubikView.pushMove('z', -1, 2);
+    this.rubikView.pushMove('z', -1, 2);
+    this.rubikView.pushMove('z', -1, 2);
+    // this.rubikView.pushMove('x', -1, 0);
+    // this.rubikView.pushMove('x', -1, 0);
+
+    this.rubikView.rubikModel.createInterface();
+    this.rubikView.startNextMove();
+    console.log(this.rubikView.rubikModel.posHor)
+    console.log(this.rubikView.rubikModel.matrixReference)
+    console.log(this.rubikView.rubikModel.getCubesHor(0))
   }
 
   resizeRendererToDisplaySize = () => {
@@ -90,6 +139,17 @@ class Main {
     this.objects.forEach((obj) => {
     // obj.rotation.y = time
     });
+
+    // this.slice.rotation.y = time;
+
+      // this.rubikView.rubik.position.applyMatrix4(new THREE.Matrix4().makeRotationAxis(this.rowRotationAxis, -this.rubikView.turnAnglePerFramee));
+    // this.cubes.forEach((cube) => {
+    //   // cube.cube.position.applyMatrix4(new THREE.Matrix4().makeRotationAxis(this.rowRotationAxis, this.rubikView.turnAnglePerFramee));
+    //   cube.cube.rotateOnAxis(cube.cube.worldToLocal(this.rowRotationAxis.clone()), -this.rubikView.turnAnglePerFrame);
+
+    // })
+    // });
+    this.rubikView.render();
 
     this.controls.update();
     this.light.position.copy(this.camera.getWorldPosition(new THREE.Vector3()));
