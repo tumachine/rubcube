@@ -7,19 +7,20 @@ class RubikModel {
     this.matrix = this.createMatrix();
     this.matrixReference = this.createMatrixReference(sideLength * sideLength * sideLength);
 
-
-    // this.posHor = this.PositionHorizontal();
-    // this.posVer = this.PositionVertical();
-    // this.posDep = this.PositionDepth();
-    // this.posClockwise = this.PositionFaceClockwise();
-    // this.posAnticlockwise = this.PositioinFaceAnticlockwise();
     this.posHor = null;
     this.posVer = null;
     this.posDep = null;
     this.posDepRev = null;
     this.posClockwise = null;
-    this.posAnticlockwise = null;
+    this.posCounter = null;
     this.generatePositions();
+
+    this.interface = null;
+    this.createInterface();
+
+    this.interfaceSides = null;
+    this.createInterfaceSides();
+
     this.colors = {
       green: 0,
       blue: 1,
@@ -30,48 +31,101 @@ class RubikModel {
     };
 
     this.sequenceHor = [sides.front, sides.left, sides.back, sides.right, sides.front];
-    this.sequenceVer = [sides.top, sides.back, sides.bottom, sides.front, sides.top];
-    this.sequenceDep = [sides.left, sides.top, sides.right, sides.bottom, sides.left];
+    this.sequenceVer = [sides.up, sides.back, sides.down, sides.front, sides.up];
+    this.sequenceDep = [sides.left, sides.up, sides.right, sides.down, sides.left];
     this.sequenceHorRev = [sides.right, sides.back, sides.left, sides.front, sides.right];
-    this.sequenceVerRev = [sides.front, sides.bottom, sides.back, sides.top, sides.front];
-    this.sequenceDepRev = [sides.bottom, sides.right, sides.top, sides.left, sides.bottom];
+    this.sequenceVerRev = [sides.front, sides.down, sides.back, sides.up, sides.front];
+    this.sequenceDepRev = [sides.down, sides.right, sides.up, sides.left, sides.down];
 
-    //   rotate(matrix, posVer, sequenceVert, 0);
-    // this.rotate(this.posDep, this.sequenceDep, 0);
+    this.moveHistory = [];
+
+    // these are moves for top
+    // F and B can be use everywhere
+    // need way to register move
+    // surround with new function
+    this.moves = {
+      // L: (clockwise = true, slice = 0) => this.rotateVer(0 + slice, !clockwise),
+      L: (slice = 0, clockwise = true) => this.regMove('L', 0 + slice, !clockwise, this.rotateVer),
+      R: (slice = 0, clockwise = true) => this.regMove('R', this.sideLength - 1 - slice, clockwise, this.rotateVer),
+      U: (slice = 0, clockwise = true) => this.regMove('U', this.sideLength - 1 - slice, clockwise, this.rotateHor),
+      D: (slice = 0, clockwise = true) => this.regMove('D', 0 + slice, !clockwise, this.rotateHor),
+      F: (slice = 0, clockwise = true) => this.regMove('F', this.sideLength - 1 - slice, clockwise, this.rotateDep),
+      B: (slice = 0, clockwise = true) => this.regMove('B', 0 + slice, !clockwise, this.rotateDep),
+    };
+
+    const right = {
+      U: (slice = 0) => this.moves.R(slice),
+      D: (slice = 0) => this.moves.L(slice),
+      L: (slice = 0) => this.moves.U(slice, false),
+      R: (slice = 0) => this.moves.D(slice, false),
+    };
+
+    const down = {
+      U: (slice = 0) => this.moves.D(slice, false),
+      D: (slice = 0) => this.moves.U(slice, false),
+      L: (slice = 0) => this.moves.R(slice, false),
+      R: (slice = 0) => this.moves.L(slice, false),
+    };
+
+    const left = {
+      U: (slice = 0) => this.moves.L(slice, false),
+      D: (slice = 0) => this.moves.R(slice, false),
+      L: (slice = 0) => this.moves.D(slice),
+      R: (slice = 0) => this.moves.U(slice),
+    };
   }
 
-  rotateVerCounter = (slice) => {
-    this.rotate(this.posVer, this.sequenceVer, slice);
-    this.rotateFaceReal(slice, sides.left, sides.right, this.posClockwise);
+  generateMoves = () => {
+    this.moves.F
   }
 
-  rotateHorCounter = (slice) => {
-    this.rotate(this.posHor, this.sequenceHor, slice);
-    this.rotateFaceReal(slice, sides.bottom, sides.top, this.posClockwise);
+  regMove = (side, slice, clockwise, rotation) => {
+    this.moveHistory.push({ side, slice, clockwise });
+    rotation(slice, rotation);
+    console.log(side, slice, clockwise);
   }
 
-  rotateDepCounter = (slice) => {
-    this.rotate(this.posDep, this.sequenceDep, slice);
-    this.rotateFaceReal(slice, sides.back, sides.front, this.posAnticlockwise);
+  rotateVer = (slice, clockwise) => {
+    this.rotateMat(this.posVer, clockwise ? this.sequenceVerRev : this.sequenceVer, slice);
+    this.rotateFaceRealMat(slice, sides.left, sides.right, clockwise ? this.posCounter : this.posClockwise);
+  }
+
+  rotateHor = (slice, clockwise) => {
+    this.rotateMat(this.posHor, clockwise ? this.sequenceHorRev : this.sequenceHor, slice);
+    this.rotateFaceRealMat(slice, sides.down, sides.up, clockwise ? this.posCounter : this.posClockwise);
+  }
+
+  rotateDep = (slice, clockwise) => {
+    this.rotateMat(clockwise ? this.posDepRev : this.posDep, clockwise ? this.sequenceDepRev : this.sequenceDep, slice);
+    this.rotateFaceRealMat(slice, sides.back, sides.front, clockwise ? this.posClockwise : this.posCounter);
   }
 
 
-  rotateVer = (slice) => {
-    this.rotate(this.posVer, this.sequenceVerRev, slice);
-    this.rotateFaceReal(slice, sides.left, sides.right, this.posAnticlockwise);
+  rotateVerRef = (slice, clockwise) => {
+    this.rotateRef(this.posVer, clockwise ? this.sequenceVerRev : this.sequenceVer, slice);
+    this.rotateFaceRealRef(slice, sides.left, sides.right, clockwise ? this.posCounter : this.posClockwise);
   }
 
-  rotateHor = (slice) => {
-    this.rotate(this.posHor, this.sequenceHorRev, slice);
-    this.rotateFaceReal(slice, sides.bottom, sides.top, this.posAnticlockwise);
+  rotateHorRef = (slice, clockwise) => {
+    this.rotateRef(this.posHor, clockwise ? this.sequenceHorRev : this.sequenceHor, slice);
+    this.rotateFaceRealRef(slice, sides.down, sides.up, clockwise ? this.posCounter : this.posClockwise);
   }
 
-  rotateDep = (slice) => {
-    this.rotate(this.posDepRev, this.sequenceDepRev, slice);
-    this.rotateFaceReal(slice, sides.back, sides.front, this.posClockwise);
+  rotateDepRef = (slice, clockwise) => {
+    this.rotateRef(clockwise ? this.posDepRev : this.posDep, clockwise ? this.sequenceDepRev : this.sequenceDep, slice);
+    this.rotateFaceRealRef(slice, sides.back, sides.front, clockwise ? this.posClockwise : this.posCounter);
   }
 
   createInterface = () => {
+    this.interface = [
+      [], // left
+      [], // right
+      [], // top
+      [], // bottom
+      [], // front
+      [], // back
+    ];
+
     // left
     const left = [];
     for (let i = this.sideLength - 1; i >= 0; i -= 1) {
@@ -79,7 +133,6 @@ class RubikModel {
         left.push(i + (j * this.sideLength));
       }
     }
-    console.log(left);
     // right
     const right = [];
     for (let i = this.totalColors - 1; i > (this.totalColors - 1) - this.sideLength; i -= 1) {
@@ -87,49 +140,97 @@ class RubikModel {
         right.push(i - (j * this.sideLength));
       }
     }
-    console.log(right);
     // top
-    const top = [];
+    const up = [];
     for (let i = this.sideLength * (this.sideLength - 1); i >= 0; i -= this.sideLength) {
       for (let j = 0; j < this.sideLength; j += 1) {
-        top.push(i + j);
+        up.push(i + j);
       }
     }
-    console.log(top);
     // bottom
-    const bottom = [];
+    const down = [];
     for (let i = this.totalColors - 1; i >= 0; i -= 1) {
-      bottom.push(i);
+      down.push(i);
     }
-    console.log(bottom);
+    // front
+    const frontAndBack = [];
+    for (let i = 0; i < this.totalColors; i += 1) {
+      frontAndBack.push(i);
+    }
+    this.interface[sides.left] = left;
+    this.interface[sides.right] = right;
+    this.interface[sides.up] = up;
+    this.interface[sides.down] = down;
+    this.interface[sides.front] = frontAndBack;
+    this.interface[sides.back] = frontAndBack;
   }
 
-  testGreenWhiteCross = () => {
-    const testArr = [];
+  createInterfaceSides = () => {
     const middle = Math.floor(this.sideLength / 2);
 
-    const faceBottom = middle;
-    const faceBottomRight = faceBottom + middle;
-    const faceBottomLeft = faceBottom - middle;
+    const faceDown = middle;
+    const faceDownRight = faceDown + middle;
+    const faceDownLeft = faceDown - middle;
 
     const faceMiddle = this.sideLength * middle + middle;
     const faceMiddleRight = faceMiddle + middle;
     const faceMiddleLeft = faceMiddle - middle;
 
-    const faceTop = this.sideLength * (this.sideLength - 1) + middle;
-    const faceTopRight = faceTop + middle;
-    const faceTopLeft = faceTop - middle;
+    const faceUp = this.sideLength * (this.sideLength - 1) + middle;
+    const faceUpRight = faceUp + middle;
+    const faceUpLeft = faceUp - middle;
 
-    if (this.matrix[sides.left][4] === this.colors.green
-      && this.matrix[sides.left][5] === this.colors.green
-      && this.matrix[sides.front][3] === this.colors.white) {
-      console.log("Correct green white cross")
-    } else {
-      console.log("Wrong green white cross")
+    this.interfaceSides = {
+      down: faceDown,
+      downRight: faceDownRight,
+      downLeft: faceDownLeft,
+
+      middle: faceMiddle,
+      right: faceMiddleRight,
+      left: faceMiddleLeft,
+
+      up: faceUp,
+      upRight: faceUpRight,
+      upLeft: faceUpLeft,
+    };
+  }
+
+  testWhiteCross = () => {
+    const intSides = [this.interfaceSides.left, this.interfaceSides.up, this.interfaceSides.right, this.interfaceSides.down];
+    const consSides = [sides.left, sides.up, sides.right, sides.down];
+    for (let i = 0; i < 4; i += 1) {
+      if (this.getColor(consSides[i], this.interfaceSides.down) === consSides[i]
+        && this.getColor(sides.front, intSides[i]) === sides.front) {
+        console.log('Correct green white cross');
+      } else {
+        console.log('Wrong green white cross');
+      }
     }
   }
 
-  getCubesHor = (slice) => this.getCubes(this.posHor, this.sequenceHor, slice, sides.bottom, sides.top);
+  testGreenWhiteCross = () => {
+    if (this.getColor(sides.left, this.interfaceSides.down) === sides.left
+      // && this.getColor(sides.left, this.interfaceSides.middle) === sides.left
+      && this.getColor(sides.front, this.interfaceSides.left) === sides.front) {
+      console.log('Correct green white cross');
+    } else {
+      console.log('Wrong green white cross');
+    }
+
+
+    // if (this.matrix[sides.left][4] === this.colors.green
+    //   && this.matrix[sides.left][5] === this.colors.green
+    //   && this.matrix[sides.front][3] === this.colors.white) {
+    //   console.log("Correct green white cross")
+    // } else {
+    //   console.log("Wrong green white cross")
+    // }
+  }
+
+  // getColor(sides.left, this.interfaceSides.bottom)
+  getColor = (side, direction) => this.matrix[side][this.interface[side][direction]];
+
+  getCubesHor = (slice) => this.getCubes(this.posHor, this.sequenceHor, slice, sides.down, sides.up);
 
   getCubesVer = (slice) => this.getCubes(this.posVer, this.sequenceVer, slice, sides.left, sides.right);
 
@@ -162,12 +263,12 @@ class RubikModel {
 
     // indexes bottom
     for (let cube = 0; cube < this.totalColors; cube += 1) {
-      matrixRubic[sides.bottom].push(cube);
+      matrixRubic[sides.down].push(cube);
     }
 
     // indexes top
     for (let cube = cubes - this.totalColors; cube < cubes; cube += 1) {
-      matrixRubic[sides.top].push(cube);
+      matrixRubic[sides.up].push(cube);
     }
 
     // indexes left
@@ -216,18 +317,24 @@ class RubikModel {
     return cubes;
   }
 
-  rotate = (slices, sequence, slice) => {
+  rotateRef = (slices, sequence, slice) => {
+    this.rotateFunc(slices, sequence, slice, this.matrixReference);
+  }
+
+  rotateMat = (slices, sequence, slice) => {
+    this.rotateFunc(slices, sequence, slice, this.matrix);
+  }
+
+  rotateFunc = (slices, sequence, slice, matrix) => {
     const layer = slices[slice];
     let first = layer[0];
     // save values of first face
-    const firstFace = layer[0].map((i) => this.matrix[sequence[0]][i]);
-    const firstMatrixFace = layer[0].map((i) => this.matrixReference[sequence[0]][i]);
+    const firstFace = layer[0].map((i) => matrix[sequence[0]][i]);
 
     for (let face = 0; face < layer.length - 1; face += 1) {
       const second = layer[face + 1];
       for (let i = 0; i < layer[face].length; i += 1) {
-        this.matrix[sequence[face]][first[i]] = this.matrix[sequence[face + 1]][second[i]];
-        this.matrixReference[sequence[face]][first[i]] = this.matrixReference[sequence[face + 1]][second[i]];
+        matrix[sequence[face]][first[i]] = matrix[sequence[face + 1]][second[i]];
       }
       first = second;
     }
@@ -235,10 +342,34 @@ class RubikModel {
     const lastFace = sequence[sequence.length - 2];
     for (let i = 0; i < layer[0].length; i += 1) {
       // matrix[lastFace][layer[lastFace][i]] = firstFace[i];
-      this.matrix[lastFace][layer[3][i]] = firstFace[i];
-      this.matrixReference[lastFace][layer[3][i]] = firstMatrixFace[i];
+      matrix[lastFace][layer[3][i]] = firstFace[i];
     }
   }
+
+  // keep matrix and reference separated
+  // rotateFunc = (slices, sequence, slice) => {
+  //   const layer = slices[slice];
+  //   let first = layer[0];
+  //   // save values of first face
+  //   const firstFace = layer[0].map((i) => this.matrix[sequence[0]][i]);
+  //   const firstMatrixFace = layer[0].map((i) => this.matrixReference[sequence[0]][i]);
+
+  //   for (let face = 0; face < layer.length - 1; face += 1) {
+  //     const second = layer[face + 1];
+  //     for (let i = 0; i < layer[face].length; i += 1) {
+  //       this.matrix[sequence[face]][first[i]] = this.matrix[sequence[face + 1]][second[i]];
+  //       this.matrixReference[sequence[face]][first[i]] = this.matrixReference[sequence[face + 1]][second[i]];
+  //     }
+  //     first = second;
+  //   }
+
+  //   const lastFace = sequence[sequence.length - 2];
+  //   for (let i = 0; i < layer[0].length; i += 1) {
+  //     // matrix[lastFace][layer[lastFace][i]] = firstFace[i];
+  //     this.matrix[lastFace][layer[3][i]] = firstFace[i];
+  //     this.matrixReference[lastFace][layer[3][i]] = firstMatrixFace[i];
+  //   }
+  // }
 
   createEmptySlices() {
   // slices depending on a side length
@@ -256,22 +387,38 @@ class RubikModel {
     return slices;
   }
 
-  rotateFaceReal = (slice, bottom, top, clockwiseArr) => {
+  rotateFaceRealRef = (slice, bottom, top, clockwiseArr) => {
+    this.rotateFaceRealFunc(slice, bottom, top, clockwiseArr, this.rotateFaceRef);
+  }
+
+  rotateFaceRealMat = (slice, bottom, top, clockwiseArr) => {
+    this.rotateFaceRealFunc(slice, bottom, top, clockwiseArr, this.rotateFaceMat);
+  }
+
+  rotateFaceRealFunc = (slice, bottom, top, clockwiseArr, func) => {
     if (slice === 0) {
-      this.rotateFace(bottom, clockwiseArr);
+      func(bottom, clockwiseArr);
       // console.log('making face rotation');
     } else if (slice === this.sideLength - 1) {
-      this.rotateFace(top, clockwiseArr);
+      func(top, clockwiseArr);
       // console.log('making face rotation');
     }
   }
 
-  rotateFace = (face, positionFace) => {
-    const faceCopy = [...this.matrix[face]];
-    const faceMatrixCopy = [...this.matrixReference[face]];
+  rotateFaceRef = (face, positionFace) => {
+    this.rotateFaceFunc(face, positionFace, this.matrixReference);
+  }
+
+  rotateFaceMat = (face, positionFace) => {
+    this.rotateFaceFunc(face, positionFace, this.matrix);
+  }
+
+  // keep matrix and reference separated
+  // ref update is unnesesary unless you have a rubik model
+  rotateFaceFunc = (face, positionFace, matrix) => {
+    const faceCopy = [...matrix[face]];
     for (let i = 0; i < this.totalColors; i += 1) {
-      this.matrix[face][i] = faceCopy[positionFace[i]];
-      this.matrixReference[face][i] = faceMatrixCopy[positionFace[i]];
+      matrix[face][i] = faceCopy[positionFace[i]];
     }
   }
 
@@ -329,11 +476,11 @@ class RubikModel {
     // this.posHorRev = [...this.posHor].reverse()
 
     this.posClockwise = [];
-    this.posAnticlockwise = [];
+    this.posCounter = [];
     for (let i = 0; i < this.sideLength; i += 1) {
       for (let j = 0; j < this.sideLength; j += 1) {
         this.posClockwise.push((this.sideLength - i - 1) + j * this.sideLength);
-        this.posAnticlockwise.push(i + (this.sideLength - 1 - j) * this.sideLength);
+        this.posCounter.push(i + (this.sideLength - 1 - j) * this.sideLength);
       }
     }
   }

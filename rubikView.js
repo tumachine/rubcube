@@ -27,6 +27,23 @@ class RubikView {
     // http://stackoverflow.com/questions/20089098/three-js-adding-and-removing-children-of-rotated-objects
     this.pivot = new THREE.Object3D();
     this.activeGroup = [];
+    // axis 'x', 'y' or 'z'
+    // direction '-1' or '1'
+    //      -1 - clockwise
+    //       1 - counterclockwise
+    this.moves = {
+      // L: () => this.pushMove('x', 1, 0),
+      L: (clockwise = true, slice = 0) => this.rotate('x', !clockwise, 0 + slice),
+      R: (clockwise = true, slice = 0) => this.rotate('x', clockwise, this.rubikModel.sideLength - 1 - slice),
+      U: (clockwise = true, slice = 0) => this.rotate('y', clockwise, this.rubikModel.sideLength - 1 - slice),
+      D: (clockwise = true, slice = 0) => this.rotate('y', !clockwise, 0 + slice),
+      F: (clockwise = true, slice = 0) => this.rotate('z', clockwise, this.rubikModel.sideLength - 1 - slice),
+      B: (clockwise = true, slice = 0) => this.rotate('z', !clockwise, 0 + slice),
+    };
+  }
+
+  rotate = (axis, clockwise, slice) => {
+    this.pushMove(axis, clockwise ? -1 : 1, slice);
   }
 
   // select cubes that are to be rotated
@@ -53,14 +70,12 @@ class RubikView {
       // this.rubikModel.rotateDep(slice);
     }
     cubes.forEach((i) => this.activeGroup.push(this.cubes[i].cube));
-    console.log(cubes)
-
-
-    console.log(this.rubikModel.matrixReference)
   }
 
   // axis 'x', 'y' or 'z'
   // direction '-1' or '1'
+  //      -1 - clockwise
+  //       1 - counterclockwise
   // cube might be not needed
   pushMove = (axis, direction, slice) => {
     this.moveQueue.push({
@@ -71,7 +86,6 @@ class RubikView {
   startNextMove = () => {
     const nextMove = this.moveQueue.pop();
 
-    console.log('starting');
     if (nextMove) {
       const direction = nextMove.direction || 1;
       const { axis, slice } = nextMove;
@@ -119,7 +133,6 @@ class RubikView {
   moveComplete = () => {
     this.isMoving = false;
     this.moveN = null;
-    this.moveDirection = undefined;
     this.clickVector = undefined;
 
     this.pivot.updateMatrixWorld();
@@ -133,15 +146,18 @@ class RubikView {
       this.rubik.attach(cube);
     });
 
+    const clockwise = this.moveDirection === -1;
     if (this.moveAxis === 'x') {
-      this.rubikModel.rotateVer(this.moveSlice);
+      this.rubikModel.rotateVerRef(this.moveSlice, clockwise);
     } else if (this.moveAxis === 'y') {
-      this.rubikModel.rotateHor(this.moveSlice);
+      this.rubikModel.rotateHorRef(this.moveSlice, clockwise);
     } else if (this.moveAxis === 'z') {
-      this.rubikModel.rotateDep(this.moveSlice);
+      this.rubikModel.rotateDepRef(this.moveSlice, clockwise);
     }
     this.moveAxis = null;
-    this.rubikModel.testGreenWhiteCross();
+    this.moveDirection = undefined;
+    // this.rubikModel.testGreenWhiteCross();
+    // this.rubikModel.testWhiteCross();
 
     this.startNextMove();
   }
@@ -200,9 +216,9 @@ class RubikView {
     // maybe there is a simpler way of representing rubik graphically
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
       // color bottom
-      this.cubes[this.rubikModel.matrixReference[sides.bottom][cube]].setColor(faceSides.bottom, this.rubikModel.matrix[sides.bottom][cube]);
+      this.cubes[this.rubikModel.matrixReference[sides.down][cube]].setColor(faceSides.bottom, this.rubikModel.matrix[sides.down][cube]);
       // color top
-      this.cubes[this.rubikModel.matrixReference[sides.top][cube]].setColor(faceSides.top, this.rubikModel.matrix[sides.top][cube]);
+      this.cubes[this.rubikModel.matrixReference[sides.up][cube]].setColor(faceSides.top, this.rubikModel.matrix[sides.up][cube]);
       // color left
       this.cubes[this.rubikModel.matrixReference[sides.left][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.left][cube]);
       // color right

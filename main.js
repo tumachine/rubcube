@@ -104,18 +104,28 @@ class Main {
     //   this.rubikView.pushMove(randomAxis(), -1, randomInt(0, 2));
     // }
     // this.rubikView.pushMove('y', -1, 0);
-    this.rubikView.pushMove('z', -1, 2);
-    this.rubikView.pushMove('z', -1, 2);
-    this.rubikView.pushMove('z', -1, 2);
-    this.rubikView.pushMove('z', -1, 2);
+    // this.rubikView.pushMove('y', -1, 2);
+    // this.rubikView.pushMove('z', -1, 2);
+    // this.rubikView.pushMove('z', -1, 2);
+    // this.rubikView.pushMove('z', -1, 2);
     // this.rubikView.pushMove('x', -1, 0);
     // this.rubikView.pushMove('x', -1, 0);
 
-    this.rubikView.rubikModel.createInterface();
+    const funcs = [
+      this.rubikView.moves.D,
+      this.rubikView.moves.U,
+      this.rubikView.moves.F,
+      this.rubikView.moves.B,
+      this.rubikView.moves.L,
+    ];
+    for (let i = 0; i < 50; i += 1) {
+      const clockwise = randomInt(0, 1) === 0;
+      funcs[randomInt(0, funcs.length - 1)](clockwise);
+    }
     this.rubikView.startNextMove();
-    console.log(this.rubikView.rubikModel.posHor)
-    console.log(this.rubikView.rubikModel.matrixReference)
-    console.log(this.rubikView.rubikModel.getCubesHor(0))
+    // console.log(this.rubikView.rubikModel.posHor)
+    // console.log(this.rubikView.rubikModel.matrixReference)
+    // console.log(this.rubikView.rubikModel.getCubesHor(0))
   }
 
   resizeRendererToDisplaySize = () => {
