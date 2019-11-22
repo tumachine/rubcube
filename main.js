@@ -111,17 +111,37 @@ class Main {
     // this.rubikView.pushMove('x', -1, 0);
     // this.rubikView.pushMove('x', -1, 0);
 
-    const funcs = [
-      this.rubikView.moves.D,
-      this.rubikView.moves.U,
-      this.rubikView.moves.F,
-      this.rubikView.moves.B,
-      this.rubikView.moves.L,
-    ];
-    for (let i = 0; i < 50; i += 1) {
-      const clockwise = randomInt(0, 1) === 0;
-      funcs[randomInt(0, funcs.length - 1)](clockwise);
-    }
+    // const funcs = [
+    //   this.rubikView.moves.D,
+    //   this.rubikView.moves.U,
+    //   this.rubikView.moves.F,
+    //   this.rubikView.moves.B,
+    //   this.rubikView.moves.L,
+    // ];
+    // for (let i = 0; i < 50; i += 1) {
+    //   const clockwise = randomInt(0, 1) === 0;
+    //   funcs[randomInt(0, funcs.length - 1)](clockwise);
+    // }
+    // this.rubikView.rubikModel.generateMoves();
+    this.rubikView.rubikModel.generateRandomMoves(10);
+    // this.rubikView.rubikModel.moves.D();
+    // this.rubikView.rubikModel.moves.B();
+    // this.rubikView.rubikModel.sideRef[sides.l].U(0, false);
+
+    // // reverse face test
+    // this.rubikView.rubikModel.moves.L(0, false);
+    // this.rubikView.rubikModel.moves.U();
+    // this.rubikView.rubikModel.moves.B();
+    // this.rubikView.rubikModel.moves.U(0, false);
+    // this.rubikView.rubikModel.moves.L();
+    // this.rubikView.rubikModel.moves.L();
+    // this.rubikView.rubikModel.moves.L();
+
+    this.rubikView.rubikModel.testWhiteCross();
+    // this.rubikView.rubikModel.moves.F();
+    // this.rubikView.rubikModel.moves.F();
+    // this.rubikView.rubikModel.moves.F();
+    this.rubikView.translateGeneratedMoves();
     this.rubikView.startNextMove();
     // console.log(this.rubikView.rubikModel.posHor)
     // console.log(this.rubikView.rubikModel.matrixReference)

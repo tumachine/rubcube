@@ -1,10 +1,10 @@
 const sides = {
-  left: 0,
-  right: 1,
-  up: 2,
-  down: 3,
-  front: 4,
-  back: 5,
+  l: 0,
+  r: 1,
+  u: 2,
+  d: 3,
+  f: 4,
+  b: 5,
 };
 
 export { sides };
