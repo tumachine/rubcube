@@ -31,6 +31,8 @@ class Main {
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.camera.position.z = 8;
+    this.camera.position.x = 5;
+    this.camera.position.y = 5;
     this.controls.update();
     // camera.position.set(0, 50, 0)
     // camera.up.set(0, 0, 1)
@@ -90,62 +92,13 @@ class Main {
       return x;
     }
 
-    // for (let i = 0; i < 2; i += 1) {
-    //   this.rubikView.pushMove(randomAxis(), -1);
-    // }
-    // this.rubikView.pushMove('x', -1);
-    // y -1 clockwise
-    // this.rubikView.pushMove('y', -1);
-    // y 1 counterclockwise
-    // this.rubikView.pushMove('x', 1);
-    // this.rubikView.pushMove('y', 1);
-    // z -1 clockwise
-    // for (let i = 0; i < 50; i += 1) {
-    //   this.rubikView.pushMove(randomAxis(), -1, randomInt(0, 2));
-    // }
-    // this.rubikView.pushMove('y', -1, 0);
-    // this.rubikView.pushMove('y', -1, 2);
-    // this.rubikView.pushMove('z', -1, 2);
-    // this.rubikView.pushMove('z', -1, 2);
-    // this.rubikView.pushMove('z', -1, 2);
-    // this.rubikView.pushMove('x', -1, 0);
-    // this.rubikView.pushMove('x', -1, 0);
-
-    // const funcs = [
-    //   this.rubikView.moves.D,
-    //   this.rubikView.moves.U,
-    //   this.rubikView.moves.F,
-    //   this.rubikView.moves.B,
-    //   this.rubikView.moves.L,
-    // ];
-    // for (let i = 0; i < 50; i += 1) {
-    //   const clockwise = randomInt(0, 1) === 0;
-    //   funcs[randomInt(0, funcs.length - 1)](clockwise);
-    // }
-    // this.rubikView.rubikModel.generateMoves();
     this.rubikView.rubikModel.generateRandomMoves(10);
-    // this.rubikView.rubikModel.moves.D();
-    // this.rubikView.rubikModel.moves.B();
-    // this.rubikView.rubikModel.sideRef[sides.l].U(0, false);
+    this.rubikView.rubikModel.solve();
+    this.rubikView.colorizeRubik();
 
-    // // reverse face test
-    // this.rubikView.rubikModel.moves.L(0, false);
-    // this.rubikView.rubikModel.moves.U();
-    // this.rubikView.rubikModel.moves.B();
-    // this.rubikView.rubikModel.moves.U(0, false);
-    // this.rubikView.rubikModel.moves.L();
-    // this.rubikView.rubikModel.moves.L();
-    // this.rubikView.rubikModel.moves.L();
+    // this.rubikView.translateGeneratedMoves();
+    // this.rubikView.startNextMove();
 
-    this.rubikView.rubikModel.testWhiteCross();
-    // this.rubikView.rubikModel.moves.F();
-    // this.rubikView.rubikModel.moves.F();
-    // this.rubikView.rubikModel.moves.F();
-    this.rubikView.translateGeneratedMoves();
-    this.rubikView.startNextMove();
-    // console.log(this.rubikView.rubikModel.posHor)
-    // console.log(this.rubikView.rubikModel.matrixReference)
-    // console.log(this.rubikView.rubikModel.getCubesHor(0))
   }
 
   resizeRendererToDisplaySize = () => {

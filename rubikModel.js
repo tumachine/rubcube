@@ -49,6 +49,13 @@ class RubikModel {
       [],
       [],
     ];
+    this.faceCornerCases = [
+      [],
+      [],
+      [],
+      [],
+    ];
+
     this.generateFaceSideCases();
 
     this.moveHistory = [];
@@ -67,13 +74,15 @@ class RubikModel {
       B: (slice = 0, clockwise = true) => this.regMove('B', 0 + slice, !clockwise, this.rotateDep),
     };
 
-    this.sideRef = [
+    this.frontOrient = [
       // left
       {
         U: (slice = 0, clockwise = true) => this.moves.L(slice, clockwise),
         D: (slice = 0, clockwise = true) => this.moves.R(slice, clockwise),
         L: (slice = 0, clockwise = true) => this.moves.D(slice, clockwise),
         R: (slice = 0, clockwise = true) => this.moves.U(slice, clockwise),
+        F: (slice = 0, clockwise = true) => this.moves.F(slice, clockwise),
+        B: (slice = 0, clockwise = true) => this.moves.B(slice, clockwise),
       },
       // right
       {
@@ -81,6 +90,8 @@ class RubikModel {
         D: (slice = 0, clockwise = true) => this.moves.L(slice, clockwise),
         L: (slice = 0, clockwise = true) => this.moves.U(slice, clockwise),
         R: (slice = 0, clockwise = true) => this.moves.D(slice, clockwise),
+        F: (slice = 0, clockwise = true) => this.moves.F(slice, clockwise),
+        B: (slice = 0, clockwise = true) => this.moves.B(slice, clockwise),
       },
       // up
       {
@@ -88,6 +99,8 @@ class RubikModel {
         D: (slice = 0, clockwise = true) => this.moves.D(slice, clockwise),
         L: (slice = 0, clockwise = true) => this.moves.L(slice, clockwise),
         R: (slice = 0, clockwise = true) => this.moves.R(slice, clockwise),
+        F: (slice = 0, clockwise = true) => this.moves.F(slice, clockwise),
+        B: (slice = 0, clockwise = true) => this.moves.B(slice, clockwise),
       },
       // down
       {
@@ -95,147 +108,201 @@ class RubikModel {
         D: (slice = 0, clockwise = true) => this.moves.U(slice, clockwise),
         L: (slice = 0, clockwise = true) => this.moves.R(slice, clockwise),
         R: (slice = 0, clockwise = true) => this.moves.L(slice, clockwise),
+        F: (slice = 0, clockwise = true) => this.moves.F(slice, clockwise),
+        B: (slice = 0, clockwise = true) => this.moves.B(slice, clockwise),
+      },
+    ];
+
+    this.sideOrient = [
+      // left
+      {
+        U: (slice = 0, clockwise = true) => this.moves.B(slice, clockwise),
+        D: (slice = 0, clockwise = true) => this.moves.F(slice, clockwise),
+        L: (slice = 0, clockwise = true) => this.moves.D(slice, clockwise),
+        R: (slice = 0, clockwise = true) => this.moves.U(slice, clockwise),
+        F: (slice = 0, clockwise = true) => this.moves.L(slice, clockwise),
+        B: (slice = 0, clockwise = true) => this.moves.R(slice, clockwise),
+      },
+      // right
+      {
+        U: (slice = 0, clockwise = true) => this.moves.B(slice, clockwise),
+        D: (slice = 0, clockwise = true) => this.moves.F(slice, clockwise),
+        L: (slice = 0, clockwise = true) => this.moves.U(slice, clockwise),
+        R: (slice = 0, clockwise = true) => this.moves.D(slice, clockwise),
+        F: (slice = 0, clockwise = true) => this.moves.R(slice, clockwise),
+        B: (slice = 0, clockwise = true) => this.moves.L(slice, clockwise),
+      },
+      // up
+      {
+        U: (slice = 0, clockwise = true) => this.moves.B(slice, clockwise),
+        D: (slice = 0, clockwise = true) => this.moves.F(slice, clockwise),
+        L: (slice = 0, clockwise = true) => this.moves.L(slice, clockwise),
+        R: (slice = 0, clockwise = true) => this.moves.R(slice, clockwise),
+        F: (slice = 0, clockwise = true) => this.moves.U(slice, clockwise),
+        B: (slice = 0, clockwise = true) => this.moves.D(slice, clockwise),
+      },
+      // down
+      {
+        U: (slice = 0, clockwise = true) => this.moves.B(slice, clockwise),
+        D: (slice = 0, clockwise = true) => this.moves.F(slice, clockwise),
+        L: (slice = 0, clockwise = true) => this.moves.R(slice, clockwise),
+        R: (slice = 0, clockwise = true) => this.moves.L(slice, clockwise),
+        F: (slice = 0, clockwise = true) => this.moves.D(slice, clockwise),
+        B: (slice = 0, clockwise = true) => this.moves.U(slice, clockwise),
       },
     ];
 
     this.checkSequence = [s.l, s.u, s.r, s.d];
+    this.colorHashes = [1, 10, 100, 1000, 10000, 100000];
   }
 
-  // // solve one side for white cross
-  // solveWhiteCrossSide = () => {
-  //   let count = 0;
+  solveWhiteCornerSide = (sc, fc) => {
+    // check if already correct
+    if (this.check(sc[0], this.f.dr, sc[0]) && (this.check(sc[1], this.f.dl, sc[1]) && (this.check(s.f, fc[0], s.f)))) {
+      console.log('corner is in a right place');
+      return;
+    }
 
-  //   while (!(this.check(s.l, this.f.d, s.l) && this.check(s.f, this.f.l, s.f))) {
-  //     // correct on left
-  //     // need a simpler way to check colors
-  //     // if (this.getColor(s.l, this.f.l) === s.l && this.getColor(s.d, this.f.r) === s.f) {
-  //     if (this.check(s.l, this.f.l, s.l) && this.check(s.d, this.f.r, s.f)) {
-  //       this.sideRef[s.l].U(0, false);
-  //       console.log('left left');
-  //       return;
-  //     }
-  //     // correct on top
-  //     if (this.check(s.l, this.f.u, s.l) && this.check(s.b, this.f.l, s.f)) {
-  //       this.sideRef[s.l].U();
-  //       this.sideRef[s.l].U();
-  //       console.log('left top');
-  //       return;
-  //     }
+    // this
+    // find cube where sum of the colors equals, sum of the desired cube
+    // can check bottom and top with this solution
+    let desiredSum = 0;
+    desiredSum += this.colorHashes[sc[0]];
+    desiredSum += this.colorHashes[sc[1]];
+    desiredSum += this.colorHashes[s.f];
+    // front
+    let sum = 0;
+    let frontFaceSide = null;
+    for (let i = 0; i < 4; i += 1) {
+      sum = 0;
+      sum += this.getColorHash(sc[i], this.f.dr);
+      sum += this.getColorHash(sc[(i + 1) % 4], this.f.dl);
+      sum += this.getColorHash(s.f, fc[i]);
+      if (sum === desiredSum) {
+        frontFaceSide = i;
 
-  //     // correct on right
-  //     if (this.check(s.l, this.f.r, s.l) && this.check(s.u, this.f.l, s.f)) {
-  //       this.sideRef[s.l].U();
-  //       console.log('left right');
-  //       return;
-  //     }
+        break;
+      }
+    }
 
-  //     // for reverse colors, move them to the right
-  //     // left
-  //     if (this.check(s.l, this.f.l, s.f) && this.check(s.d, this.f.r, s.l)) {
-  //       this.sideRef[s.l].U();
-  //       this.sideRef[s.l].U();
-  //       console.log('reverse left left');
-  //     } else if (this.check(s.l, this.f.u, s.f) && this.check(s.b, this.f.l, s.l)) {
-  //       // top
-  //       this.sideRef[s.l].U();
-  //       console.log('reverse top left');
-  //     } else if (this.check(s.l, this.f.d, s.f) && this.check(s.f, this.f.l, s.l)) {
-  //       // down
-  //       this.sideRef[s.l].U(0, false);
-  //       console.log('reverse down left');
-  //     }
+    if (frontFaceSide !== null) {
+      this.sideOrient[sc[frontFaceSide]].R();
+      this.sideOrient[sc[frontFaceSide]].U();
+      this.sideOrient[sc[frontFaceSide]].R(0, false);
 
-  //     // solve reverse face case
-  //     if (this.check(s.l, this.f.r, s.f) && this.check(s.u, this.f.l, s.l)) {
-  //       this.sideRef[s.u].U();
-  //       this.moves.B();
-  //       this.sideRef[s.u].U(0, false);
-  //       this.sideRef[s.l].U();
-  //       this.sideRef[s.l].U();
-  //       console.log('reverse face case');
-  //       return;
-  //     }
+      if (frontFaceSide === 0) {
+        this.moves.B(0, false);
+      }
+      if (frontFaceSide === 1) {
+        // do nothing
+      }
+      if (frontFaceSide === 2) {
+        this.moves.B();
+      }
+      if (frontFaceSide === 3) {
+        this.moves.B();
+        this.moves.B();
+      }
+    }
 
-  //     // solve for top left
-  //     if ((this.check(s.r, this.f.l, s.l) && this.check(s.u, this.f.r, s.f))
-  //     || (this.check(s.r, this.f.l, s.f) && this.check(s.u, this.f.r, s.l))) {
-  //       this.sideRef[s.l].D();
-  //       this.moves.B();
-  //       this.sideRef[s.l].D(0, false);
-  //       this.moves.B();
-  //       console.log('top hard side');
-  //     }
 
-  //     // solve for bottom left
-  //     if ((this.check(s.r, this.f.r, s.l) && this.check(s.d, this.f.l, s.f))
-  //     || (this.check(s.r, this.f.r, s.f) && this.check(s.d, this.f.l, s.l))) {
-  //       this.sideRef[s.l].L();
-  //       this.moves.B();
-  //       this.sideRef[s.l].L(0, false);
-  //       this.moves.B();
-  //       console.log('bottom hard side');
-  //     }
+    // bottom
+    let backFaceSide = null;
+    if (frontFaceSide === null) {
+      for (let i = 0; i < 4; i += 1) {
+        sum = 0;
+        sum += this.getColorHash(sc[i], this.f.ur);
+        sum += this.getColorHash(sc[(i + 1) % 4], this.f.ul);
+        sum += this.getColorHash(s.b, fc[i]);
+        if (sum === desiredSum) {
+          backFaceSide = i;
+          break;
+        }
+      }
+      if (backFaceSide === 0) {
+        // do nothing
+      }
+      if (backFaceSide === 1) {
+        this.moves.B();
+      }
+      if (backFaceSide === 2) {
+        this.moves.B();
+        this.moves.B();
+      }
+      if (backFaceSide === 3) {
+        this.moves.B(0, false);
+      }
+    }
 
-  //     // solve for face top
-  //     if ((this.check(s.u, this.f.d, s.l) && this.check(s.f, this.f.u, s.f))
-  //     || (this.check(s.u, this.f.d, s.f) && this.check(s.f, this.f.u, s.l))) {
-  //       this.sideRef[s.l].R();
-  //       this.sideRef[s.l].R();
-  //       console.log('front top hard face');
-  //     }
+    // place it on the right side
+    // for (let i = 0; i < 4; i += 1) {
+    // there can now be only three cases, after putting
+    // case 1: white to the right
+    if (this.check(sc[0], this.f.ur, s.f) && (this.check(sc[1], this.f.ul, sc[1]))) {
+      this.frontOrient[sc[1]].L(0, false);
+      this.moves.B(0, false);
+      this.frontOrient[sc[1]].L();
+      console.log('solved case 1');
+      return;
+    }
+    // case 2: white in the left
+    if (this.check(sc[0], this.f.ur, sc[0]) && (this.check(sc[1], this.f.ul, s.f))) {
+      this.frontOrient[sc[0]].R();
+      this.moves.B();
+      this.frontOrient[sc[0]].R(0, false);
+      console.log('solved case 2');
+      return;
+    }
+    // case 3: white in the bottom
+    if (this.check(sc[0], this.f.ur, sc[1]) && (this.check(sc[1], this.f.ul, sc[0]))) {
+      this.frontOrient[sc[1]].L(0, false);
+      this.moves.B();
+      this.moves.B();
+      this.frontOrient[sc[1]].L();
+      this.moves.B();
 
-  //     // solve for face right
-  //     if ((this.check(s.r, this.f.d, s.l) && this.check(s.f, this.f.r, s.f))
-  //     || (this.check(s.r, this.f.d, s.f) && this.check(s.f, this.f.r, s.l))) {
-  //       this.sideRef[s.l].D();
-  //       this.sideRef[s.l].D();
-  //       console.log('front right hard face');
-  //     }
+      this.frontOrient[sc[1]].L(0, false);
+      this.moves.B(0, false);
 
-  //     // solve for face bottom
-  //     if ((this.check(s.d, this.f.d, s.l) && this.check(s.f, this.f.d, s.f))
-  //     || (this.check(s.d, this.f.d, s.f) && this.check(s.f, this.f.d, s.l))) {
-  //       this.sideRef[s.l].L();
-  //       this.sideRef[s.l].L();
-  //       console.log('front bottom hard face');
-  //     }
+      this.frontOrient[sc[1]].L();
+      console.log('solved case 3');
+      return;
+    }
 
-  //     // this solves another three cases for bottom
-  //     this.moves.B();
+    // this.moves.B();
+    // }
+  }
 
-  //     console.log('solving')
-
-  //     if (count === 10) {
-  //       break;
-  //     }
-  //     count += 1;
-  //   }
-  // }
+  solveWhiteFace = (sca, fca) => {
+    for (let i = 0; i < 4; i += 1) {
+      this.solveWhiteCornerSide(sca[i], fca[i]);
+    }
+  }
 
   solveWhiteCrossSide = (fc, sc) => {
     let count = 0;
 
-    while (!(this.check(sc[0], this.f.d, sc[0]) && this.check(s.f, fc[0], s.f))) {
+    while (!(this.check(sc[0], this.f.d, sc[0]) && (this.check(s.f, fc[0], s.f)))) {
       // correct on left
       // need a simpler way to check colors
       // if (this.getColor(s.l, this.f.l) === s.l && this.getColor(s.d, this.f.r) === s.f) {
       // up, right, down, left
       if (this.check(sc[0], this.f.l, sc[0]) && this.check(sc[3], this.f.r, s.f)) {
-        this.sideRef[sc[0]].U(0, false);
+        this.frontOrient[sc[0]].U(0, false);
         console.log('left left');
         return;
       }
       // correct on top
       if (this.check(sc[0], this.f.u, sc[0]) && this.check(s.b, fc[0], s.f)) {
-        this.sideRef[sc[0]].U();
-        this.sideRef[sc[0]].U();
+        this.frontOrient[sc[0]].U();
+        this.frontOrient[sc[0]].U();
         console.log('left top');
         return;
       }
 
       // correct on right
       if (this.check(sc[0], this.f.r, sc[0]) && this.check(sc[1], this.f.l, s.f)) {
-        this.sideRef[sc[0]].U();
+        this.frontOrient[sc[0]].U();
         console.log('left right');
         return;
       }
@@ -243,26 +310,26 @@ class RubikModel {
       // for reverse colors, move them to the right
       // left
       if (this.check(sc[0], this.f.l, s.f) && this.check(sc[3], this.f.r, sc[0])) {
-        this.sideRef[sc[0]].U();
-        this.sideRef[sc[0]].U();
+        this.frontOrient[sc[0]].U();
+        this.frontOrient[sc[0]].U();
         console.log('reverse left left');
       } else if (this.check(sc[0], this.f.u, s.f) && this.check(s.b, fc[0], sc[0])) {
         // top
-        this.sideRef[sc[0]].U();
+        this.frontOrient[sc[0]].U();
         console.log('reverse top left');
       } else if (this.check(sc[0], this.f.d, s.f) && this.check(s.f, fc[0], sc[0])) {
         // down
-        this.sideRef[sc[0]].U(0, false);
+        this.frontOrient[sc[0]].U(0, false);
         console.log('reverse down left');
       }
 
       // solve reverse face case
       if (this.check(sc[0], this.f.r, s.f) && this.check(sc[1], this.f.l, sc[0])) {
-        this.sideRef[sc[1]].U();
+        this.frontOrient[sc[1]].U();
         this.moves.B();
-        this.sideRef[sc[1]].U(0, false);
-        this.sideRef[sc[0]].U();
-        this.sideRef[sc[0]].U();
+        this.frontOrient[sc[1]].U(0, false);
+        this.frontOrient[sc[0]].U();
+        this.frontOrient[sc[0]].U();
         console.log('reverse face case');
         return;
       }
@@ -270,9 +337,9 @@ class RubikModel {
       // solve for top left
       if ((this.check(sc[2], this.f.l, sc[0]) && this.check(sc[1], this.f.r, s.f))
       || (this.check(sc[2], this.f.l, s.f) && this.check(sc[1], this.f.r, sc[0]))) {
-        this.sideRef[sc[0]].D();
+        this.frontOrient[sc[0]].D();
         this.moves.B();
-        this.sideRef[sc[0]].D(0, false);
+        this.frontOrient[sc[0]].D(0, false);
         this.moves.B();
         console.log('top hard side');
       }
@@ -280,9 +347,9 @@ class RubikModel {
       // solve for bottom left
       if ((this.check(sc[2], this.f.r, sc[0]) && this.check(sc[3], this.f.l, s.f))
       || (this.check(sc[2], this.f.r, s.f) && this.check(sc[3], this.f.l, sc[0]))) {
-        this.sideRef[sc[0]].L();
+        this.frontOrient[sc[0]].L();
         this.moves.B();
-        this.sideRef[sc[0]].L(0, false);
+        this.frontOrient[sc[0]].L(0, false);
         this.moves.B();
         console.log('bottom hard side');
       }
@@ -290,24 +357,24 @@ class RubikModel {
       // solve for face top
       if ((this.check(sc[1], this.f.d, sc[0]) && this.check(s.f, fc[1], s.f))
       || (this.check(sc[1], this.f.d, s.f) && this.check(s.f, fc[1], sc[0]))) {
-        this.sideRef[sc[0]].R();
-        this.sideRef[sc[0]].R();
+        this.frontOrient[sc[0]].R();
+        this.frontOrient[sc[0]].R();
         console.log('front top hard face');
       }
 
       // solve for face right
       if ((this.check(sc[2], this.f.d, sc[0]) && this.check(s.f, fc[2], s.f))
       || (this.check(sc[2], this.f.d, s.f) && this.check(s.f, fc[2], sc[0]))) {
-        this.sideRef[sc[0]].D();
-        this.sideRef[sc[0]].D();
+        this.frontOrient[sc[0]].D();
+        this.frontOrient[sc[0]].D();
         console.log('front right hard face');
       }
 
       // solve for face bottom
       if ((this.check(sc[3], this.f.d, sc[0]) && this.check(s.f, fc[3], s.f))
       || (this.check(sc[3], this.f.d, s.f) && this.check(s.f, fc[3], sc[0]))) {
-        this.sideRef[sc[0]].L();
-        this.sideRef[sc[0]].L();
+        this.frontOrient[sc[0]].L();
+        this.frontOrient[sc[0]].L();
         console.log('front bottom hard face');
       }
 
@@ -323,33 +390,160 @@ class RubikModel {
     }
   }
 
+  solve = () => {
+    this.solveWhiteCross();
+    // const correctFaces = this.moveFrontCornersToBackIfWhite(this.faceCornerCases, this.sideCases);
+    // console.log(correctFaces);
+    this.solveWhiteFace(this.sideCases, this.faceCornerCases);
+    // this.solveMiddleLayerCorrectInitialPosition();
+    this.solveMiddleLayer();
+  }
+
   check = (side, face, color) => this.getColor(side, face) === color;
 
-  testWhiteCross = () => {
-    // this.solveWhiteCrossSide(this.faceCases[1], this.sideCases[1]);
+  solveMiddleLayerLeftCase = (orientation) => {
+    // U' L' U L U F U' F'
+    // left
+    orientation.U(0, false);
+    orientation.L(0, false);
+    orientation.U();
+    orientation.L();
+    orientation.U();
+    orientation.F();
+    orientation.U(0, false);
+    orientation.F(0, false);
+    console.log('Middle case LEFT');
+  }
+
+  solveMiddleLayerRightCase = (orientation) => {
+    // U R U' R' U' F' U F
+    // right
+    orientation.U();
+    orientation.R();
+    orientation.U(0, false);
+    orientation.R(0, false);
+    orientation.U(0, false);
+    orientation.F(0, false);
+    orientation.U();
+    orientation.F();
+    console.log('Middle case RIGHT');
+  }
+
+  solveMiddleLayerSide = (fc, sc) => {
+    // rotate until color is the same, and
+    // depending on the second color, use algorithm
+
+    // three cases for back side with back rotations, determine number of back rotations
+    // check for right side
+    // create a check if a side already correct
+    if (this.check(sc[0], this.f.r, sc[0]) && (this.check(sc[1], this.f.l, sc[1]))) {
+      console.log('middle layer side already correct');
+      // already correct
+      return;
+    }
+
+    // cube is in the middle
+    // move it to top
     for (let i = 0; i < 4; i += 1) {
-      // if (this.getColor(this.checkSequence[i], this.f.d) === this.checkSequence[i]
-      //   && this.getColor(s.f, faceCases[i]) === s.f) {
-      //   console.log('Correct green white cross');
-      // } else {
+      if (this.check(sc[i], this.f.r, sc[1]) && this.check(sc[(i + 1) % 4], this.f.l, sc[0])) {
+        console.log('middle opposite', i);
+        this.solveMiddleLayerRightCase(this.sideOrient[sc[i]]);
+        if (i === 0) {
+          this.moves.B();
+          this.moves.B();
+        } else if (i === 1) {
+          this.moves.B(0, false);
+        } else if (i === 2) {
+          // do nothing
+        } else if (i === 3) {
+          this.moves.B();
+        }
+        this.solveMiddleLayerRightCase(this.sideOrient[sc[0]]);
+        break;
+      }
+      if (this.check(sc[i], this.f.r, sc[0]) && this.check(sc[(i + 1) % 4], this.f.l, sc[1])) {
+        console.log('middle same ', i);
+        this.solveMiddleLayerRightCase(this.sideOrient[sc[i]]);
+        if (i === 0) {
+          this.moves.B();
+        } if (i === 1) {
+          this.moves.B();
+          this.moves.B();
+        } else if (i === 2) {
+          this.moves.B(0, false);
+        } else if (i === 3) {
+          // do nothing
+        }
+        this.solveMiddleLayerLeftCase(this.sideOrient[sc[1]]);
+        // this.solveMiddleLayerRightCase(this.sideOrient[sc[i]]);
+        break;
+      }
+
+      if (this.check(sc[i], this.f.u, sc[0]) && this.check(s.b, fc[i], sc[1])) {
+        console.log('top same', i);
+        if (i === 0) {
+          // do nothing
+        } else if (i === 1) {
+          this.moves.B();
+        } else if (i === 2) {
+          this.moves.B();
+          this.moves.B();
+        } else if (i === 3) {
+          this.moves.B(0, false);
+        }
+        this.solveMiddleLayerRightCase(this.sideOrient[sc[0]]);
+        break;
+      }
+
+      if (this.check(sc[i], this.f.u, sc[1]) && this.check(s.b, fc[i], sc[0])) {
+        console.log('top opposite', i);
+        if (i === 0) {
+          this.moves.B(0, false);
+        } else if (i === 1) {
+          // do nothing
+        } else if (i === 2) {
+          this.moves.B(0, false);
+        } else if (i === 3) {
+          // do nothing
+          this.moves.B();
+          this.moves.B();
+        }
+        this.solveMiddleLayerLeftCase(this.sideOrient[sc[1]]);
+        break;
+      }
+    }
+  }
+
+  solveMiddleLayer = () => {
+    console.log('solving middle layer');
+    for (let i = 0; i < 4; i += 1) {
+      this.solveMiddleLayerSide(this.faceCases[i], this.sideCases[i]);
+      // console.log(i + 1);
+    }
+  }
+
+  solveWhiteCross = () => {
+    for (let i = 0; i < 4; i += 1) {
       this.solveWhiteCrossSide(this.faceCases[i], this.sideCases[i]);
-      console.log(i + 1)
-      // console.log('Wrong green white cross');
-      // }
+      // console.log(i + 1);
     }
   }
 
   generateFaceSideCases = () => {
+    // need an array for FCA = [this.f.ul, this.f.ur, this.f.dr, this.f.dl]
     const leftFaceCases = [this.f.l, this.f.u, this.f.r, this.f.d];
     const leftSideCases = [s.l, s.u, s.r, s.d];
+    const leftFaceCornerCases = [this.f.ul, this.f.ur, this.f.dr, this.f.dl];
     for (let i = 0; i < 4; i += 1) {
       for (let j = 0; j < 4; j += 1) {
         this.faceCases[i][j] = leftFaceCases[(j + i) % 4];
         this.sideCases[i][j] = leftSideCases[(j + i) % 4];
+        this.faceCornerCases[i][j] = leftFaceCornerCases[(j + i) % 4];
       }
     }
     console.log(this.faceCases);
     console.log(this.sideCases);
+    console.log(this.faceCornerCases);
   }
 
   testGreenWhiteCross = () => {
@@ -502,6 +696,8 @@ class RubikModel {
 
   // getColor(sides.left, this.interfaceSides.bottom)
   getColor = (side, direction) => this.matrix[side][this.interface[side][direction]];
+
+  getColorHash = (side, direction) => this.colorHashes[this.getColor(side, direction)];
 
   getCubesHor = (slice) => this.getCubes(this.posHor, this.sequenceHor, slice, s.d, s.u);
 
