@@ -23,7 +23,7 @@ class RubikView {
     this.moveAxis = null;
     this.moveSlice = 0;
     this.moveDirection = null;
-    this.rotationSpeed = 1.0;
+    this.rotationSpeed = 0.2;
 
     this.pivot = new THREE.Object3D();
     this.activeGroup = [];

@@ -98,7 +98,6 @@ class Main {
 
     // this.rubikView.translateGeneratedMoves();
     // this.rubikView.startNextMove();
-
   }
 
   resizeRendererToDisplaySize = () => {
