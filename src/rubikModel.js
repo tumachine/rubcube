@@ -363,21 +363,28 @@ class RubikModel {
 
   solveBigCube = () => {
     // first finish white face
+    this.solveWhiteCenter();
   }
 
-  swapAlgo = (cube) => {
-    this.moves.R(cube, false);
-    this.moves.D(cube, false);
-    this.moves.R(cube);
-    this.moves.U();
-    this.moves.R(cube, false);
-    this.moves.D(cube);
-    this.moves.R(cube);
-    this.moves.U(0, false);
+  solveWhiteCenter = () => {
+    this.solveWhiteCenterVerLine(0);
   }
 
-  swapCubesTest = () => {
+  solveWhiteCenterVerLine = (line) => {
+    // convinient to start counting from 0
+    // first line
+    // sideLength + 1 + line
+    // line up 1
+    // sideLength * lineUp + 1 + line
+    // how many iterations for a line?
+    // sideLength - 2
+    if (this.check(s.f, this.getLineCubeColor(0, 1), s.f)) {
+      console.log('first cube is there');
+    }
+  }
 
+  getLineCubeColor = (line, num) => {
+    return this.sideLength * (num + 1) + 1 + line;
   }
 
   solve = () => {

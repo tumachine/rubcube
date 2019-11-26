@@ -42,16 +42,15 @@ class Main {
 
     this.scene.add(this.light);
 
-    const rubicModel = new RubikModel(4);
+    const rubicModel = new RubikModel(3);
 
     this.rubikView = new RubikView(rubicModel, this.scene);
 
     this.scene.add(this.rubikView.rubik);
 
-    // this.rubikView.rubikModel.generateRandomMoves(10, true);
-    // this.rubikView.rubikModel.solve();
-    this.rubikView.rubikModel.swapAlgo(1);
-    this.rubikView.rubikModel.swapAlgo(1);
+    this.rubikView.rubikModel.generateRandomMoves(10, true);
+    this.rubikView.rubikModel.solve();
+    // this.rubikView.rubikModel.solveBigCube();
     // this.rubikView.colorizeRubik();
 
     this.rubikView.translateGeneratedMoves();
