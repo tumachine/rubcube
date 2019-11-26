@@ -48,7 +48,7 @@ class Main {
 
     this.scene.add(this.rubikView.rubik);
 
-    this.rubikView.rubikModel.generateRandomMoves(10, true);
+    this.rubikView.rubikModel.generateRandomMoves(10);
     this.rubikView.rubikModel.solve();
     // this.rubikView.rubikModel.solveBigCube();
     // this.rubikView.colorizeRubik();
