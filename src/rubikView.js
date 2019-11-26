@@ -1,4 +1,4 @@
-import * as THREE from './someFolder/build/three.module.js';
+import * as THREE from '../someFolder/build/three.module.js';
 import Cube from './cube.js';
 import { sides } from './variables.js';
 
@@ -33,7 +33,7 @@ class RubikView {
     //       1 - counterclockwise
     // vert 'x' rotateVer
 
-    this.moves = {
+    this.historyMoves = {
       // L: (clockwise = true, slice = 0) => this.pushMove('x', clockwise ? 1 : -1, 0 + slice),
       // R: (clockwise = true, slice = 0) => this.pushMove('x', clockwise ? -1 : 1, this.rubikModel.sideLength - 1 - slice),
       // U: (clockwise = true, slice = 0) => this.pushMove('y', clockwise ? -1 : 1, this.rubikModel.sideLength - 1 - slice),
@@ -62,7 +62,7 @@ class RubikView {
         side, slice, clockwise,
       } = this.rubikModel.moveHistory[i];
 
-      this.moves[side](clockwise, slice);
+      this.historyMoves[side](clockwise, slice);
     }
   }
 
@@ -214,7 +214,11 @@ class RubikView {
     const cubes = [];
     // draw rubic
     // depend on a side length
-    const limit = Math.floor(this.rubikModel.sideLength / 2);
+    let limit = Math.floor(this.rubikModel.sideLength / 2);
+    if (this.rubikModel.sideLength % 2 === 0) {
+      limit = this.rubikModel.sideLength / 2 - 0.5;
+    }
+
     for (let y = -limit; y <= limit; y += 1) {
       for (let z = -limit; z <= limit; z += 1) {
         for (let x = -limit; x <= limit; x += 1) {
@@ -241,6 +245,7 @@ class RubikView {
       back: 10,
     };
 
+    console.log(this.cubes)
     // maybe there is a simpler way of representing rubik graphically
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
       // color bottom

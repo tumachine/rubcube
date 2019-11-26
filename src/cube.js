@@ -1,4 +1,4 @@
-import * as THREE from './someFolder/build/three.module.js';
+import * as THREE from '../someFolder/build/three.module.js';
 
 const boxWidth = 0.95;
 const boxHeight = 0.95;

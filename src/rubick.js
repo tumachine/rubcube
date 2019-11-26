@@ -1,5 +1,5 @@
-import * as THREE from './someFolder/build/three.module.js';
-import { OrbitControls } from './someFolder/examples/jsm/controls/OrbitControls.js';
+import * as THREE from '../someFolder/build/three.module.js';
+import { OrbitControls } from '../someFolder/examples/jsm/controls/OrbitControls.js';
 import Cube from './cube.js';
 
 const sides = {

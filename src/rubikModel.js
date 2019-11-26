@@ -5,6 +5,7 @@ class RubikModel {
     this.sideLength = sideLength;
     this.totalColors = sideLength * sideLength;
     this.matrix = this.createMatrix();
+
     this.matrixReference = this.createMatrixReference(sideLength * sideLength * sideLength);
 
     this.posHor = null;
@@ -18,18 +19,11 @@ class RubikModel {
     this.interface = null;
     this.createInterface();
 
+    // face
     this.f = null;
     this.createInterfaceSides();
 
-    this.colors = {
-      green: 0,
-      blue: 1,
-      orange: 2,
-      red: 3,
-      white: 4,
-      yellow: 5,
-    };
-
+    console.log(this.f);
     this.sequenceHor = [s.f, s.l, s.b, s.r, s.f];
     this.sequenceVer = [s.u, s.b, s.d, s.f, s.u];
     this.sequenceDep = [s.l, s.u, s.r, s.d, s.l];
@@ -37,35 +31,18 @@ class RubikModel {
     this.sequenceVerRev = [s.f, s.d, s.b, s.u, s.f];
     this.sequenceDepRev = [s.d, s.r, s.u, s.l, s.d];
 
-    this.faceCases = [
-      [],
-      [],
-      [],
-      [],
-    ];
-    this.sideCases = [
-      [],
-      [],
-      [],
-      [],
-    ];
-    this.faceCornerCases = [
-      [],
-      [],
-      [],
-      [],
-    ];
+    // hashes for correctly identifying color combinations on a cube
+    this.colorHashes = [1, 10, 100, 1000, 10000, 100000];
+
+    this.faceCases = [[], [], [], []];
+    this.sideCases = [[], [], [], []];
+    this.faceCornerCases = [[], [], [], []];
 
     this.generateFaceSideCases();
 
     this.moveHistory = [];
 
-    // these are moves for top
-    // F and B can be use everywhere
-    // need way to register move
-    // surround with new function
     this.moves = {
-      // L: (clockwise = true, slice = 0) => this.rotateVer(0 + slice, !clockwise),
       L: (slice = 0, clockwise = true) => this.regMove('L', 0 + slice, !clockwise, this.rotateVer),
       R: (slice = 0, clockwise = true) => this.regMove('R', this.sideLength - 1 - slice, clockwise, this.rotateVer),
       U: (slice = 0, clockwise = true) => this.regMove('U', this.sideLength - 1 - slice, clockwise, this.rotateHor),
@@ -151,9 +128,6 @@ class RubikModel {
         B: (slice = 0, clockwise = true) => this.moves.U(slice, clockwise),
       },
     ];
-
-    this.checkSequence = [s.l, s.u, s.r, s.d];
-    this.colorHashes = [1, 10, 100, 1000, 10000, 100000];
   }
 
   solveWhiteCornerSide = (sc, fc) => {
@@ -268,9 +242,6 @@ class RubikModel {
       console.log('solved case 3');
       return;
     }
-
-    // this.moves.B();
-    // }
   }
 
   solveWhiteFace = (sca, fca) => {
@@ -390,11 +361,33 @@ class RubikModel {
     }
   }
 
+  solveBigCube = () => {
+    // first finish white face
+  }
+
+  swapAlgo = (cube) => {
+    this.moves.R(cube, false);
+    this.moves.D(cube, false);
+    this.moves.R(cube);
+    this.moves.U();
+    this.moves.R(cube, false);
+    this.moves.D(cube);
+    this.moves.R(cube);
+    this.moves.U(0, false);
+  }
+
+  swapCubesTest = () => {
+
+  }
+
   solve = () => {
     this.solveWhiteCross();
     this.solveWhiteFace(this.sideCases, this.faceCornerCases);
+
+    // don't use them for 2x2 cube maybe
     this.solveMiddleLayer();
     this.solveYellowCross();
+
     this.solveSwapYellowEdges();
     this.solvePositionYellowCorners();
     this.solveOrientLastLayerCorners();
@@ -616,8 +609,6 @@ class RubikModel {
     orientation.U();
   }
 
-  // solve
-
   solveYellowCrossAllCase = (orientation) => {
     // F R U R' U' F'
     orientation.F();
@@ -691,16 +682,12 @@ class RubikModel {
 
       this.solveYellowCrossAllCase(orientation);
     }
-
-    // this.sideCases
-    // this.faceCases
   }
 
   check = (side, face, color) => this.getColor(side, face) === color;
 
   solveMiddleLayerLeftCase = (orientation) => {
     // U' L' U L U F U' F'
-    // left
     orientation.U(0, false);
     orientation.L(0, false);
     orientation.U();
@@ -714,7 +701,6 @@ class RubikModel {
 
   solveMiddleLayerRightCase = (orientation) => {
     // U R U' R' U' F' U F
-    // right
     orientation.U();
     orientation.R();
     orientation.U(0, false);
@@ -772,7 +758,6 @@ class RubikModel {
           // do nothing
         }
         this.solveMiddleLayerLeftCase(this.sideOrient[sc[1]]);
-        // // this.solveMiddleLayerRightCase(this.sideOrient[sc[i]]);
         break;
       }
 
@@ -812,17 +797,14 @@ class RubikModel {
   }
 
   solveMiddleLayer = () => {
-    console.log('solving middle layer');
     for (let i = 0; i < 4; i += 1) {
       this.solveMiddleLayerSide(this.faceCases[i], this.sideCases[i]);
-      // console.log(i + 1);
     }
   }
 
   solveWhiteCross = () => {
     for (let i = 0; i < 4; i += 1) {
       this.solveWhiteCrossSide(this.faceCases[i], this.sideCases[i]);
-      // console.log(i + 1);
     }
   }
 
@@ -844,7 +826,7 @@ class RubikModel {
   }
 
 
-  generateRandomMoves = (num) => {
+  generateRandomMoves = (num, randomSlices = false) => {
     function randomInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1) + min);
     }
@@ -857,11 +839,19 @@ class RubikModel {
       this.moves.L,
       this.moves.R,
     ];
-
-    for (let i = 0; i < num; i += 1) {
-      const clockwise = randomInt(0, 1) === 0;
-      funcs[randomInt(0, funcs.length - 1)](0, clockwise);
+    if (randomSlices === true) {
+      for (let i = 0; i < num; i += 1) {
+        const clockwise = randomInt(0, 1) === 0;
+        const slice = randomInt(0, this.sideLength - 1);
+        funcs[randomInt(0, funcs.length - 1)](slice, clockwise);
+      }
+    } else {
+      for (let i = 0; i < num; i += 1) {
+        const clockwise = randomInt(0, 1) === 0;
+        funcs[randomInt(0, funcs.length - 1)](0, clockwise);
+      }
     }
+
   }
 
   regMove = (side, slice, clockwise, rotation) => {
@@ -938,19 +928,31 @@ class RubikModel {
   }
 
   createInterfaceSides = () => {
-    const middle = Math.floor(this.sideLength / 2);
+    // const middle = Math.floor(this.sideLength / 2);
 
-    const faceDown = middle;
-    const faceDownRight = faceDown + middle;
-    const faceDownLeft = faceDown - middle;
+    // const faceDown = middle;
+    // const faceDownRight = faceDown + middle;
+    // const faceDownLeft = faceDown - middle;
 
-    const faceMiddle = this.sideLength * middle + middle;
-    const faceMiddleRight = faceMiddle + middle;
-    const faceMiddleLeft = faceMiddle - middle;
+    // const faceMiddle = this.sideLength * middle + middle;
+    // const faceMiddleRight = faceMiddle + middle;
+    // const faceMiddleLeft = faceMiddle - middle;
 
-    const faceUp = this.sideLength * (this.sideLength - 1) + middle;
-    const faceUpRight = faceUp + middle;
-    const faceUpLeft = faceUp - middle;
+    // const faceUp = this.sideLength * (this.sideLength - 1) + middle;
+    // const faceUpRight = faceUp + middle;
+    // const faceUpLeft = faceUp - middle;
+
+    const faceDown = 1;
+    const faceDownRight = this.sideLength - 1;
+    const faceDownLeft = 0;
+
+    const faceMiddle = this.sideLength + 1;
+    const faceMiddleRight = (this.sideLength * 2) - 1;
+    const faceMiddleLeft = this.sideLength;
+
+    const faceUp = (this.sideLength * this.sideLength) - this.sideLength + 1;
+    const faceUpRight = (this.sideLength * this.sideLength) - 1;
+    const faceUpLeft = (this.sideLength * this.sideLength) - this.sideLength;
 
     this.f = {
       d: faceDown,
@@ -967,8 +969,6 @@ class RubikModel {
     };
   }
 
-
-  // getColor(sides.left, this.interfaceSides.bottom)
   getColor = (side, direction) => this.matrix[side][this.interface[side][direction]];
 
   getColorHash = (side, direction) => this.colorHashes[this.getColor(side, direction)];
@@ -1100,10 +1100,8 @@ class RubikModel {
   rotateFaceReal = (slice, bottom, top, clockwiseArr, matrix) => {
     if (slice === 0) {
       this.rotateFace(bottom, clockwiseArr, matrix);
-      // console.log('making face rotation');
     } else if (slice === this.sideLength - 1) {
       this.rotateFace(top, clockwiseArr, matrix);
-      // console.log('making face rotation');
     }
   }
 
@@ -1167,18 +1165,6 @@ class RubikModel {
         this.posCounter.push(i + (this.sideLength - 1 - j) * this.sideLength);
       }
     }
-  }
-
-  createOrderedByColor = () => {
-    const matrixRubic = [
-      [0, 1, 2, 3, 4, 5, 1, 2, 3], // left
-      [0, 1, 2, 3, 4, 5, 1, 2, 3], // right
-      [0, 1, 2, 3, 4, 5, 1, 2, 3], // top
-      [0, 1, 2, 3, 4, 5, 1, 2, 3], // bottom
-      [0, 1, 2, 3, 4, 5, 1, 2, 3], // front
-      [0, 1, 2, 3, 4, 5, 1, 2, 3], // back
-    ];
-    return matrixRubic;
   }
 }
 
