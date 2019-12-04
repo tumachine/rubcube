@@ -30,7 +30,7 @@ class Main {
     this.camera = createCamera();
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.camera.position.z = 10;
+    // this.camera.position.z = 10;
     this.controls.update();
     // camera.position.set(0, 50, 0)
     // camera.up.set(0, 0, 1)
@@ -41,20 +41,39 @@ class Main {
     this.objects = [];
 
     this.scene.add(this.light);
+  }
 
-    const rubicModel = new RubikModel(3);
+  createRubik(length) {
+    const rubikModel = new RubikModel(length);
+    this.camera.position.z = length * 2;
+    this.camera.far = length * 4;
 
-    this.rubikView = new RubikView(rubicModel, this.scene);
+    this.rubikView = new RubikView(rubikModel, this.scene);
 
     this.scene.add(this.rubikView.rubik);
+  }
 
-    this.rubikView.rubikModel.generateRandomMoves(10);
-    this.rubikView.rubikModel.solve();
-    // this.rubikView.rubikModel.solveBigCube();
-    // this.rubikView.colorizeRubik();
+  colorize() {
+    this.rubikView.colorizeRubik();
+  }
 
-    this.rubikView.translateGeneratedMoves();
-    this.rubikView.startNextMove();
+  scrambleRubik(moves, sidesOnly = true) {
+    this.rubikView.rubikModel.generateRandomMoves(moves, !sidesOnly);
+  }
+
+  solveRubik(standard = true, animate = true) {
+    if (standard) {
+      this.rubikView.rubikModel.solve();
+    } else {
+      this.rubikView.rubikModel.solveBigCube();
+    }
+
+    if (animate) {
+      this.rubikView.translateGeneratedMoves();
+      this.rubikView.startNextMove();
+    } else {
+      this.rubikView.colorizeRubik();
+    }
   }
 
   resizeRendererToDisplaySize = () => {
@@ -91,6 +110,10 @@ class Main {
 
 function main() {
   const start = new Main();
+  start.createRubik(7);
+  start.colorize();
+  // start.scrambleRubik(50, false);
+  // start.solveRubik(false, true);
   start.render();
 }
 

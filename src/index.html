@@ -2,8 +2,23 @@
   <head>
     <link rel="stylesheet" href="index.css">
     <script type="module" src="main.js"></script>
+    <script type="module" src="./split.js"></script>
   </head>
   <body>
-    <canvas id="c"></canvas>
+    <div id="editor">
+      <div id="view"><canvas id="c"></canvas></div>
+      <div id="controls">
+        <input type="button" value="scramble">
+
+        <!-- can act as continue -->
+        <input type="button" value="solve">
+
+        <input type="button" value="default">
+        <input type="button" value="stop">
+
+        <input type="button" value="change size">
+        <input type="button" value="animation">
+      </div>
+    </div>
   </body>
 </html>

@@ -128,6 +128,14 @@ class RubikModel {
         B: (slice = 0, clockwise = true) => this.moves.U(slice, clockwise),
       },
     ];
+
+    // back
+    this.back = [];
+    for (let i = 0; i < this.sideLength; i += 1) {
+      for (let j = 0; j < this.sideLength; j += 1) {
+        this.back.push((i + 1) * this.sideLength - 1 - j);
+      }
+    }
   }
 
   solveWhiteCornerSide = (sc, fc) => {
@@ -240,7 +248,6 @@ class RubikModel {
 
       this.frontOrient[sc[1]].L();
       console.log('solved case 3');
-      return;
     }
   }
 
@@ -367,25 +374,246 @@ class RubikModel {
   }
 
   solveWhiteCenter = () => {
-    this.solveWhiteCenterVerLine(0);
-  }
+    const solveLeftBuild = (row, column, side) => {
+      let nextPos = this.getFaceDirection(row, column);
+      for (let i = 0; i < 4; i += 1) {
+        if (this.check(side, nextPos, s.f)) {
+          for (let j = 0; j < 4; j += 1) {
+            if (this.check(side, Math.abs(column - (this.sideLength - 1)) * this.sideLength + row, s.f)) {
+              this.moves.D(row);
+              console.log('LEFT white is in ', nextPos, i);
+              return true;
+            }
+            this.moves.L();
+          }
+        }
+        const currentRow = Math.floor(nextPos / this.sideLength);
+        const currentCol = nextPos % this.sideLength;
+        nextPos = currentRow + (this.sideLength - 1 - currentCol) * this.sideLength;
+      }
+      return false;
+    };
 
-  solveWhiteCenterVerLine = (line) => {
-    // convinient to start counting from 0
-    // first line
-    // sideLength + 1 + line
-    // line up 1
-    // sideLength * lineUp + 1 + line
-    // how many iterations for a line?
-    // sideLength - 2
-    if (this.check(s.f, this.getLineCubeColor(0, 1), s.f)) {
-      console.log('first cube is there');
+    const solveRightBuild = (row, column, side) => {
+      let nextPos = this.getFaceDirection(row, column);
+      for (let i = 0; i < 4; i += 1) {
+        if (this.check(side, nextPos, s.f)) {
+          for (let j = 0; j < 4; j += 1) {
+            if (this.check(side, column * this.sideLength + Math.abs(row - (this.sideLength - 1)), s.f)) {
+              this.moves.D(row, false);
+              console.log('RIGHT white is in ', nextPos, i);
+              return true;
+            }
+            this.moves.R();
+          }
+        }
+        const currentRow = Math.floor(nextPos / this.sideLength);
+        const currentCol = nextPos % this.sideLength;
+        nextPos = currentRow + (this.sideLength - 1 - currentCol) * this.sideLength;
+      }
+      return false;
+    };
+
+    const solveBackBuild = (row, column, side) => {
+      let nextPos = this.getFaceDirection(row, column);
+      for (let i = 0; i < 4; i += 1) {
+        if (this.checkBack(side, nextPos, s.f)) {
+          if (i === 0) {
+            // nothing
+          } else if (i === 1) {
+            this.moves.B(0, false);
+          } else if (i === 2) {
+            this.moves.B();
+            this.moves.B();
+          } else if (i === 3) {
+            this.moves.B();
+          }
+          this.moves.D(row);
+          this.moves.D(row);
+          console.log('BACK white is in ', nextPos, i);
+          return true;
+        }
+        const currentRow = Math.floor(nextPos / this.sideLength);
+        const currentCol = nextPos % this.sideLength;
+        nextPos = currentRow + (this.sideLength - 1 - currentCol) * this.sideLength;
+      }
+      return false;
+    };
+
+    const solveDownBuild = (row, column, side) => {
+      let nextPos = this.getFaceDirection(row, column);
+      let currentRow = null;
+      let currentCol = null;
+      for (let i = 0; i < 4; i += 1) {
+        currentRow = Math.floor(nextPos / this.sideLength);
+        currentCol = nextPos % this.sideLength;
+        if (this.check(side, nextPos, s.f)) {
+          const rotatedFront = Math.abs(currentCol - (this.sideLength - 1));
+          if (rotatedFront >= column) {
+            this.moves.D();
+            this.moves.F(rotatedFront, false);
+            this.moves.D(0, false);
+            console.log('DOWN white is in ', nextPos, i);
+            return true;
+          }
+        }
+        nextPos = currentRow + (this.sideLength - 1 - currentCol) * this.sideLength;
+      }
+      return false;
+    };
+
+    const solveFrontBuild = (row, column, side) => {
+      let nextPos = this.getFaceDirection(row, column);
+      let currentRow = null;
+      let currentCol = null;
+      for (let i = 0; i < 4; i += 1) {
+        currentRow = Math.floor(nextPos / this.sideLength);
+        currentCol = nextPos % this.sideLength;
+        if (this.check(side, nextPos, s.f)) {
+          const futurePos = currentRow + (this.sideLength - 1 - currentCol) * this.sideLength;
+          const futureRow = Math.floor(futurePos / this.sideLength);
+          const futureCol = futurePos % this.sideLength;
+          if (currentCol !== column) {
+            this.moves.F();
+            this.moves.D(futureRow);
+            this.moves.F(0, false);
+            // console.log('current row', currentRow);
+            // console.log('current col', currentCol);
+            // console.log('future row', futureRow);
+            // console.log('future col', futureCol);
+
+            console.log('FRONT white is in ', nextPos, i);
+            return true;
+          }
+        }
+        nextPos = currentRow + (this.sideLength - 1 - currentCol) * this.sideLength;
+      }
+      return false;
+    };
+
+    const solveUpBuild = (row, column, side) => {
+      let nextPos = this.getFaceDirection(row, column);
+      let currentRow = null;
+      let currentCol = null;
+      let highestPos = nextPos;
+      let found = false;
+      for (let i = 0; i < 4; i += 1) {
+        // highest column is a row
+        currentRow = Math.floor(nextPos / this.sideLength);
+        currentCol = nextPos % this.sideLength;
+        highestPos = nextPos > highestPos ? nextPos : highestPos;
+        if (this.check(side, nextPos, s.f)) {
+          // place it on a row where column is at
+          found = true;
+        }
+        nextPos = currentRow + (this.sideLength - 1 - currentCol) * this.sideLength;
+      }
+
+      if (found) {
+        for (let i = 0; i < 4; i += 1) {
+          if (this.check(side, highestPos, s.f)) {
+            currentRow = Math.floor(highestPos / this.sideLength);
+            this.moves.D();
+            this.moves.F(currentRow);
+            this.moves.D(0, false);
+            console.log('UP white is in ', nextPos, i);
+            return true;
+          }
+          this.moves.U();
+        }
+      }
+      return false;
+    };
+
+    const solveLeft = (row, column) => solveLeftBuild(row, column, s.l);
+    const solveRight = (row, column) => solveRightBuild(row, column, s.r);
+    const solveBack = (row, column) => solveBackBuild(row, column, s.b);
+    const solveFront = (row, column) => {
+      if (solveFrontBuild(row, column, s.f)) {
+        return solveRight(row, column);
+      }
+    };
+    const solveUp = (row, column) => {
+      if (solveUpBuild(row, column, s.u)) {
+        return solveRight(row, column);
+      }
+    };
+    const solveDown = (row, column) => {
+      if (solveDownBuild(row, column, s.d)) {
+        return solveRight(row, column);
+      }
+    };
+
+    const solveOrder = [
+      solveFront,
+      solveLeft,
+      solveRight,
+      solveBack,
+      solveUp,
+      solveDown,
+    ];
+
+
+    const solveCube = (row, column) => {
+      if (!this.check(s.f, this.getFaceDirection(row, column), s.f)) {
+        for (let i = 0; i < solveOrder.length; i += 1) {
+          if (solveOrder[i](row, column)) {
+            break;
+          }
+        }
+      }
+    };
+
+    const lineLength = this.sideLength - 1;
+
+    for (let col = 1; col < lineLength; col += 1) {
+      for (let row = 1; row < lineLength; row += 1) {
+        if (!this.check(s.f, this.getFaceDirection(row, col), s.f)) {
+          solveCube(row, col);
+          if (!this.check(s.f, this.getFaceDirection(row, col), s.f)) {
+            console.log('INCORRECT');
+            return false;
+          }
+        }
+      }
+      this.moves.L(col);
     }
+    // for (let col = 1; col < lineLength; col += 1) {
+    //   this.moves.L(col, false);
+    // }
+
+    // check left, right, top, back, bottom
+    // if any of 4 cubes on the side are equal to the value,
+    // maybe rotate them and place in a correct place
+
+    // row 1
+    // check left
+    // all 4 possible positions of white
+    // rotate face
+    // rotate horizontal
+    // this algo works for left right back
+
+    // do it differently for top and bottom
+
+    // for top, rotate depth left or right
+    // rotate left or right face
+    // rotate depth reverse, to turn back white cubes
+
+    // for bottom, rotate D(0)
+    // depth for cube
+    // rotate D(0) reverse
+
+    // then do standard algo
+    // check all 5 sides for a white color on the position we want our cube to be in
+    // if not on the position, do rotation until it's on the needed position
+    // put that color somehow on top
+    // when line is made
+    // bring it down
   }
 
-  getLineCubeColor = (line, num) => {
-    return this.sideLength * (num + 1) + 1 + line;
-  }
+  getFaceDirection = (row, col) => col + row * this.sideLength;
+
+  getLineCubeColor = (line, num) => this.sideLength * (num + 1) + 1 + line;
 
   solve = () => {
     this.solveWhiteCross();
@@ -691,7 +919,6 @@ class RubikModel {
     }
   }
 
-  check = (side, face, color) => this.getColor(side, face) === color;
 
   solveMiddleLayerLeftCase = (orientation) => {
     // U' L' U L U F U' F'
@@ -849,7 +1076,8 @@ class RubikModel {
     if (randomSlices === true) {
       for (let i = 0; i < num; i += 1) {
         const clockwise = randomInt(0, 1) === 0;
-        const slice = randomInt(0, this.sideLength - 1);
+        // random moves should not move center slices
+        const slice = randomInt(0, Math.floor(this.sideLength / 2) - 1);
         funcs[randomInt(0, funcs.length - 1)](slice, clockwise);
       }
     } else {
@@ -858,7 +1086,6 @@ class RubikModel {
         funcs[randomInt(0, funcs.length - 1)](0, clockwise);
       }
     }
-
   }
 
   regMove = (side, slice, clockwise, rotation) => {
@@ -922,16 +1149,18 @@ class RubikModel {
       down.push(i);
     }
     // front
-    const frontAndBack = [];
+    const front = [];
     for (let i = 0; i < this.totalColors; i += 1) {
-      frontAndBack.push(i);
+      front.push(i);
     }
+    // console.log(back)
     this.interface[s.l] = left;
     this.interface[s.r] = right;
     this.interface[s.u] = up;
     this.interface[s.d] = down;
-    this.interface[s.f] = frontAndBack;
-    this.interface[s.b] = frontAndBack;
+    this.interface[s.f] = front;
+    this.interface[s.b] = front;
+    // this.interface[s.b] = back;
   }
 
   createInterfaceSides = () => {
@@ -976,7 +1205,13 @@ class RubikModel {
     };
   }
 
+  check = (side, face, color) => this.getColor(side, face) === color;
+
+  checkBack = (side, face, color) => this.getBackColor(side, face) === color;
+
   getColor = (side, direction) => this.matrix[side][this.interface[side][direction]];
+
+  getBackColor = (side, direction) => this.matrix[side][this.back[direction]];
 
   getColorHash = (side, direction) => this.colorHashes[this.getColor(side, direction)];
 
