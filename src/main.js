@@ -110,10 +110,10 @@ class Main {
 
 function main() {
   const start = new Main();
-  start.createRubik(7);
+  start.createRubik(5);
   start.colorize();
-  // start.scrambleRubik(50, false);
-  // start.solveRubik(false, true);
+  start.scrambleRubik(50, false);
+  start.solveRubik(false, false);
   start.render();
 }
 
