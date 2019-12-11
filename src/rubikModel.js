@@ -127,14 +127,6 @@ class RubikModel {
         B: (slice = 0, clockwise = true) => this.moves.U(slice, clockwise),
       },
     ];
-
-    // back
-    this.back = [];
-    for (let i = 0; i < this.sideLength; i += 1) {
-      for (let j = 0; j < this.sideLength; j += 1) {
-        this.back.push((i + 1) * this.sideLength - 1 - j);
-      }
-    }
   }
 
   solveWhiteCornerSide = (sc, fc) => {

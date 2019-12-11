@@ -21,7 +21,7 @@ function createCamera() {
   return camera;
 }
 
-class Main {
+class MainScene {
   constructor() {
     this.light = createLight();
     this.canvas = document.querySelector('#c');
@@ -44,25 +44,41 @@ class Main {
   }
 
   createRubik(length) {
+    if (this.scene.getObjectByName('rubik') !== undefined) {
+      this.scene.remove(this.rubikView.rubik);
+    }
+
     const rubikModel = new RubikModel(length);
-    this.camera.position.z = length * 2;
+
+
+    // this.controls.enabled = false;
+
+    this.camera.position.set(length * 1.5, length * 1.2, length * 2);
     this.camera.far = length * 4;
+    this.camera.updateProjectionMatrix();
+    // this.camera.lookAt(this.controls.target);
+
+    // this.controls.enabled = true;
 
     this.rubikView = new RubikView(rubikModel, this.scene);
+    this.rubikView.rubik.name = 'rubik';
 
     this.scene.add(this.rubikView.rubik);
-  }
-
-  colorize() {
     this.rubikView.colorizeRubik();
   }
 
-  scrambleRubik(moves, sidesOnly = true) {
-    this.rubikView.rubikModel.generateRandomMoves(moves, !sidesOnly);
+  scrambleRubik(moves) {
+    if (this.rubikView.rubikModel.sideLength > 3) {
+      this.rubikView.rubikModel.generateRandomMoves(moves, true);
+    } else {
+      this.rubikView.rubikModel.generateRandomMoves(moves);
+    }
+    this.rubikView.translateGeneratedMoves();
+    this.rubikView.startNextMove();
   }
 
-  solveRubik(standard = true, animate = true) {
-    if (standard) {
+  solveRubik(animate = true) {
+    if (this.rubikView.rubikModel.sideLength === 3) {
       this.rubikView.rubikModel.solve();
     } else {
       this.rubikView.rubikModel.solveBigCube();
@@ -94,10 +110,6 @@ class Main {
       this.camera.updateProjectionMatrix();
     }
 
-    this.objects.forEach((obj) => {
-    // obj.rotation.y = time
-    });
-
     this.rubikView.render();
 
     this.controls.update();
@@ -106,15 +118,38 @@ class Main {
     requestAnimationFrame(this.render);
   }
 }
+const main = new MainScene();
+
+let size = 3;
+
+window.onload = () => {
+  const sizeUp = document.getElementById('sizeUp');
+  const sizeDown = document.getElementById('sizeDown');
+  const scramble = document.getElementById('scramble');
+  const solve = document.getElementById('solve');
+  sizeUp.onclick = () => {
+    size += 2;
+    main.createRubik(size);
+  };
+  sizeDown.onclick = () => {
+    if (size > 3) {
+      console.log(size)
+      size -= 2;
+      main.createRubik(size);
+    }
+  };
+  scramble.onclick = () => {
+    main.scrambleRubik(30);
+  };
+  solve.onclick = () => {
+    main.solveRubik(true);
+  };
+};
 
 
-function main() {
-  const start = new Main();
-  start.createRubik(5);
-  start.colorize();
-  start.scrambleRubik(50, false);
-  start.solveRubik(false, false);
-  start.render();
+function init() {
+  main.createRubik(3);
+  main.render();
 }
 
-main();
+init();

@@ -8,16 +8,21 @@
     <div id="editor">
       <div id="view"><canvas id="c"></canvas></div>
       <div id="controls">
-        <input type="button" value="scramble">
+        <input type="button" value="scramble" id="scramble">
 
         <!-- can act as continue -->
-        <input type="button" value="solve">
+        <input type="button" value="solve" id="solve">
 
-        <input type="button" value="default">
-        <input type="button" value="stop">
+        <!-- <input type="button" value="default"> -->
+        <!-- <input type="button" value="stop"> -->
 
-        <input type="button" value="change size">
-        <input type="button" value="animation">
+        <div>
+          <b>Size: </b>
+          <b id="rubikSize"></b>
+          <input type="button" value="-" id="sizeDown">
+          <input type="button" value="+" id="sizeUp">
+        </div>
+        <!-- <input type="button" value="animation"> -->
       </div>
     </div>
   </body>

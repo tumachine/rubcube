@@ -56,13 +56,17 @@ class RubikView {
   // modes: generated and manual
   // implement stop mechanism, with continue option
   translateGeneratedMoves = () => {
-    this.rubikModel.moveHistory.forEach((move) => {
+    for (let i = this.moveN; i < this.rubikModel.moveHistory.length; i += 1) {
       const {
         side, slice, clockwise,
-      } = move;
+      } = this.rubikModel.moveHistory[i];
       this.historyMoves[side](clockwise, slice);
-    });
-
+    }
+    // this.rubikModel.moveHistory.forEach((move) => {
+    //   const {
+    //     side, slice, clockwise,
+    //   } = move;
+    // this.historyMoves[side](clockwise, slice);
     // for (let i = 0; i < this.rubikModel.moveHistory.length; i += 1) {
     //   // extract variables from move
     //   const {
