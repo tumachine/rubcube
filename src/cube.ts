@@ -1,4 +1,4 @@
-import * as THREE from '../someFolder/build/three.module.js';
+import * as THREE from 'three';
 
 const boxWidth = 0.95;
 const boxHeight = 0.95;
@@ -14,6 +14,10 @@ const orange = 0xFFA500;
 const colors = [green, blue, orange, red, white, yellow];
 
 export default class Cube {
+  material: THREE.MeshPhongMaterial
+  geometry: THREE.BoxGeometry
+  cube: THREE.Mesh
+
   constructor(x, y, z) {
     this.material = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, vertexColors: THREE.FaceColors });
     this.geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);

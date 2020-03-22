@@ -1,9 +1,27 @@
-import * as THREE from '../someFolder/build/three.module.js';
+import * as THREE from 'three';
 import Cube from './cube.js';
 import { sides } from './variables.js';
+import { RubikModel, Move, MoveActions } from './rubikModel.js';
 
 class RubikView {
-  constructor(rubikModel) {
+  public rubikModel: RubikModel
+  public rubik: THREE.Object3D
+  public cubes: Array<Cube>
+  public moveQueue: Array<Move>
+  public completedMoveStack: Array<Move>
+
+  public moveN: number
+  public currentMove: number
+  public isMoving: boolean
+  public moveAxis: string
+  public moveSlice: number
+  public moveDirection: number
+  public rotationSpeed: number
+  public pivot: THREE.Object3D
+  public activeGroup: Array<THREE.Mesh>
+  public historyMoves: MoveActions
+
+  constructor(rubikModel: RubikModel) {
     this.rubikModel = rubikModel;
 
     this.rubik = new THREE.Object3D();
@@ -43,12 +61,12 @@ class RubikView {
       // B: (clockwise = true, slice = 0) => this.pushMove('z', clockwise ? 1 : -1, 0 + slice),
 
       // moves from Model
-      L: (clockwise = true, slice = 0) => this.pushMove('x', clockwise ? -1 : 1, slice),
-      R: (clockwise = true, slice = 0) => this.pushMove('x', clockwise ? -1 : 1, slice),
-      U: (clockwise = true, slice = 0) => this.pushMove('y', clockwise ? -1 : 1, slice),
-      D: (clockwise = true, slice = 0) => this.pushMove('y', clockwise ? -1 : 1, slice),
-      F: (clockwise = true, slice = 0) => this.pushMove('z', clockwise ? -1 : 1, slice),
-      B: (clockwise = true, slice = 0) => this.pushMove('z', clockwise ? -1 : 1, slice),
+      L: (slice = 0, clockwise = true) => this.pushMove('x', clockwise ? -1 : 1, slice),
+      R: (slice = 0, clockwise = true) => this.pushMove('x', clockwise ? -1 : 1, slice),
+      U: (slice = 0, clockwise = true) => this.pushMove('y', clockwise ? -1 : 1, slice),
+      D: (slice = 0, clockwise = true) => this.pushMove('y', clockwise ? -1 : 1, slice),
+      F: (slice = 0, clockwise = true) => this.pushMove('z', clockwise ? -1 : 1, slice),
+      B: (slice = 0, clockwise = true) => this.pushMove('z', clockwise ? -1 : 1, slice),
     };
   }
 
