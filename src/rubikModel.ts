@@ -79,7 +79,7 @@ class Face {
   }
 }
 
-class RubikOperations {
+class RubikModel {
   private posHor: Array<Array<Array<number>>>
   private posVer: Array<Array<Array<number>>>
   private posDep: Array<Array<Array<number>>>
@@ -95,7 +95,7 @@ class RubikOperations {
   private sideCases: Array<Array<number>> = [[], [], [], []]
   private faceCornerCases: Array<Array<number>> = [[], [], [], []]
 
-  private sideLength: number
+  public sideLength: number
   private totalColors: number
   private matrix: Array<Array<number>>
   private matrixReference: Array<Array<number>>
@@ -556,14 +556,6 @@ class RubikOperations {
         this.posCounter.push(i + (this.sideLength - 1 - j) * this.sideLength);
       }
     }
-  }
-}
-
-class RubikModel {
-  public cube: RubikOperations
-
-  public constructor(sideLength: number) {
-    this.cube = new RubikOperations(sideLength)
   }
 
   solveWhiteCornerSide = (sc: number[], fc: number[]) => {
