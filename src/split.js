@@ -1,7 +1,7 @@
 // Three.js - Responsive Editor
 // from https://threejsfundamentals.org/threejs/threejs-responsive-editor.html
 
-import Split from '../someFolder/examples/jsm/controls/split.js';
+import Split from './lib/split/split';
 
 /* global Split */
 

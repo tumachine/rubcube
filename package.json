@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "parcel src/index.html",
+    "prod": "parcel build src/index.html"
   },
   "repository": {
     "type": "git",
@@ -17,13 +18,17 @@
   },
   "homepage": "https://github.com/tumachine/rubcube#readme",
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^2.24.0",
-    "@typescript-eslint/parser": "^2.24.0",
+    "@types/node": "^13.9.8",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "commonjs": "0.0.1",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-plugin-import": "^2.20.1"
+    "eslint-plugin-import": "^2.20.2",
+    "parcel-bundler": "^1.12.4"
   },
   "dependencies": {
-    "three": "^0.114.0"
+    "three": "^0.115.0",
+    "typescript": "^3.8.3"
   }
 }
