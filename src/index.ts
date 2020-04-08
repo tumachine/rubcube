@@ -4,6 +4,9 @@ import { OrbitControls } from '../node_modules/three/examples/jsm/controls/Orbit
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import RubikView from './rubik/view';
 import RubikModel from './rubik/model';
+import SolveStandardRubik from './rubik/solutions/solveStandardRubik';
+import SolveWhiteCenterRubik from './rubik/solutions/solveWhiteCenterRubik'
+import SolveYellowCenterRubik from './rubik/solutions/solveYellowCenterRubik';
 
 function createLight() {
   const color = 0xFFFFFF;
@@ -89,15 +92,21 @@ class MainScene {
       this.rubikView.rubikModel.generateRandomMoves(moves);
     }
     // this.rubikView.translateGeneratedMoves();
-    // this.rubikView.startNextMove();
-    this.rubikView.colorizeRubik();
+    this.rubikView.startNextMove();
+    // this.rubikView.colorizeRubik();
   }
 
   solveRubik(animate = true) {
     if (this.rubikView.rubikModel.sideLength === 3) {
-      this.rubikView.rubikModel.solve();
+      // this.rubikView.rubikModel.solve();
+      const solveStandardRubik = new SolveStandardRubik(this.rubikView.rubikModel);
+      solveStandardRubik.solve();
+      // this.rubikView.rubikModel
     } else {
-      this.rubikView.rubikModel.solveBigCube();
+      const solveWhiteCenterRubik = new SolveWhiteCenterRubik(this.rubikView.rubikModel);
+      solveWhiteCenterRubik.solve();
+      const solveYellowCenterRubik = new SolveYellowCenterRubik(this.rubikView.rubikModel);
+      solveYellowCenterRubik.solve();
     }
 
     if (animate) {
@@ -183,7 +192,7 @@ window.onload = () => {
     main.scrambleRubik(30);
   };
   solve.onclick = () => {
-    main.solveRubik(false);
+    main.solveRubik(true);
   };
   main.createRubik(3);
   main.render();

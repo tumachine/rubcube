@@ -174,31 +174,25 @@ class RubikView {
 
   placeTextOnRubik = () => {
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-      // this.stRotations[1], // done
-      // this.opRotations[1], // done
-      // this.opRotations[0], // done
-      // this.stRotations[0], // done
-      // null,
-      // this.opRotations[0], // done
 
       // text left
       // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].addText(cube.toString(), sides.l);
-      this.cubes[this.rubikModel.matrixReference[sides.l][this.rubikModel.stRotations[1][cube]]].addText(cube.toString(), sides.l);
+      this.cubes[this.rubikModel.matrixReference[sides.l][this.rubikModel.stRotations[2][cube]]].addText(cube.toString(), sides.l);
       // text right
       // this.cubes[this.rubikModel.matrixReference[sides.r][cube]].addText(cube.toString(), sides.r);
-      this.cubes[this.rubikModel.matrixReference[sides.r][this.rubikModel.opRotations[1][cube]]].addText(cube.toString(), sides.r);
+      this.cubes[this.rubikModel.matrixReference[sides.r][this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), sides.r);
       // text top
       // this.cubes[this.rubikModel.matrixReference[sides.u][cube]].addText(cube.toString(), sides.u);
-      this.cubes[this.rubikModel.matrixReference[sides.u][this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), sides.u);
+      this.cubes[this.rubikModel.matrixReference[sides.u][this.rubikModel.opRotations[3][cube]]].addText(cube.toString(), sides.u);
       // text bottom
       // this.cubes[this.rubikModel.matrixReference[sides.d][cube]].addText(cube.toString(), sides.d);
-      this.cubes[this.rubikModel.matrixReference[sides.d][this.rubikModel.stRotations[0][cube]]].addText(cube.toString(), sides.d);
+      this.cubes[this.rubikModel.matrixReference[sides.d][this.rubikModel.stRotations[1][cube]]].addText(cube.toString(), sides.d);
       // text front
       // this.cubes[this.rubikModel.matrixReference[sides.f][cube]].addText(cube.toString(), sides.f);
       // this.cubes[this.rubikModel.matrixReference[sides.f][this.rubikModel.stRotations[0][cube]]].addText(cube.toString(), sides.f);
       // text back
       // this.cubes[this.rubikModel.matrixReference[sides.b][cube]].addText(cube.toString(), sides.b);
-      this.cubes[this.rubikModel.matrixReference[sides.b][this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), sides.b);
+      // this.cubes[this.rubikModel.matrixReference[sides.b][this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), sides.b);
     }
   }
 

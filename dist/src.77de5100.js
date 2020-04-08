@@ -83076,7 +83076,10 @@ var colors;
   colors[colors["red"] = 3] = "red";
   colors[colors["white"] = 4] = "white";
   colors[colors["yellow"] = 5] = "yellow";
-})(colors = exports.colors || (exports.colors = {})); // function roundRect(ctx, x, y, w, h, r) {
+})(colors = exports.colors || (exports.colors = {})); // hashes for correctly identifying color combinations on a cube
+
+
+exports.colorHashes = [1, 10, 100, 1000, 10000, 100000]; // function roundRect(ctx, x, y, w, h, r) {
 //   ctx.beginPath();
 //   ctx.moveTo(x + r, y);
 //   ctx.lineTo(x + w - r, y);
@@ -83395,34 +83398,27 @@ function () {
 
     this.placeTextOnRubik = function () {
       for (var cube = 0; cube < _this.rubikModel.totalColors; cube += 1) {
-        // this.stRotations[1], // done
-        // this.opRotations[1], // done
-        // this.opRotations[0], // done
-        // this.stRotations[0], // done
-        // null,
-        // this.opRotations[0], // done
         // text left
         // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].addText(cube.toString(), sides.l);
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.l][_this.rubikModel.stRotations[1][cube]]].addText(cube.toString(), utils_1.sides.l); // text right
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.l][_this.rubikModel.stRotations[2][cube]]].addText(cube.toString(), utils_1.sides.l); // text right
         // this.cubes[this.rubikModel.matrixReference[sides.r][cube]].addText(cube.toString(), sides.r);
 
 
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.r][_this.rubikModel.opRotations[1][cube]]].addText(cube.toString(), utils_1.sides.r); // text top
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.r][_this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), utils_1.sides.r); // text top
         // this.cubes[this.rubikModel.matrixReference[sides.u][cube]].addText(cube.toString(), sides.u);
 
 
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.u][_this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), utils_1.sides.u); // text bottom
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.u][_this.rubikModel.opRotations[3][cube]]].addText(cube.toString(), utils_1.sides.u); // text bottom
         // this.cubes[this.rubikModel.matrixReference[sides.d][cube]].addText(cube.toString(), sides.d);
 
 
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.d][_this.rubikModel.stRotations[0][cube]]].addText(cube.toString(), utils_1.sides.d); // text front
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.d][_this.rubikModel.stRotations[1][cube]]].addText(cube.toString(), utils_1.sides.d); // text front
         // this.cubes[this.rubikModel.matrixReference[sides.f][cube]].addText(cube.toString(), sides.f);
         // this.cubes[this.rubikModel.matrixReference[sides.f][this.rubikModel.stRotations[0][cube]]].addText(cube.toString(), sides.f);
         // text back
         // this.cubes[this.rubikModel.matrixReference[sides.b][cube]].addText(cube.toString(), sides.b);
+        // this.cubes[this.rubikModel.matrixReference[sides.b][this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), sides.b);
 
-
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.b][_this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), utils_1.sides.b);
       }
     };
 
@@ -83606,34 +83602,14 @@ var RubikModel =
 /** @class */
 function () {
   function RubikModel(sideLength) {
-    var _this = this; // hashes for correctly identifying color combinations on a cube
+    var _this = this;
 
-
-    this.colorHashes = [1, 10, 100, 1000, 10000, 100000];
-    this.faceCases = [[], [], [], []];
-    this.sideCases = [[], [], [], []];
-    this.faceCornerCases = [[], [], [], []];
     this.sequenceHor = [utils_1.sides.f, utils_1.sides.l, utils_1.sides.b, utils_1.sides.r, utils_1.sides.f];
     this.sequenceVer = [utils_1.sides.u, utils_1.sides.b, utils_1.sides.d, utils_1.sides.f, utils_1.sides.u];
     this.sequenceDep = [utils_1.sides.l, utils_1.sides.u, utils_1.sides.r, utils_1.sides.d, utils_1.sides.l];
     this.sequenceHorRev = [utils_1.sides.r, utils_1.sides.b, utils_1.sides.l, utils_1.sides.f, utils_1.sides.r];
     this.sequenceVerRev = [utils_1.sides.f, utils_1.sides.d, utils_1.sides.b, utils_1.sides.u, utils_1.sides.f];
     this.sequenceDepRev = [utils_1.sides.d, utils_1.sides.r, utils_1.sides.u, utils_1.sides.l, utils_1.sides.d];
-
-    this.generateFaceSideCases = function () {
-      // need an array for FCA = [this.f.ul, this.f.ur, this.f.dr, this.f.dl]
-      var leftFaceCases = [_this.f.l, _this.f.u, _this.f.r, _this.f.d];
-      var leftSideCases = [utils_1.sides.l, utils_1.sides.u, utils_1.sides.r, utils_1.sides.d];
-      var leftFaceCornerCases = [_this.f.ul, _this.f.ur, _this.f.dr, _this.f.dl];
-
-      for (var i = 0; i < 4; i += 1) {
-        for (var j = 0; j < 4; j += 1) {
-          _this.faceCases[i][j] = leftFaceCases[(j + i) % 4];
-          _this.sideCases[i][j] = leftSideCases[(j + i) % 4];
-          _this.faceCornerCases[i][j] = leftFaceCornerCases[(j + i) % 4];
-        }
-      }
-    };
 
     this.generateRandomMoves = function (num, randomSlices) {
       if (randomSlices === void 0) {
@@ -83700,9 +83676,8 @@ function () {
       _this.rotateFaceReal(slice, utils_1.sides.b, utils_1.sides.f, clockwise ? _this.posClockwise : _this.posCounter, realMatrix);
     };
 
-    this.createInterface = function () {
-      _this.interface = [[], [], [], [], [], []]; // there are four different positions of standard when rotated
-
+    this.createRotations = function () {
+      // there are four different positions of standard when rotated
       var standard = [];
 
       for (var i = 0; i < _this.totalColors; i += 1) {
@@ -83727,34 +83702,7 @@ function () {
 
           _this.opRotations[i + 1].push(_this.opRotations[i][_this.posClockwise[j]]);
         }
-      } // console.log(back)
-      // this.interface[s.l] = left;
-      // this.interface[s.r] = right;
-      // this.interface[s.u] = up;
-      // this.interface[s.d] = down;
-      // this.interface[s.f] = front;
-      // this.interface[s.b] = front;
-      // this.interface[s.b] = back;
-
-
-      _this.interface[utils_1.sides.l] = __spreadArrays(_this.stRotations[3]);
-      _this.interface[utils_1.sides.r] = __spreadArrays(_this.opRotations[3]);
-      _this.interface[utils_1.sides.u] = __spreadArrays(_this.opRotations[2]);
-      _this.interface[utils_1.sides.d] = __spreadArrays(_this.stRotations[2]);
-      _this.interface[utils_1.sides.f] = __spreadArrays(_this.stRotations[0]);
-      _this.interface[utils_1.sides.b] = __spreadArrays(_this.stRotations[0]);
-    };
-
-    this.check = function (side, face, color) {
-      return _this.getColor(side, face) === color;
-    };
-
-    this.getColor = function (side, direction) {
-      return _this.matrix[side][_this.interface[side][direction]];
-    };
-
-    this.getColorHash = function (side, direction) {
-      return _this.colorHashes[_this.getColor(side, direction)];
+      }
     };
 
     this.getCubesHor = function (slice) {
@@ -83854,7 +83802,7 @@ function () {
 
       var firstFace = layer[0].map(function (i) {
         return matrix[sequence[0]][i];
-      });
+      }); // probably most efficient way
 
       for (var face = 0; face < layer.length - 1; face += 1) {
         var second = layer[face + 1];
@@ -83963,1295 +83911,13 @@ function () {
       }
     };
 
-    this.solve = function () {
-      _this.solveWhiteCross();
-
-      _this.solveWhiteFace(_this.sideCases, _this.faceCornerCases); // don't use them for 2x2 cube maybe
-
-
-      _this.solveMiddleLayer();
-
-      _this.solveYellowCross();
-
-      _this.solveSwapYellowEdges();
-
-      _this.solvePositionYellowCorners();
-
-      _this.solveOrientLastLayerCorners();
-    };
-
-    this.solveOrientLastLayerCorners = function () {
-      // check only from one side
-      // move not correctly oriented cubes to the check side
-      // do the algorithm 2 or 4 times, until faces yellow
-      var firstSide = _this.sideOrient[0];
-
-      var applyAlgo = function applyAlgo(num) {
-        for (var i = 0; i < num; i += 1) {
-          _this.solveOrientLastLayerCornersCase(firstSide);
-        }
-      }; // find incorrect piece
-      // rotate it toward first side
-
-
-      var fc = _this.faceCornerCases[0];
-
-      var findAndRotate = function findAndRotate() {
-        for (var i = 0; i < 4; i += 1) {
-          if (!_this.check(utils_1.sides.b, fc[i], utils_1.sides.b)) {
-            if (i === 0) {// do nothing
-            } else if (i === 1) {
-              _this.moves.B();
-            } else if (i === 2) {
-              _this.moves.B();
-
-              _this.moves.B();
-            } else if (i === 3) {
-              _this.moves.B(0, false);
-            }
-
-            return true;
-          }
-        }
-
-        return false;
-      }; // make it so yellow is on top
-      // by applying algorithm 2 or 4 times
-
-
-      for (var i = 0; i < 4; i += 1) {
-        if (findAndRotate()) {
-          applyAlgo(2);
-
-          if (!_this.check(utils_1.sides.b, fc[0], utils_1.sides.b)) {
-            applyAlgo(2);
-          }
-        } else {
-          break;
-        }
-      }
-
-      for (var i = 0; i < 4; i += 1) {
-        if (!_this.check(utils_1.sides.l, _this.f.u, utils_1.sides.l)) {
-          _this.moves.B();
-        } else {
-          break;
-        }
-      }
-    };
-
-    this.solveOrientLastLayerCornersCase = function (orientation) {
-      // R' D' R D
-      orientation.R(0, false);
-      orientation.D(0, false);
-      orientation.R();
-      orientation.D();
-    };
-
-    this.solvePositionYellowCornersCase = function (orientation) {
-      // U R U' L' U R' U' L
-      orientation.U();
-      orientation.R();
-      orientation.U(0, false);
-      orientation.L(0, false);
-      orientation.U();
-      orientation.R(0, false);
-      orientation.U(0, false);
-      orientation.L();
-      console.log('Yellow corner case');
-    };
-
-    this.solvePositionYellowCorners = function () {
-      // find cube on correct position
-      var totalCorrect = 0;
-      var correctPos = null;
-
-      var findCorrectCube = function findCorrectCube() {
-        correctPos = null;
-        totalCorrect = 0;
-
-        for (var i = 0; i < 4; i += 1) {
-          var sc = _this.sideCases[i];
-          var fc = _this.faceCornerCases[i];
-          var desiredSum = 0;
-          desiredSum += _this.colorHashes[sc[0]];
-          desiredSum += _this.colorHashes[sc[1]];
-          desiredSum += _this.colorHashes[utils_1.sides.b];
-          var sum = 0;
-          sum += _this.getColorHash(sc[0], _this.f.ur);
-          sum += _this.getColorHash(sc[1], _this.f.ul);
-          sum += _this.getColorHash(utils_1.sides.b, fc[0]);
-
-          if (sum === desiredSum) {
-            correctPos = i;
-            totalCorrect += 1;
-          }
-        }
-      };
-
-      findCorrectCube();
-
-      if (totalCorrect === 4) {
-        console.log('yellow corners were initially in correct position');
-        return;
-      } // choose random orientation, instead just chose 0
-
-
-      for (var i = 0; i < 10; i += 1) {
-        if (correctPos === null) {
-          var orientation = _this.sideOrient[0];
-
-          _this.solvePositionYellowCornersCase(orientation); // assume that cube will be correct
-
-
-          findCorrectCube();
-
-          if (totalCorrect === 4) {
-            console.log('yellow corners solved');
-            return;
-          }
-        } else {
-          break;
-        }
-      }
-
-      for (var i = 0; i < 10; i += 1) {
-        findCorrectCube();
-
-        if (totalCorrect !== 4) {
-          _this.solvePositionYellowCornersCase(_this.sideOrient[(correctPos + 1) % 4]);
-        } else {
-          console.log('solved it');
-          break;
-        }
-      }
-    };
-
-    this.solveSwapYellowEdges = function () {
-      var sc = _this.sideCases[0];
-
-      var checkComplete = function checkComplete() {
-        var count = 0;
-
-        for (var i = 0; i < 4; i += 1) {
-          if (_this.check(sc[i], _this.f.u, sc[i])) {
-            count += 1;
-          }
-        }
-
-        if (count === 4) {
-          return true;
-        }
-
-        return false;
-      }; // rotate until at least one color matches
-      // lazy check
-
-
-      for (var i = 0; i < 4; i += 1) {
-        if (_this.check(sc[0], _this.f.u, sc[0])) {
-          console.log('found correct side for yellow case');
-          break;
-        }
-
-        _this.moves.B();
-      }
-
-      if (checkComplete()) {
-        console.log('All yellow edges are correct');
-        return;
-      } // check if there are opposite cubes
-
-
-      if (_this.check(sc[1], _this.f.u, sc[3]) && _this.check(sc[3], _this.f.u, sc[1])) {
-        var orientation = _this.sideOrient[sc[0]];
-        orientation.U();
-
-        _this.solveSwapYellowEdgesCase(orientation);
-
-        orientation = _this.sideOrient[sc[2]];
-
-        _this.solveSwapYellowEdgesCase(orientation);
-
-        console.log('opposite cubes');
-        return;
-      } // next cube is of the same color as first side
-
-
-      if (_this.check(sc[2], _this.f.u, sc[3])) {
-        var orientation = _this.sideOrient[sc[3]];
-
-        _this.solveSwapYellowEdgesCase(orientation);
-
-        console.log('solved second cube');
-      }
-
-      if (_this.check(sc[1], _this.f.u, sc[2])) {
-        var orientation = _this.sideOrient[sc[2]];
-
-        _this.solveSwapYellowEdgesCase(orientation);
-
-        console.log('solved third cube');
-      }
-
-      if (_this.check(sc[3], _this.f.u, sc[2]) && _this.check(sc[2], _this.f.u, sc[1])) {
-        var orientation = _this.sideOrient[sc[2]];
-
-        _this.solveSwapYellowEdgesCase(orientation);
-
-        orientation = _this.sideOrient[sc[3]];
-
-        _this.solveSwapYellowEdgesCase(orientation);
-
-        console.log('solved unique position cube');
-      }
-    };
-
-    this.solveSwapYellowEdgesCase = function (orientation) {
-      // R U R' U R U2 R' U
-      orientation.R();
-      orientation.U();
-      orientation.R(0, false);
-      orientation.U();
-      orientation.R();
-      orientation.U();
-      orientation.U();
-      orientation.R(0, false);
-      orientation.U();
-    };
-
-    this.solveYellowCrossAllCase = function (orientation) {
-      // F R U R' U' F'
-      orientation.F();
-      orientation.R();
-      orientation.U();
-      orientation.R(0, false);
-      orientation.U(0, false);
-      orientation.F(0, false);
-      console.log('Yellow cross case ALL');
-    };
-
-    this.solveYellowCrossShortcutCase = function (orientation) {
-      // F U R U' R' F'
-      orientation.F();
-      orientation.U();
-      orientation.R();
-      orientation.U(0, false);
-      orientation.R(0, false);
-      orientation.F(0, false);
-      console.log('Yellow cross case SHORTCUT');
-    };
-
-    this.solveYellowCross = function () {
-      // detect 4 cases:
-      //  dot
-      //  L
-      //  line
-      //  complete
-      var orientation = null;
-      console.log(_this.sideCases);
-
-      for (var i = 0; i < 10; i += 1) {
-        // complete case
-        if (_this.check(utils_1.sides.b, _this.f.l, utils_1.sides.b) && _this.check(utils_1.sides.b, _this.f.u, utils_1.sides.b) && _this.check(utils_1.sides.b, _this.f.r, utils_1.sides.b) && _this.check(utils_1.sides.b, _this.f.d, utils_1.sides.b)) {
-          console.log('yellow cross is complete');
-          break;
-        } else if (!_this.check(utils_1.sides.b, _this.f.l, utils_1.sides.b) && !_this.check(utils_1.sides.b, _this.f.u, utils_1.sides.b) && !_this.check(utils_1.sides.b, _this.f.r, utils_1.sides.b) && !_this.check(utils_1.sides.b, _this.f.d, utils_1.sides.b)) {
-          // dot case
-          console.log('dot case');
-          orientation = _this.sideOrient[_this.sideCases[0][0]];
-        } else if (_this.check(utils_1.sides.b, _this.f.l, utils_1.sides.b) && _this.check(utils_1.sides.b, _this.f.r, utils_1.sides.b)) {
-          // line case
-          console.log('line case');
-          orientation = _this.sideOrient[_this.sideCases[0][1]];
-        } else if (_this.check(utils_1.sides.b, _this.f.u, utils_1.sides.b) && _this.check(utils_1.sides.b, _this.f.d, utils_1.sides.b)) {
-          // line case
-          console.log('line case');
-          orientation = _this.sideOrient[_this.sideCases[0][0]];
-        } else {
-          // L case
-          for (var j = 0; j < 4; j += 1) {
-            if (_this.check(utils_1.sides.b, _this.faceCases[0][(j + 3) % 4], utils_1.sides.b) && _this.check(utils_1.sides.b, _this.faceCases[0][(j + 2) % 4], utils_1.sides.b)) {
-              console.log(j);
-              orientation = _this.sideOrient[_this.sideCases[0][j]];
-              console.log('L case');
-              break;
-            }
-          }
-        }
-
-        if (orientation === null) {
-          orientation = _this.sideOrient[_this.sideCases[0][i % 4]];
-        }
-
-        _this.solveYellowCrossAllCase(orientation);
-      }
-    };
-
-    this.solveMiddleLayerLeftCase = function (orientation) {
-      // U' L' U L U F U' F'
-      orientation.U(0, false);
-      orientation.L(0, false);
-      orientation.U();
-      orientation.L();
-      orientation.U();
-      orientation.F();
-      orientation.U(0, false);
-      orientation.F(0, false);
-      console.log('Middle case LEFT');
-    };
-
-    this.solveMiddleLayerRightCase = function (orientation) {
-      // U R U' R' U' F' U F
-      orientation.U();
-      orientation.R();
-      orientation.U(0, false);
-      orientation.R(0, false);
-      orientation.U(0, false);
-      orientation.F(0, false);
-      orientation.U();
-      orientation.F();
-      console.log('Middle case RIGHT');
-    };
-
-    this.solveMiddleLayerSide = function (fc, sc) {
-      // rotate until color is the same, and
-      // depending on the second color, use algorithm
-      // three cases for back side with back rotations, determine number of back rotations
-      // check for right side
-      // create a check if a side already correct
-      if (_this.check(sc[0], _this.f.r, sc[0]) && _this.check(sc[1], _this.f.l, sc[1])) {
-        console.log('middle layer side already correct'); // already correct
-
-        return;
-      } // cube is in the middle
-      // move it to top
-
-
-      for (var i = 0; i < 4; i += 1) {
-        if (_this.check(sc[i], _this.f.r, sc[1]) && _this.check(sc[(i + 1) % 4], _this.f.l, sc[0])) {
-          console.log('middle opposite', i);
-
-          _this.solveMiddleLayerRightCase(_this.sideOrient[sc[i]]);
-
-          if (i === 0) {
-            _this.moves.B();
-
-            _this.moves.B();
-          } else if (i === 1) {
-            _this.moves.B(0, false);
-          } else if (i === 2) {// do nothing
-          } else if (i === 3) {
-            _this.moves.B();
-          }
-
-          _this.solveMiddleLayerRightCase(_this.sideOrient[sc[0]]);
-
-          break;
-        }
-
-        if (_this.check(sc[i], _this.f.r, sc[0]) && _this.check(sc[(i + 1) % 4], _this.f.l, sc[1])) {
-          console.log('middle same ', i);
-
-          _this.solveMiddleLayerRightCase(_this.sideOrient[sc[i]]);
-
-          if (i === 0) {
-            _this.moves.B();
-          }
-
-          if (i === 1) {
-            _this.moves.B();
-
-            _this.moves.B();
-          } else if (i === 2) {
-            _this.moves.B(0, false);
-          } else if (i === 3) {// do nothing
-          }
-
-          _this.solveMiddleLayerLeftCase(_this.sideOrient[sc[1]]);
-
-          break;
-        }
-
-        if (_this.check(sc[i], _this.f.u, sc[0]) && _this.check(utils_1.sides.b, fc[i], sc[1])) {
-          // 3 is incorrect
-          console.log('top same', i);
-
-          if (i === 0) {// do nothing
-          } else if (i === 1) {
-            _this.moves.B();
-          } else if (i === 2) {
-            _this.moves.B();
-
-            _this.moves.B();
-          } else if (i === 3) {
-            _this.moves.B(0, false);
-          }
-
-          _this.solveMiddleLayerRightCase(_this.sideOrient[sc[0]]);
-
-          break;
-        }
-
-        if (_this.check(sc[i], _this.f.u, sc[1]) && _this.check(utils_1.sides.b, fc[i], sc[0])) {
-          console.log('top opposite', i);
-
-          if (i === 0) {
-            _this.moves.B(0, false);
-          } else if (i === 1) {// do nothing
-          } else if (i === 2) {
-            _this.moves.B();
-          } else if (i === 3) {
-            _this.moves.B();
-
-            _this.moves.B();
-          }
-
-          _this.solveMiddleLayerLeftCase(_this.sideOrient[sc[1]]);
-
-          break;
-        }
-      }
-    };
-
-    this.solveMiddleLayer = function () {
-      for (var i = 0; i < 4; i += 1) {
-        _this.solveMiddleLayerSide(_this.faceCases[i], _this.sideCases[i]);
-      }
-    };
-
-    this.solveWhiteCross = function () {
-      for (var i = 0; i < 4; i += 1) {
-        _this.solveWhiteCrossSide(_this.faceCases[i], _this.sideCases[i]);
-      }
-    };
-
-    this.solveWhiteFace = function (sca, fca) {
-      for (var i = 0; i < 4; i += 1) {
-        _this.solveWhiteCornerSide(sca[i], fca[i]);
-      }
-    };
-
-    this.solveWhiteCornerSide = function (sc, fc) {
-      // check if already correct
-      if (_this.check(sc[0], _this.f.dr, sc[0]) && _this.check(sc[1], _this.f.dl, sc[1]) && _this.check(utils_1.sides.f, fc[0], utils_1.sides.f)) {
-        console.log('corner is in a right place');
-        return;
-      } // this
-      // find cube where sum of the colors equals, sum of the desired cube
-      // can check bottom and top with this solution
-
-
-      var desiredSum = 0;
-      desiredSum += _this.colorHashes[sc[0]];
-      desiredSum += _this.colorHashes[sc[1]];
-      desiredSum += _this.colorHashes[utils_1.sides.f]; // front
-
-      var sum = 0;
-      var frontFaceSide = null;
-
-      for (var i = 0; i < 4; i += 1) {
-        sum = 0;
-        sum += _this.getColorHash(sc[i], _this.f.dr);
-        sum += _this.getColorHash(sc[(i + 1) % 4], _this.f.dl);
-        sum += _this.getColorHash(utils_1.sides.f, fc[i]);
-
-        if (sum === desiredSum) {
-          frontFaceSide = i;
-          break;
-        }
-      }
-
-      if (frontFaceSide !== null) {
-        _this.sideOrient[sc[frontFaceSide]].R();
-
-        _this.sideOrient[sc[frontFaceSide]].U();
-
-        _this.sideOrient[sc[frontFaceSide]].R(0, false);
-
-        if (frontFaceSide === 0) {
-          _this.moves.B(0, false);
-        }
-
-        if (frontFaceSide === 1) {// do nothing
-        }
-
-        if (frontFaceSide === 2) {
-          _this.moves.B();
-        }
-
-        if (frontFaceSide === 3) {
-          _this.moves.B();
-
-          _this.moves.B();
-        }
-      } // bottom
-
-
-      var backFaceSide = null;
-
-      if (frontFaceSide === null) {
-        for (var i = 0; i < 4; i += 1) {
-          sum = 0;
-          sum += _this.getColorHash(sc[i], _this.f.ur);
-          sum += _this.getColorHash(sc[(i + 1) % 4], _this.f.ul);
-          sum += _this.getColorHash(utils_1.sides.b, fc[i]);
-
-          if (sum === desiredSum) {
-            backFaceSide = i;
-            break;
-          }
-        }
-
-        if (backFaceSide === 0) {// do nothing
-        }
-
-        if (backFaceSide === 1) {
-          _this.moves.B();
-        }
-
-        if (backFaceSide === 2) {
-          _this.moves.B();
-
-          _this.moves.B();
-        }
-
-        if (backFaceSide === 3) {
-          _this.moves.B(0, false);
-        }
-      } // place it on the right side
-      // for (let i = 0; i < 4; i += 1) {
-      // there can now be only three cases, after putting
-      // case 1: white to the right
-
-
-      if (_this.check(sc[0], _this.f.ur, utils_1.sides.f) && _this.check(sc[1], _this.f.ul, sc[1])) {
-        _this.frontOrient[sc[1]].L(0, false);
-
-        _this.moves.B(0, false);
-
-        _this.frontOrient[sc[1]].L();
-
-        console.log('solved case 1');
-        return;
-      } // case 2: white in the left
-
-
-      if (_this.check(sc[0], _this.f.ur, sc[0]) && _this.check(sc[1], _this.f.ul, utils_1.sides.f)) {
-        _this.frontOrient[sc[0]].R();
-
-        _this.moves.B();
-
-        _this.frontOrient[sc[0]].R(0, false);
-
-        console.log('solved case 2');
-        return;
-      } // case 3: white in the bottom
-
-
-      if (_this.check(sc[0], _this.f.ur, sc[1]) && _this.check(sc[1], _this.f.ul, sc[0])) {
-        _this.frontOrient[sc[1]].L(0, false);
-
-        _this.moves.B();
-
-        _this.moves.B();
-
-        _this.frontOrient[sc[1]].L();
-
-        _this.moves.B();
-
-        _this.frontOrient[sc[1]].L(0, false);
-
-        _this.moves.B(0, false);
-
-        _this.frontOrient[sc[1]].L();
-
-        console.log('solved case 3');
-      }
-    };
-
-    this.solveWhiteCrossSide = function (fc, sc) {
-      var count = 0;
-
-      while (!(_this.check(sc[0], _this.f.d, sc[0]) && _this.check(utils_1.sides.f, fc[0], utils_1.sides.f))) {
-        // correct on left
-        // need a simpler way to check colors
-        // if (this.getColor(s.l, this.f.l) === s.l && this.getColor(s.d, this.f.r) === s.f) {
-        // up, right, down, left
-        if (_this.check(sc[0], _this.f.l, sc[0]) && _this.check(sc[3], _this.f.r, utils_1.sides.f)) {
-          _this.frontOrient[sc[0]].U(0, false);
-
-          console.log('left left');
-          return;
-        } // correct on top
-
-
-        if (_this.check(sc[0], _this.f.u, sc[0]) && _this.check(utils_1.sides.b, fc[0], utils_1.sides.f)) {
-          _this.frontOrient[sc[0]].U();
-
-          _this.frontOrient[sc[0]].U();
-
-          console.log('left top');
-          return;
-        } // correct on right
-
-
-        if (_this.check(sc[0], _this.f.r, sc[0]) && _this.check(sc[1], _this.f.l, utils_1.sides.f)) {
-          _this.frontOrient[sc[0]].U();
-
-          console.log('left right');
-          return;
-        } // for reverse colors, move them to the right
-        // left
-
-
-        if (_this.check(sc[0], _this.f.l, utils_1.sides.f) && _this.check(sc[3], _this.f.r, sc[0])) {
-          _this.frontOrient[sc[0]].U();
-
-          _this.frontOrient[sc[0]].U();
-
-          console.log('reverse left left');
-        } else if (_this.check(sc[0], _this.f.u, utils_1.sides.f) && _this.check(utils_1.sides.b, fc[0], sc[0])) {
-          // top
-          _this.frontOrient[sc[0]].U();
-
-          console.log('reverse top left');
-        } else if (_this.check(sc[0], _this.f.d, utils_1.sides.f) && _this.check(utils_1.sides.f, fc[0], sc[0])) {
-          // down
-          _this.frontOrient[sc[0]].U(0, false);
-
-          console.log('reverse down left');
-        } // solve reverse face case
-
-
-        if (_this.check(sc[0], _this.f.r, utils_1.sides.f) && _this.check(sc[1], _this.f.l, sc[0])) {
-          _this.frontOrient[sc[1]].U();
-
-          _this.moves.B();
-
-          _this.frontOrient[sc[1]].U(0, false);
-
-          _this.frontOrient[sc[0]].U();
-
-          _this.frontOrient[sc[0]].U();
-
-          console.log('reverse face case');
-          return;
-        } // solve for top left
-
-
-        if (_this.check(sc[2], _this.f.l, sc[0]) && _this.check(sc[1], _this.f.r, utils_1.sides.f) || _this.check(sc[2], _this.f.l, utils_1.sides.f) && _this.check(sc[1], _this.f.r, sc[0])) {
-          _this.frontOrient[sc[0]].D();
-
-          _this.moves.B();
-
-          _this.frontOrient[sc[0]].D(0, false);
-
-          _this.moves.B();
-
-          console.log('top hard side');
-        } // solve for bottom left
-
-
-        if (_this.check(sc[2], _this.f.r, sc[0]) && _this.check(sc[3], _this.f.l, utils_1.sides.f) || _this.check(sc[2], _this.f.r, utils_1.sides.f) && _this.check(sc[3], _this.f.l, sc[0])) {
-          _this.frontOrient[sc[0]].L();
-
-          _this.moves.B();
-
-          _this.frontOrient[sc[0]].L(0, false);
-
-          _this.moves.B();
-
-          console.log('bottom hard side');
-        } // solve for face top
-
-
-        if (_this.check(sc[1], _this.f.d, sc[0]) && _this.check(utils_1.sides.f, fc[1], utils_1.sides.f) || _this.check(sc[1], _this.f.d, utils_1.sides.f) && _this.check(utils_1.sides.f, fc[1], sc[0])) {
-          _this.frontOrient[sc[0]].R();
-
-          _this.frontOrient[sc[0]].R();
-
-          console.log('front top hard face');
-        } // solve for face right
-
-
-        if (_this.check(sc[2], _this.f.d, sc[0]) && _this.check(utils_1.sides.f, fc[2], utils_1.sides.f) || _this.check(sc[2], _this.f.d, utils_1.sides.f) && _this.check(utils_1.sides.f, fc[2], sc[0])) {
-          _this.frontOrient[sc[0]].D();
-
-          _this.frontOrient[sc[0]].D();
-
-          console.log('front right hard face');
-        } // solve for face bottom
-
-
-        if (_this.check(sc[3], _this.f.d, sc[0]) && _this.check(utils_1.sides.f, fc[3], utils_1.sides.f) || _this.check(sc[3], _this.f.d, utils_1.sides.f) && _this.check(utils_1.sides.f, fc[3], sc[0])) {
-          _this.frontOrient[sc[0]].L();
-
-          _this.frontOrient[sc[0]].L();
-
-          console.log('front bottom hard face');
-        } // this solves another three cases for bottom
-
-
-        _this.moves.B();
-
-        console.log('solving');
-
-        if (count === 10) {
-          break;
-        }
-
-        count += 1;
-      }
-    };
-
-    this.baseFind = function (row, column, side, color, operation, localCheck) {
-      var nextPos = _this.getFaceDirection(row, column);
-
-      var origPos = nextPos;
-
-      for (var i = 0; i < 4; i += 1) {
-        var currentRow = Math.floor(nextPos / _this.sideLength);
-        var currentCol = nextPos % _this.sideLength;
-
-        if (localCheck(side, nextPos, color)) {
-          var result = operation(nextPos, origPos, column, row, currentCol, currentRow);
-
-          if (result === true) {
-            return true;
-          }
-        }
-
-        nextPos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
-      }
-
-      return false;
-    };
-
-    this.solveYellowCenter = function () {
-      console.log(_this.stRotations);
-      var localRef = [_this.stRotations[1], _this.opRotations[1], _this.opRotations[0], _this.stRotations[0], null, _this.opRotations[0]]; // l: 0,
-      // r: 1,
-      // u: 2,
-      // d: 3,
-      // f: 4,
-      // b: 5,
-
-      var localColor = function localColor(side, direction) {
-        return _this.matrix[side][localRef[side][direction]];
-      };
-
-      var localCheck = function localCheck(side, direction, color) {
-        return localColor(side, direction) === color;
-      };
-
-      var localFind = function localFind(row, col, side, operation) {
-        return _this.baseFind(row, col, side, utils_1.sides.b, operation, localCheck);
-      };
-
-      var middle = Math.floor(_this.sideLength / 2);
-
-      var solveLeftBuild = function solveLeftBuild(nextPos, origPos, column, row, currentCol, currentRow) {
-        console.log('solving left');
-
-        for (var j = 0; j < 4; j += 1) {
-          if (localCheck(utils_1.sides.r, origPos, utils_1.sides.b)) {
-            _this.moves.B(row);
-
-            break;
-          }
-
-          _this.moves.R();
-        }
-
-        return true;
-      };
-
-      var solveRightBuild = function solveRightBuild(nextPos, origPos, column, row, currentCol, currentRow) {
-        console.log('solving right');
-
-        for (var j = 0; j < 4; j += 1) {
-          if (localCheck(utils_1.sides.l, origPos, utils_1.sides.b)) {
-            _this.moves.B(row, false);
-
-            break;
-          }
-
-          _this.moves.L();
-        }
-
-        return true;
-      };
-
-      var solveDownBuild = function solveDownBuild(nextPos, origPos, column, row, currentCol, currentRow) {
-        console.log('solving down');
-
-        for (var j = 0; j < 4; j += 1) {
-          if (localCheck(utils_1.sides.d, origPos, utils_1.sides.b)) {
-            _this.moves.B(row);
-
-            _this.moves.B(row);
-
-            break;
-          }
-
-          _this.moves.D();
-        }
-
-        return true;
-      };
-
-      var solveFrontBuild = function solveFrontBuild(nextPos, origPos, column, row, currentCol, currentRow) {
-        console.log('solving front');
-
-        if (currentCol >= column && currentCol !== middle) {
-          // move front piece to the right
-          _this.moves.D(currentRow); // correct
-          // rotate opposite to the right once
-
-
-          if (currentCol < middle && currentRow > middle || currentCol > middle && currentRow < middle) {
-            _this.moves.R(0, false);
-          } else {
-            _this.moves.R();
-          } // rotate back to down
-
-
-          _this.moves.B(currentCol); // correct
-          // undo
-
-
-          if (currentCol < middle && currentRow > middle || currentCol > middle && currentRow < middle) {
-            _this.moves.R();
-          } else {
-            _this.moves.R(0, false);
-          }
-
-          _this.moves.D(currentRow, false); // correct
-
-
-          _this.moves.B(currentCol, false);
-
-          return true;
-        }
-      };
-
-      var solveUpBuild = function solveUpBuild(nextPos, origPos, column, row, currentCol, currentRow) {
-        console.log('solving up');
-        var futurePos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
-        var futureCol = futurePos % _this.sideLength;
-        var futureRow = Math.floor(futurePos / _this.sideLength);
-
-        if (currentCol !== column) {
-          _this.moves.U();
-
-          _this.moves.B(futureRow);
-
-          _this.moves.U(0, false);
-
-          return true;
-        }
-      };
-
-      var solveLeft = function solveLeft(row, column) {
-        return localFind(row, column, utils_1.sides.r, solveLeftBuild);
-      };
-
-      var solveRight = function solveRight(row, column) {
-        return localFind(row, column, utils_1.sides.l, solveRightBuild);
-      };
-
-      var solveUp = function solveUp(row, column) {
-        if (localFind(row, column, utils_1.sides.u, solveUpBuild)) {
-          return solveRight(row, column);
-        }
-      };
-
-      var solveFront = function solveFront(row, column) {
-        if (localFind(row, column, utils_1.sides.b, solveFrontBuild)) {
-          // return solveRight(row, column);
-          return solveUp(row, column);
-        }
-      };
-
-      var solveDown = function solveDown(row, column) {
-        if (localFind(row, column, utils_1.sides.d, solveDownBuild)) {
-          return solveRight(row, column);
-        }
-      };
-
-      var solveOrder = [// solveFront,
-      solveUp, solveLeft, solveRight, solveDown];
-
-      var solveCube = function solveCube(row, column) {
-        if (!localCheck(utils_1.sides.u, _this.getFaceDirection(row, column), utils_1.sides.b)) {
-          for (var i = 0; i < solveOrder.length; i += 1) {
-            // console.log(solveOrder[i])
-            if (solveOrder[i](row, column)) {
-              break;
-            }
-          }
-        }
-      };
-
-      var lineLength = _this.sideLength - 1;
-
-      var completeFirstMiddleHalf = function completeFirstMiddleHalf() {
-        console.log('found middle');
-
-        _this.moves.U();
-
-        for (var i = 1; i < middle; i += 1) {
-          _this.moves.R(i);
-        }
-
-        _this.moves.U(0, false);
-
-        _this.moves.U(0, false);
-
-        for (var i = 1; i < middle; i += 1) {
-          _this.moves.R(i);
-        }
-
-        _this.moves.U(0, false);
-
-        _this.moves.U(0, false);
-
-        for (var i = 1; i < middle; i += 1) {
-          _this.moves.R(i, false);
-        }
-      };
-
-      var completeSecondMiddleHalf = function completeSecondMiddleHalf() {
-        console.log('found second middle');
-
-        _this.moves.U();
-
-        for (var i = middle + 1; i < middle * 2; i += 1) {
-          _this.moves.R(i);
-        }
-
-        _this.moves.U(0, false);
-
-        _this.moves.U(0, false);
-
-        for (var i = middle + 1; i < middle * 2; i += 1) {
-          _this.moves.R(i);
-        }
-
-        _this.moves.U(0, false);
-
-        _this.moves.U(0, false);
-
-        for (var i = middle + 1; i < middle * 2; i += 1) {
-          _this.moves.R(i, false);
-        }
-      };
-
-      for (var row = 1; row < lineLength; row += 1) {
-        if (!localCheck(utils_1.sides.u, _this.getFaceDirection(row, middle), utils_1.sides.b)) {
-          console.log('solving');
-
-          if (row === middle) {
-            completeFirstMiddleHalf();
-          } else {
-            solveCube(row, middle);
-
-            if (!localCheck(utils_1.sides.u, _this.getFaceDirection(row, middle), utils_1.sides.b)) {
-              console.log('INCORRECT');
-              return false;
-            }
-          }
-        }
-      }
-
-      completeSecondMiddleHalf();
-
-      _this.moves.B(); // // special case for middle column
-      // for (let col = 1; col < lineLength; col += 1) {
-      //   for (let row = 1; row < lineLength; row += 1) {
-      //     solveFront(row, col);
-      //   }
-      //   for (let row = 1; row < lineLength; row += 1) {
-      //     if (col === middle) {
-      //       // no nothing
-      //     } else if (!localCheck(s.u, this.getFaceDirection(row, col), s.b)) {
-      //       console.log('solving');
-      //       solveCube(row, col);
-      //       if (!localCheck(s.u, this.getFaceDirection(row, col), s.b)) {
-      //         console.log('INCORRECT');
-      //         return false;
-      //       }
-      //     }
-      //   }
-      //   if (col === middle) {
-      //     // do nothing
-      //   } else {
-      //     this.moves.R(col);
-      //     this.moves.U();
-      //     this.moves.U();
-      //     this.moves.R(col);
-      //     this.moves.U();
-      //     this.moves.U();
-      //     this.moves.R(col, false);
-      //   }
-      // }
-      // for (let col = 1; col < lineLength; col += 1) {
-      //   this.moves.L(col, false);
-      // }
-
-    };
-
-    this.solveWhiteCenter = function () {
-      var localRef = [_this.stRotations[0], _this.opRotations[0], _this.opRotations[2], _this.stRotations[2], _this.stRotations[0], _this.opRotations[0]];
-
-      var localColor = function localColor(side, direction) {
-        return _this.matrix[side][localRef[side][direction]];
-      };
-
-      var localCheck = function localCheck(side, direction, color) {
-        return localColor(side, direction) === color;
-      };
-
-      var localFind = function localFind(row, col, side, operation) {
-        _this.baseFind(row, col, side, utils_1.sides.f, operation, localCheck);
-      };
-
-      var baseFunc = function baseFunc(row, column, side, operation) {
-        var nextPos = _this.getFaceDirection(row, column);
-
-        var origPos = nextPos;
-
-        for (var i = 0; i < 4; i += 1) {
-          var currentRow = Math.floor(nextPos / _this.sideLength);
-          var currentCol = nextPos % _this.sideLength;
-
-          if (localCheck(side, nextPos, utils_1.sides.f)) {
-            var result = operation(nextPos, origPos, column, row, currentCol, currentRow);
-
-            if (result === true) {
-              return true;
-            }
-          }
-
-          nextPos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
-        }
-
-        return false;
-      };
-
-      var solveLeftBuild = function solveLeftBuild(nextPos, origPos, column, row, currentCol, currentRow) {
-        for (var j = 0; j < 4; j += 1) {
-          if (localCheck(utils_1.sides.l, origPos, utils_1.sides.f)) {
-            _this.moves.D(row);
-
-            break;
-          }
-
-          _this.moves.L();
-        }
-
-        return true;
-      };
-
-      var solveRightBuild = function solveRightBuild(nextPos, origPos, column, row, currentCol, currentRow) {
-        for (var j = 0; j < 4; j += 1) {
-          if (localCheck(utils_1.sides.r, origPos, utils_1.sides.f)) {
-            _this.moves.D(row, false);
-
-            break;
-          }
-
-          _this.moves.R();
-        }
-
-        return true;
-      };
-
-      var solveBackBuild = function solveBackBuild(nextPos, origPos, column, row, currentCol, currentRow) {
-        for (var j = 0; j < 4; j += 1) {
-          if (localCheck(utils_1.sides.b, origPos, utils_1.sides.f)) {
-            _this.moves.D(row);
-
-            _this.moves.D(row);
-
-            break;
-          }
-
-          _this.moves.B();
-        }
-
-        return true;
-      };
-
-      var solveDownBuild = function solveDownBuild(nextPos, origPos, column, row, currentCol, currentRow) {
-        var rotatedFront = Math.abs(currentCol - (_this.sideLength - 1));
-
-        if (rotatedFront >= column) {
-          _this.moves.D();
-
-          _this.moves.F(rotatedFront, false);
-
-          _this.moves.D(0, false);
-
-          return true;
-        }
-      };
-
-      var solveFrontBuild = function solveFrontBuild(nextPos, origPos, column, row, currentCol, currentRow) {
-        var futurePos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
-        var futureRow = Math.floor(futurePos / _this.sideLength);
-        var futureCol = futurePos % _this.sideLength;
-
-        if (currentCol !== column) {
-          _this.moves.F();
-
-          _this.moves.D(futureRow);
-
-          _this.moves.F(0, false);
-
-          return true;
-        }
-      };
-
-      var solveUpBuild = function solveUpBuild(row, column, side) {
-        var nextPos = _this.getFaceDirection(row, column);
-
-        var currentRow = null;
-        var currentCol = null;
-        var highestPos = nextPos;
-        var found = false;
-
-        for (var i = 0; i < 4; i += 1) {
-          // highest column is a row
-          currentRow = Math.floor(nextPos / _this.sideLength);
-          currentCol = nextPos % _this.sideLength;
-          highestPos = nextPos > highestPos ? nextPos : highestPos;
-
-          if (localCheck(side, nextPos, utils_1.sides.f)) {
-            // place it on a row where column is at
-            found = true;
-          }
-
-          nextPos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
-        }
-
-        if (found) {
-          for (var i = 0; i < 4; i += 1) {
-            if (localCheck(side, highestPos, utils_1.sides.f)) {
-              currentRow = Math.floor(highestPos / _this.sideLength);
-
-              _this.moves.D();
-
-              _this.moves.F(currentRow);
-
-              _this.moves.D(0, false); // console.log('UP white is in ', nextPos, i);
-
-
-              return true;
-            }
-
-            _this.moves.U();
-          }
-        }
-
-        return false;
-      };
-
-      var solveLeft = function solveLeft(row, column) {
-        return baseFunc(row, column, utils_1.sides.l, solveLeftBuild);
-      };
-
-      var solveRight = function solveRight(row, column) {
-        return baseFunc(row, column, utils_1.sides.r, solveRightBuild);
-      };
-
-      var solveBack = function solveBack(row, column) {
-        return baseFunc(row, column, utils_1.sides.b, solveBackBuild);
-      };
-
-      var solveFront = function solveFront(row, column) {
-        if (baseFunc(row, column, utils_1.sides.f, solveFrontBuild)) {
-          return solveRight(row, column);
-        }
-      };
-
-      var solveUp = function solveUp(row, column) {
-        if (solveUpBuild(row, column, utils_1.sides.u)) {
-          return solveRight(row, column);
-        }
-      };
-
-      var solveDown = function solveDown(row, column) {
-        if (baseFunc(row, column, utils_1.sides.d, solveDownBuild)) {
-          return solveRight(row, column);
-        }
-      };
-
-      var solveOrder = [solveFront, solveLeft, solveRight, solveBack, solveUp, solveDown];
-
-      var solveCube = function solveCube(row, column) {
-        if (!localCheck(utils_1.sides.f, _this.getFaceDirection(row, column), utils_1.sides.f)) {
-          for (var i = 0; i < solveOrder.length; i += 1) {
-            if (solveOrder[i](row, column)) {
-              break;
-            }
-          }
-        }
-      }; // for left st 0
-      // for right op 0
-      // for up op 2
-      // for down st 2
-      // for front st 0
-      // for back op 0
-
-
-      var lineLength = _this.sideLength - 1;
-
-      for (var col = 1; col < lineLength; col += 1) {
-        for (var row = 1; row < lineLength; row += 1) {
-          if (!localCheck(utils_1.sides.f, _this.getFaceDirection(row, col), utils_1.sides.f)) {
-            solveCube(row, col);
-
-            if (!localCheck(utils_1.sides.f, _this.getFaceDirection(row, col), utils_1.sides.f)) {
-              console.log('INCORRECT');
-              return false;
-            }
-          }
-        }
-
-        _this.moves.L(col);
-      }
-
-      for (var col = 1; col < lineLength; col += 1) {
-        _this.moves.L(col, false);
-      }
-    };
-
-    this.solveBigCube = function () {
-      // first finish white face
-      // this.solveWhiteCenter();
-      _this.solveWhiteCenter();
-
-      _this.solveYellowCenter();
-    };
-
-    this.getFaceDirection = function (row, col) {
-      return col + row * _this.sideLength;
-    };
-
-    this.getLineCubeColor = function (line, num) {
-      return _this.sideLength * (num + 1) + 1 + line;
-    };
-
     this.sideLength = sideLength;
     this.totalColors = sideLength * sideLength;
     this.matrix = this.createMatrix();
     this.matrixReference = this.createMatrixReference(sideLength * sideLength * sideLength);
     this.generatePositions();
-    this.createInterface();
+    this.createRotations();
     this.f = new face_1.default(sideLength);
-    this.generateFaceSideCases();
     this.moveHistory = [];
     this.moves = new moveActions_1.default();
 
@@ -85326,553 +83992,6 @@ function () {
 
       return _this.regMove(new move_1.default('B', 0 + slice, !clockwise, 'z', _this.rotateDep, _this.getCubesDep));
     };
-
-    this.frontOrient = [// left
-    {
-      U: function U(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.L(slice, clockwise);
-      },
-      D: function D(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.R(slice, clockwise);
-      },
-      L: function L(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.D(slice, clockwise);
-      },
-      R: function R(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.U(slice, clockwise);
-      },
-      F: function F(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.F(slice, clockwise);
-      },
-      B: function B(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.B(slice, clockwise);
-      }
-    }, // right
-    {
-      U: function U(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.R(slice, clockwise);
-      },
-      D: function D(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.L(slice, clockwise);
-      },
-      L: function L(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.U(slice, clockwise);
-      },
-      R: function R(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.D(slice, clockwise);
-      },
-      F: function F(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.F(slice, clockwise);
-      },
-      B: function B(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.B(slice, clockwise);
-      }
-    }, // up
-    {
-      U: function U(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.U(slice, clockwise);
-      },
-      D: function D(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.D(slice, clockwise);
-      },
-      L: function L(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.L(slice, clockwise);
-      },
-      R: function R(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.R(slice, clockwise);
-      },
-      F: function F(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.F(slice, clockwise);
-      },
-      B: function B(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.B(slice, clockwise);
-      }
-    }, // down
-    {
-      U: function U(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.D(slice, clockwise);
-      },
-      D: function D(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.U(slice, clockwise);
-      },
-      L: function L(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.R(slice, clockwise);
-      },
-      R: function R(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.L(slice, clockwise);
-      },
-      F: function F(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.F(slice, clockwise);
-      },
-      B: function B(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.B(slice, clockwise);
-      }
-    }];
-    this.sideOrient = [// left
-    {
-      U: function U(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.B(slice, clockwise);
-      },
-      D: function D(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.F(slice, clockwise);
-      },
-      L: function L(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.D(slice, clockwise);
-      },
-      R: function R(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.U(slice, clockwise);
-      },
-      F: function F(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.L(slice, clockwise);
-      },
-      B: function B(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.R(slice, clockwise);
-      }
-    }, // right
-    {
-      U: function U(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.B(slice, clockwise);
-      },
-      D: function D(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.F(slice, clockwise);
-      },
-      L: function L(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.U(slice, clockwise);
-      },
-      R: function R(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.D(slice, clockwise);
-      },
-      F: function F(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.R(slice, clockwise);
-      },
-      B: function B(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.L(slice, clockwise);
-      }
-    }, // up
-    {
-      U: function U(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.B(slice, clockwise);
-      },
-      D: function D(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.F(slice, clockwise);
-      },
-      L: function L(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.L(slice, clockwise);
-      },
-      R: function R(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.R(slice, clockwise);
-      },
-      F: function F(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.U(slice, clockwise);
-      },
-      B: function B(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.D(slice, clockwise);
-      }
-    }, // down
-    {
-      U: function U(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.B(slice, clockwise);
-      },
-      D: function D(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.F(slice, clockwise);
-      },
-      L: function L(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.R(slice, clockwise);
-      },
-      R: function R(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.L(slice, clockwise);
-      },
-      F: function F(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.D(slice, clockwise);
-      },
-      B: function B(slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moves.U(slice, clockwise);
-      }
-    }];
   }
 
   RubikModel.prototype.createEmptySlices = function () {
@@ -85917,7 +84036,1625 @@ function () {
 
 
 exports.default = RubikModel;
-},{"./utils":"rubik/utils.ts","./face":"rubik/face.ts","./move":"rubik/move.ts","./moveActions":"rubik/moveActions.ts"}],"index.ts":[function(require,module,exports) {
+},{"./utils":"rubik/utils.ts","./face":"rubik/face.ts","./move":"rubik/move.ts","./moveActions":"rubik/moveActions.ts"}],"rubik/solutions/rubikSolutionBase.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var utils_1 = require("../utils");
+
+var RubikSolutionBase =
+/** @class */
+function () {
+  function RubikSolutionBase(rubik) {
+    var _this = this;
+
+    this.check = function (side, face, color) {
+      return _this.getColor(side, face) === color;
+    };
+
+    this.getColor = function (side, direction) {
+      return _this.rubik.matrix[side][_this.interface[side][direction]];
+    };
+
+    this.getColorHash = function (side, direction) {
+      return utils_1.colorHashes[_this.getColor(side, direction)];
+    };
+
+    this.getFaceDirection = function (row, col) {
+      return col + row * _this.rubik.sideLength;
+    };
+
+    this.getLineCubeColor = function (line, num) {
+      return _this.rubik.sideLength * (num + 1) + 1 + line;
+    };
+
+    this.rubik = rubik;
+    this.f = rubik.f;
+    this.sideLength = rubik.sideLength;
+  }
+
+  return RubikSolutionBase;
+}();
+
+exports.default = RubikSolutionBase;
+},{"../utils":"rubik/utils.ts"}],"rubik/solutions/solveStandardRubik.ts":[function(require,module,exports) {
+"use strict";
+
+var __extends = this && this.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (b.hasOwnProperty(p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var __spreadArrays = this && this.__spreadArrays || function () {
+  for (var s = 0, i = 0, il = arguments.length; i < il; i++) {
+    s += arguments[i].length;
+  }
+
+  for (var r = Array(s), k = 0, i = 0; i < il; i++) {
+    for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++) {
+      r[k] = a[j];
+    }
+  }
+
+  return r;
+};
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* eslint-disable max-len */
+
+var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
+
+var utils_1 = require("../utils");
+
+var utils_2 = require("../utils");
+
+var SolveStandardRubik =
+/** @class */
+function (_super) {
+  __extends(SolveStandardRubik, _super);
+
+  function SolveStandardRubik(rubik) {
+    var _this = _super.call(this, rubik) || this;
+
+    _this.faceCases = [[], [], [], []];
+    _this.sideCases = [[], [], [], []];
+    _this.faceCornerCases = [[], [], [], []];
+
+    _this.generateFaceSideCases = function () {
+      // need an array for FCA = [this.f.ul, this.f.ur, this.f.dr, this.f.dl]
+      var leftFaceCases = [_this.f.l, _this.f.u, _this.f.r, _this.f.d];
+      var leftSideCases = [utils_1.sides.l, utils_1.sides.u, utils_1.sides.r, utils_1.sides.d];
+      var leftFaceCornerCases = [_this.f.ul, _this.f.ur, _this.f.dr, _this.f.dl];
+
+      for (var i = 0; i < 4; i += 1) {
+        for (var j = 0; j < 4; j += 1) {
+          _this.faceCases[i][j] = leftFaceCases[(j + i) % 4];
+          _this.sideCases[i][j] = leftSideCases[(j + i) % 4];
+          _this.faceCornerCases[i][j] = leftFaceCornerCases[(j + i) % 4];
+        }
+      }
+    };
+
+    _this.solveWhiteCross = function () {
+      for (var i = 0; i < 4; i += 1) {
+        _this.solveWhiteCrossSide(_this.faceCases[i], _this.sideCases[i]);
+      }
+    };
+
+    _this.solveWhiteFace = function (sca, fca) {
+      for (var i = 0; i < 4; i += 1) {
+        _this.solveWhiteCornerSide(sca[i], fca[i]);
+      }
+    };
+
+    _this.solveWhiteCornerSide = function (sc, fc) {
+      // check if already correct
+      if (_this.check(sc[0], _this.f.dr, sc[0]) && _this.check(sc[1], _this.f.dl, sc[1]) && _this.check(utils_1.sides.f, fc[0], utils_1.sides.f)) {
+        console.log('corner is in a right place');
+        return;
+      } // this
+      // find cube where sum of the colors equals, sum of the desired cube
+      // can check bottom and top with this solution
+
+
+      var desiredSum = 0;
+      desiredSum += utils_2.colorHashes[sc[0]];
+      desiredSum += utils_2.colorHashes[sc[1]];
+      desiredSum += utils_2.colorHashes[utils_1.sides.f]; // front
+
+      var sum = 0;
+      var frontFaceSide = null;
+
+      for (var i = 0; i < 4; i += 1) {
+        sum = 0;
+        sum += _this.getColorHash(sc[i], _this.f.dr);
+        sum += _this.getColorHash(sc[(i + 1) % 4], _this.f.dl);
+        sum += _this.getColorHash(utils_1.sides.f, fc[i]);
+
+        if (sum === desiredSum) {
+          frontFaceSide = i;
+          break;
+        }
+      }
+
+      if (frontFaceSide !== null) {
+        _this.sideOrient[sc[frontFaceSide]].R();
+
+        _this.sideOrient[sc[frontFaceSide]].U();
+
+        _this.sideOrient[sc[frontFaceSide]].R(0, false);
+
+        if (frontFaceSide === 0) {
+          _this.m.B(0, false);
+        }
+
+        if (frontFaceSide === 1) {// do nothing
+        }
+
+        if (frontFaceSide === 2) {
+          _this.m.B();
+        }
+
+        if (frontFaceSide === 3) {
+          _this.m.B();
+
+          _this.m.B();
+        }
+      } // bottom
+
+
+      var backFaceSide = null;
+
+      if (frontFaceSide === null) {
+        for (var i = 0; i < 4; i += 1) {
+          sum = 0;
+          sum += _this.getColorHash(sc[i], _this.f.ur);
+          sum += _this.getColorHash(sc[(i + 1) % 4], _this.f.ul);
+          sum += _this.getColorHash(utils_1.sides.b, fc[i]);
+
+          if (sum === desiredSum) {
+            backFaceSide = i;
+            break;
+          }
+        }
+
+        if (backFaceSide === 0) {// do nothing
+        }
+
+        if (backFaceSide === 1) {
+          _this.m.B();
+        }
+
+        if (backFaceSide === 2) {
+          _this.m.B();
+
+          _this.m.B();
+        }
+
+        if (backFaceSide === 3) {
+          _this.m.B(0, false);
+        }
+      } // place it on the right side
+      // for (let i = 0; i < 4; i += 1) {
+      // there can now be only three cases, after putting
+      // case 1: white to the right
+
+
+      if (_this.check(sc[0], _this.f.ur, utils_1.sides.f) && _this.check(sc[1], _this.f.ul, sc[1])) {
+        _this.frontOrient[sc[1]].L(0, false);
+
+        _this.m.B(0, false);
+
+        _this.frontOrient[sc[1]].L();
+
+        console.log('solved case 1');
+        return;
+      } // case 2: white in the left
+
+
+      if (_this.check(sc[0], _this.f.ur, sc[0]) && _this.check(sc[1], _this.f.ul, utils_1.sides.f)) {
+        _this.frontOrient[sc[0]].R();
+
+        _this.m.B();
+
+        _this.frontOrient[sc[0]].R(0, false);
+
+        console.log('solved case 2');
+        return;
+      } // case 3: white in the bottom
+
+
+      if (_this.check(sc[0], _this.f.ur, sc[1]) && _this.check(sc[1], _this.f.ul, sc[0])) {
+        _this.frontOrient[sc[1]].L(0, false);
+
+        _this.m.B();
+
+        _this.m.B();
+
+        _this.frontOrient[sc[1]].L();
+
+        _this.m.B();
+
+        _this.frontOrient[sc[1]].L(0, false);
+
+        _this.m.B(0, false);
+
+        _this.frontOrient[sc[1]].L();
+
+        console.log('solved case 3');
+      }
+    };
+
+    _this.solveWhiteCrossSide = function (fc, sc) {
+      var count = 0;
+
+      while (!(_this.check(sc[0], _this.f.d, sc[0]) && _this.check(utils_1.sides.f, fc[0], utils_1.sides.f))) {
+        // correct on left
+        // need a simpler way to check colors
+        // if (this.getColor(s.l, this.f.l) === s.l && this.getColor(s.d, this.f.r) === s.f) {
+        // up, right, down, left
+        if (_this.check(sc[0], _this.f.l, sc[0]) && _this.check(sc[3], _this.f.r, utils_1.sides.f)) {
+          _this.frontOrient[sc[0]].U(0, false);
+
+          console.log('left left');
+          return;
+        } // correct on top
+
+
+        if (_this.check(sc[0], _this.f.u, sc[0]) && _this.check(utils_1.sides.b, fc[0], utils_1.sides.f)) {
+          _this.frontOrient[sc[0]].U();
+
+          _this.frontOrient[sc[0]].U();
+
+          console.log('left top');
+          return;
+        } // correct on right
+
+
+        if (_this.check(sc[0], _this.f.r, sc[0]) && _this.check(sc[1], _this.f.l, utils_1.sides.f)) {
+          _this.frontOrient[sc[0]].U();
+
+          console.log('left right');
+          return;
+        } // for reverse colors, move them to the right
+        // left
+
+
+        if (_this.check(sc[0], _this.f.l, utils_1.sides.f) && _this.check(sc[3], _this.f.r, sc[0])) {
+          _this.frontOrient[sc[0]].U();
+
+          _this.frontOrient[sc[0]].U();
+
+          console.log('reverse left left');
+        } else if (_this.check(sc[0], _this.f.u, utils_1.sides.f) && _this.check(utils_1.sides.b, fc[0], sc[0])) {
+          // top
+          _this.frontOrient[sc[0]].U();
+
+          console.log('reverse top left');
+        } else if (_this.check(sc[0], _this.f.d, utils_1.sides.f) && _this.check(utils_1.sides.f, fc[0], sc[0])) {
+          // down
+          _this.frontOrient[sc[0]].U(0, false);
+
+          console.log('reverse down left');
+        } // solve reverse face case
+
+
+        if (_this.check(sc[0], _this.f.r, utils_1.sides.f) && _this.check(sc[1], _this.f.l, sc[0])) {
+          _this.frontOrient[sc[1]].U();
+
+          _this.m.B();
+
+          _this.frontOrient[sc[1]].U(0, false);
+
+          _this.frontOrient[sc[0]].U();
+
+          _this.frontOrient[sc[0]].U();
+
+          console.log('reverse face case');
+          return;
+        } // solve for top left
+
+
+        if (_this.check(sc[2], _this.f.l, sc[0]) && _this.check(sc[1], _this.f.r, utils_1.sides.f) || _this.check(sc[2], _this.f.l, utils_1.sides.f) && _this.check(sc[1], _this.f.r, sc[0])) {
+          _this.frontOrient[sc[0]].D();
+
+          _this.m.B();
+
+          _this.frontOrient[sc[0]].D(0, false);
+
+          _this.m.B();
+
+          console.log('top hard side');
+        } // solve for bottom left
+
+
+        if (_this.check(sc[2], _this.f.r, sc[0]) && _this.check(sc[3], _this.f.l, utils_1.sides.f) || _this.check(sc[2], _this.f.r, utils_1.sides.f) && _this.check(sc[3], _this.f.l, sc[0])) {
+          _this.frontOrient[sc[0]].L();
+
+          _this.m.B();
+
+          _this.frontOrient[sc[0]].L(0, false);
+
+          _this.m.B();
+
+          console.log('bottom hard side');
+        } // solve for face top
+
+
+        if (_this.check(sc[1], _this.f.d, sc[0]) && _this.check(utils_1.sides.f, fc[1], utils_1.sides.f) || _this.check(sc[1], _this.f.d, utils_1.sides.f) && _this.check(utils_1.sides.f, fc[1], sc[0])) {
+          _this.frontOrient[sc[0]].R();
+
+          _this.frontOrient[sc[0]].R();
+
+          console.log('front top hard face');
+        } // solve for face right
+
+
+        if (_this.check(sc[2], _this.f.d, sc[0]) && _this.check(utils_1.sides.f, fc[2], utils_1.sides.f) || _this.check(sc[2], _this.f.d, utils_1.sides.f) && _this.check(utils_1.sides.f, fc[2], sc[0])) {
+          _this.frontOrient[sc[0]].D();
+
+          _this.frontOrient[sc[0]].D();
+
+          console.log('front right hard face');
+        } // solve for face bottom
+
+
+        if (_this.check(sc[3], _this.f.d, sc[0]) && _this.check(utils_1.sides.f, fc[3], utils_1.sides.f) || _this.check(sc[3], _this.f.d, utils_1.sides.f) && _this.check(utils_1.sides.f, fc[3], sc[0])) {
+          _this.frontOrient[sc[0]].L();
+
+          _this.frontOrient[sc[0]].L();
+
+          console.log('front bottom hard face');
+        } // this solves another three cases for bottom
+
+
+        _this.m.B();
+
+        console.log('solving');
+
+        if (count === 10) {
+          break;
+        }
+
+        count += 1;
+      }
+    };
+
+    _this.solve = function () {
+      _this.solveWhiteCross();
+
+      _this.solveWhiteFace(_this.sideCases, _this.faceCornerCases); // don't use them for 2x2 cube maybe
+
+
+      _this.solveMiddleLayer();
+
+      _this.solveYellowCross();
+
+      _this.solveSwapYellowEdges();
+
+      _this.solvePositionYellowCorners();
+
+      _this.solveOrientLastLayerCorners();
+    };
+
+    _this.solveOrientLastLayerCorners = function () {
+      // check only from one side
+      // move not correctly oriented cubes to the check side
+      // do the algorithm 2 or 4 times, until faces yellow
+      var firstSide = _this.sideOrient[0];
+
+      var applyAlgo = function applyAlgo(num) {
+        for (var i = 0; i < num; i += 1) {
+          _this.solveOrientLastLayerCornersCase(firstSide);
+        }
+      }; // find incorrect piece
+      // rotate it toward first side
+
+
+      var fc = _this.faceCornerCases[0];
+
+      var findAndRotate = function findAndRotate() {
+        for (var i = 0; i < 4; i += 1) {
+          if (!_this.check(utils_1.sides.b, fc[i], utils_1.sides.b)) {
+            if (i === 0) {// do nothing
+            } else if (i === 1) {
+              _this.m.B();
+            } else if (i === 2) {
+              _this.m.B();
+
+              _this.m.B();
+            } else if (i === 3) {
+              _this.m.B(0, false);
+            }
+
+            return true;
+          }
+        }
+
+        return false;
+      }; // make it so yellow is on top
+      // by applying algorithm 2 or 4 times
+
+
+      for (var i = 0; i < 4; i += 1) {
+        if (findAndRotate()) {
+          applyAlgo(2);
+
+          if (!_this.check(utils_1.sides.b, fc[0], utils_1.sides.b)) {
+            applyAlgo(2);
+          }
+        } else {
+          break;
+        }
+      }
+
+      for (var i = 0; i < 4; i += 1) {
+        if (!_this.check(utils_1.sides.l, _this.f.u, utils_1.sides.l)) {
+          _this.m.B();
+        } else {
+          break;
+        }
+      }
+    };
+
+    _this.solveOrientLastLayerCornersCase = function (orientation) {
+      // R' D' R D
+      orientation.R(0, false);
+      orientation.D(0, false);
+      orientation.R();
+      orientation.D();
+    };
+
+    _this.solvePositionYellowCornersCase = function (orientation) {
+      // U R U' L' U R' U' L
+      orientation.U();
+      orientation.R();
+      orientation.U(0, false);
+      orientation.L(0, false);
+      orientation.U();
+      orientation.R(0, false);
+      orientation.U(0, false);
+      orientation.L();
+      console.log('Yellow corner case');
+    };
+
+    _this.solvePositionYellowCorners = function () {
+      // find cube on correct position
+      var totalCorrect = 0;
+      var correctPos = null;
+
+      var findCorrectCube = function findCorrectCube() {
+        correctPos = null;
+        totalCorrect = 0;
+
+        for (var i = 0; i < 4; i += 1) {
+          var sc = _this.sideCases[i];
+          var fc = _this.faceCornerCases[i];
+          var desiredSum = 0;
+          desiredSum += utils_2.colorHashes[sc[0]];
+          desiredSum += utils_2.colorHashes[sc[1]];
+          desiredSum += utils_2.colorHashes[utils_1.sides.b];
+          var sum = 0;
+          sum += _this.getColorHash(sc[0], _this.f.ur);
+          sum += _this.getColorHash(sc[1], _this.f.ul);
+          sum += _this.getColorHash(utils_1.sides.b, fc[0]);
+
+          if (sum === desiredSum) {
+            correctPos = i;
+            totalCorrect += 1;
+          }
+        }
+      };
+
+      findCorrectCube();
+
+      if (totalCorrect === 4) {
+        console.log('yellow corners were initially in correct position');
+        return;
+      } // choose random orientation, instead just chose 0
+
+
+      for (var i = 0; i < 10; i += 1) {
+        if (correctPos === null) {
+          var orientation = _this.sideOrient[0];
+
+          _this.solvePositionYellowCornersCase(orientation); // assume that cube will be correct
+
+
+          findCorrectCube();
+
+          if (totalCorrect === 4) {
+            console.log('yellow corners solved');
+            return;
+          }
+        } else {
+          break;
+        }
+      }
+
+      for (var i = 0; i < 10; i += 1) {
+        findCorrectCube();
+
+        if (totalCorrect !== 4) {
+          _this.solvePositionYellowCornersCase(_this.sideOrient[(correctPos + 1) % 4]);
+        } else {
+          console.log('solved it');
+          break;
+        }
+      }
+    };
+
+    _this.solveSwapYellowEdges = function () {
+      var sc = _this.sideCases[0];
+
+      var checkComplete = function checkComplete() {
+        var count = 0;
+
+        for (var i = 0; i < 4; i += 1) {
+          if (_this.check(sc[i], _this.f.u, sc[i])) {
+            count += 1;
+          }
+        }
+
+        if (count === 4) {
+          return true;
+        }
+
+        return false;
+      }; // rotate until at least one color matches
+      // lazy check
+
+
+      for (var i = 0; i < 4; i += 1) {
+        if (_this.check(sc[0], _this.f.u, sc[0])) {
+          console.log('found correct side for yellow case');
+          break;
+        }
+
+        _this.m.B();
+      }
+
+      if (checkComplete()) {
+        console.log('All yellow edges are correct');
+        return;
+      } // check if there are opposite cubes
+
+
+      if (_this.check(sc[1], _this.f.u, sc[3]) && _this.check(sc[3], _this.f.u, sc[1])) {
+        var orientation = _this.sideOrient[sc[0]];
+        orientation.U();
+
+        _this.solveSwapYellowEdgesCase(orientation);
+
+        orientation = _this.sideOrient[sc[2]];
+
+        _this.solveSwapYellowEdgesCase(orientation);
+
+        console.log('opposite cubes');
+        return;
+      } // next cube is of the same color as first side
+
+
+      if (_this.check(sc[2], _this.f.u, sc[3])) {
+        var orientation = _this.sideOrient[sc[3]];
+
+        _this.solveSwapYellowEdgesCase(orientation);
+
+        console.log('solved second cube');
+      }
+
+      if (_this.check(sc[1], _this.f.u, sc[2])) {
+        var orientation = _this.sideOrient[sc[2]];
+
+        _this.solveSwapYellowEdgesCase(orientation);
+
+        console.log('solved third cube');
+      }
+
+      if (_this.check(sc[3], _this.f.u, sc[2]) && _this.check(sc[2], _this.f.u, sc[1])) {
+        var orientation = _this.sideOrient[sc[2]];
+
+        _this.solveSwapYellowEdgesCase(orientation);
+
+        orientation = _this.sideOrient[sc[3]];
+
+        _this.solveSwapYellowEdgesCase(orientation);
+
+        console.log('solved unique position cube');
+      }
+    };
+
+    _this.solveSwapYellowEdgesCase = function (orientation) {
+      // R U R' U R U2 R' U
+      orientation.R();
+      orientation.U();
+      orientation.R(0, false);
+      orientation.U();
+      orientation.R();
+      orientation.U();
+      orientation.U();
+      orientation.R(0, false);
+      orientation.U();
+    };
+
+    _this.solveYellowCrossAllCase = function (orientation) {
+      // F R U R' U' F'
+      orientation.F();
+      orientation.R();
+      orientation.U();
+      orientation.R(0, false);
+      orientation.U(0, false);
+      orientation.F(0, false);
+      console.log('Yellow cross case ALL');
+    };
+
+    _this.solveYellowCrossShortcutCase = function (orientation) {
+      // F U R U' R' F'
+      orientation.F();
+      orientation.U();
+      orientation.R();
+      orientation.U(0, false);
+      orientation.R(0, false);
+      orientation.F(0, false);
+      console.log('Yellow cross case SHORTCUT');
+    };
+
+    _this.solveYellowCross = function () {
+      // detect 4 cases:
+      //  dot
+      //  L
+      //  line
+      //  complete
+      var orientation = null;
+      console.log(_this.sideCases);
+
+      for (var i = 0; i < 10; i += 1) {
+        // complete case
+        if (_this.check(utils_1.sides.b, _this.f.l, utils_1.sides.b) && _this.check(utils_1.sides.b, _this.f.u, utils_1.sides.b) && _this.check(utils_1.sides.b, _this.f.r, utils_1.sides.b) && _this.check(utils_1.sides.b, _this.f.d, utils_1.sides.b)) {
+          console.log('yellow cross is complete');
+          break;
+        } else if (!_this.check(utils_1.sides.b, _this.f.l, utils_1.sides.b) && !_this.check(utils_1.sides.b, _this.f.u, utils_1.sides.b) && !_this.check(utils_1.sides.b, _this.f.r, utils_1.sides.b) && !_this.check(utils_1.sides.b, _this.f.d, utils_1.sides.b)) {
+          // dot case
+          console.log('dot case');
+          orientation = _this.sideOrient[_this.sideCases[0][0]];
+        } else if (_this.check(utils_1.sides.b, _this.f.l, utils_1.sides.b) && _this.check(utils_1.sides.b, _this.f.r, utils_1.sides.b)) {
+          // line case
+          console.log('line case');
+          orientation = _this.sideOrient[_this.sideCases[0][1]];
+        } else if (_this.check(utils_1.sides.b, _this.f.u, utils_1.sides.b) && _this.check(utils_1.sides.b, _this.f.d, utils_1.sides.b)) {
+          // line case
+          console.log('line case');
+          orientation = _this.sideOrient[_this.sideCases[0][0]];
+        } else {
+          // L case
+          for (var j = 0; j < 4; j += 1) {
+            if (_this.check(utils_1.sides.b, _this.faceCases[0][(j + 3) % 4], utils_1.sides.b) && _this.check(utils_1.sides.b, _this.faceCases[0][(j + 2) % 4], utils_1.sides.b)) {
+              console.log(j);
+              orientation = _this.sideOrient[_this.sideCases[0][j]];
+              console.log('L case');
+              break;
+            }
+          }
+        }
+
+        if (orientation === null) {
+          orientation = _this.sideOrient[_this.sideCases[0][i % 4]];
+        }
+
+        _this.solveYellowCrossAllCase(orientation);
+      }
+    };
+
+    _this.solveMiddleLayerLeftCase = function (orientation) {
+      // U' L' U L U F U' F'
+      orientation.U(0, false);
+      orientation.L(0, false);
+      orientation.U();
+      orientation.L();
+      orientation.U();
+      orientation.F();
+      orientation.U(0, false);
+      orientation.F(0, false);
+      console.log('Middle case LEFT');
+    };
+
+    _this.solveMiddleLayerRightCase = function (orientation) {
+      // U R U' R' U' F' U F
+      orientation.U();
+      orientation.R();
+      orientation.U(0, false);
+      orientation.R(0, false);
+      orientation.U(0, false);
+      orientation.F(0, false);
+      orientation.U();
+      orientation.F();
+      console.log('Middle case RIGHT');
+    };
+
+    _this.solveMiddleLayerSide = function (fc, sc) {
+      // rotate until color is the same, and
+      // depending on the second color, use algorithm
+      // three cases for back side with back rotations, determine number of back rotations
+      // check for right side
+      // create a check if a side already correct
+      if (_this.check(sc[0], _this.f.r, sc[0]) && _this.check(sc[1], _this.f.l, sc[1])) {
+        console.log('middle layer side already correct'); // already correct
+
+        return;
+      } // cube is in the middle
+      // move it to top
+
+
+      for (var i = 0; i < 4; i += 1) {
+        if (_this.check(sc[i], _this.f.r, sc[1]) && _this.check(sc[(i + 1) % 4], _this.f.l, sc[0])) {
+          console.log('middle opposite', i);
+
+          _this.solveMiddleLayerRightCase(_this.sideOrient[sc[i]]);
+
+          if (i === 0) {
+            _this.m.B();
+
+            _this.m.B();
+          } else if (i === 1) {
+            _this.m.B(0, false);
+          } else if (i === 2) {// do nothing
+          } else if (i === 3) {
+            _this.m.B();
+          }
+
+          _this.solveMiddleLayerRightCase(_this.sideOrient[sc[0]]);
+
+          break;
+        }
+
+        if (_this.check(sc[i], _this.f.r, sc[0]) && _this.check(sc[(i + 1) % 4], _this.f.l, sc[1])) {
+          console.log('middle same ', i);
+
+          _this.solveMiddleLayerRightCase(_this.sideOrient[sc[i]]);
+
+          if (i === 0) {
+            _this.m.B();
+          }
+
+          if (i === 1) {
+            _this.m.B();
+
+            _this.m.B();
+          } else if (i === 2) {
+            _this.m.B(0, false);
+          } else if (i === 3) {// do nothing
+          }
+
+          _this.solveMiddleLayerLeftCase(_this.sideOrient[sc[1]]);
+
+          break;
+        }
+
+        if (_this.check(sc[i], _this.f.u, sc[0]) && _this.check(utils_1.sides.b, fc[i], sc[1])) {
+          // 3 is incorrect
+          console.log('top same', i);
+
+          if (i === 0) {// do nothing
+          } else if (i === 1) {
+            _this.m.B();
+          } else if (i === 2) {
+            _this.m.B();
+
+            _this.m.B();
+          } else if (i === 3) {
+            _this.m.B(0, false);
+          }
+
+          _this.solveMiddleLayerRightCase(_this.sideOrient[sc[0]]);
+
+          break;
+        }
+
+        if (_this.check(sc[i], _this.f.u, sc[1]) && _this.check(utils_1.sides.b, fc[i], sc[0])) {
+          console.log('top opposite', i);
+
+          if (i === 0) {
+            _this.m.B(0, false);
+          } else if (i === 1) {// do nothing
+          } else if (i === 2) {
+            _this.m.B();
+          } else if (i === 3) {
+            _this.m.B();
+
+            _this.m.B();
+          }
+
+          _this.solveMiddleLayerLeftCase(_this.sideOrient[sc[1]]);
+
+          break;
+        }
+      }
+    };
+
+    _this.solveMiddleLayer = function () {
+      for (var i = 0; i < 4; i += 1) {
+        _this.solveMiddleLayerSide(_this.faceCases[i], _this.sideCases[i]);
+      }
+    };
+
+    _this.m = rubik.moves;
+    _this.interface = new Array(6);
+    _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[3]);
+    _this.interface[utils_1.sides.r] = __spreadArrays(_this.rubik.opRotations[3]);
+    _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[2]);
+    _this.interface[utils_1.sides.d] = __spreadArrays(_this.rubik.stRotations[2]);
+    _this.interface[utils_1.sides.f] = __spreadArrays(_this.rubik.stRotations[0]);
+    _this.interface[utils_1.sides.b] = __spreadArrays(_this.rubik.stRotations[0]);
+
+    _this.generateFaceSideCases();
+
+    _this.frontOrient = [// left
+    {
+      U: _this.m.L,
+      D: _this.m.R,
+      L: _this.m.D,
+      R: _this.m.U,
+      F: _this.m.F,
+      B: _this.m.B
+    }, // right
+    {
+      U: _this.m.R,
+      D: _this.m.L,
+      L: _this.m.U,
+      R: _this.m.D,
+      F: _this.m.F,
+      B: _this.m.B
+    }, // up
+    {
+      U: _this.m.U,
+      D: _this.m.D,
+      L: _this.m.L,
+      R: _this.m.R,
+      F: _this.m.F,
+      B: _this.m.B
+    }, // down
+    {
+      U: _this.m.D,
+      D: _this.m.U,
+      L: _this.m.R,
+      R: _this.m.L,
+      F: _this.m.F,
+      B: _this.m.B
+    }];
+    _this.sideOrient = [// left
+    {
+      U: _this.m.B,
+      D: _this.m.F,
+      L: _this.m.D,
+      R: _this.m.U,
+      F: _this.m.L,
+      B: _this.m.R
+    }, // right
+    {
+      U: _this.m.B,
+      D: _this.m.F,
+      L: _this.m.U,
+      R: _this.m.D,
+      F: _this.m.R,
+      B: _this.m.L
+    }, // up
+    {
+      U: _this.m.B,
+      D: _this.m.F,
+      L: _this.m.L,
+      R: _this.m.R,
+      F: _this.m.U,
+      B: _this.m.D
+    }, // down
+    {
+      U: _this.m.B,
+      D: _this.m.F,
+      L: _this.m.R,
+      R: _this.m.L,
+      F: _this.m.D,
+      B: _this.m.U
+    }];
+    return _this;
+  }
+
+  return SolveStandardRubik;
+}(rubikSolutionBase_1.default);
+
+exports.default = SolveStandardRubik;
+},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveWhiteCenterRubik.ts":[function(require,module,exports) {
+"use strict";
+
+var __extends = this && this.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (b.hasOwnProperty(p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var __spreadArrays = this && this.__spreadArrays || function () {
+  for (var s = 0, i = 0, il = arguments.length; i < il; i++) {
+    s += arguments[i].length;
+  }
+
+  for (var r = Array(s), k = 0, i = 0; i < il; i++) {
+    for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++) {
+      r[k] = a[j];
+    }
+  }
+
+  return r;
+};
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* eslint-disable max-len */
+
+var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
+
+var utils_1 = require("../utils");
+
+var SolveWhiteCenterRubik =
+/** @class */
+function (_super) {
+  __extends(SolveWhiteCenterRubik, _super);
+
+  function SolveWhiteCenterRubik(rubik) {
+    var _this = _super.call(this, rubik) || this;
+
+    _this.baseFunc = function (row, column, side, operation) {
+      var nextPos = _this.getFaceDirection(row, column);
+
+      var origPos = nextPos;
+
+      for (var i = 0; i < 4; i += 1) {
+        var currentRow = Math.floor(nextPos / _this.sideLength);
+        var currentCol = nextPos % _this.sideLength;
+
+        if (_this.check(side, nextPos, utils_1.sides.f)) {
+          var result = operation(nextPos, origPos, column, row, currentCol, currentRow);
+
+          if (result === true) {
+            return true;
+          }
+        }
+
+        nextPos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
+      }
+
+      return false;
+    };
+
+    _this.solveLeftBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
+      for (var j = 0; j < 4; j += 1) {
+        if (_this.check(utils_1.sides.l, origPos, utils_1.sides.f)) {
+          _this.m.D(row);
+
+          break;
+        }
+
+        _this.m.L();
+      }
+
+      return true;
+    };
+
+    _this.solveRightBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
+      for (var j = 0; j < 4; j += 1) {
+        if (_this.check(utils_1.sides.r, origPos, utils_1.sides.f)) {
+          _this.m.D(row, false);
+
+          break;
+        }
+
+        _this.m.R();
+      }
+
+      return true;
+    };
+
+    _this.solveBackBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
+      for (var j = 0; j < 4; j += 1) {
+        if (_this.check(utils_1.sides.b, origPos, utils_1.sides.f)) {
+          _this.m.D(row);
+
+          _this.m.D(row);
+
+          break;
+        }
+
+        _this.m.B();
+      }
+
+      return true;
+    };
+
+    _this.solveDownBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
+      var rotatedFront = Math.abs(currentCol - (_this.sideLength - 1));
+
+      if (rotatedFront >= column) {
+        _this.m.D();
+
+        _this.m.F(rotatedFront, false);
+
+        _this.m.D(0, false);
+
+        return true;
+      }
+    };
+
+    _this.solveFrontBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
+      var futurePos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
+      var futureRow = Math.floor(futurePos / _this.sideLength);
+      var futureCol = futurePos % _this.sideLength;
+
+      if (currentCol !== column) {
+        _this.m.F();
+
+        _this.m.D(futureRow);
+
+        _this.m.F(0, false);
+
+        return true;
+      }
+    };
+
+    _this.solveUpBuild = function (row, column, side) {
+      var nextPos = _this.getFaceDirection(row, column);
+
+      var currentRow = null;
+      var currentCol = null;
+      var highestPos = nextPos;
+      var found = false;
+
+      for (var i = 0; i < 4; i += 1) {
+        // highest column is a row
+        currentRow = Math.floor(nextPos / _this.sideLength);
+        currentCol = nextPos % _this.sideLength;
+        highestPos = nextPos > highestPos ? nextPos : highestPos;
+
+        if (_this.check(side, nextPos, utils_1.sides.f)) {
+          // place it on a row where column is at
+          found = true;
+        }
+
+        nextPos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
+      }
+
+      if (found) {
+        for (var i = 0; i < 4; i += 1) {
+          if (_this.check(side, highestPos, utils_1.sides.f)) {
+            currentRow = Math.floor(highestPos / _this.sideLength);
+
+            _this.m.D();
+
+            _this.m.F(currentRow);
+
+            _this.m.D(0, false); // console.log('UP white is in ', nextPos, i);
+
+
+            return true;
+          }
+
+          _this.m.U();
+        }
+      }
+
+      return false;
+    };
+
+    _this.solveLeft = function (row, column) {
+      return _this.baseFunc(row, column, utils_1.sides.l, _this.solveLeftBuild);
+    };
+
+    _this.solveRight = function (row, column) {
+      return _this.baseFunc(row, column, utils_1.sides.r, _this.solveRightBuild);
+    };
+
+    _this.solveBack = function (row, column) {
+      return _this.baseFunc(row, column, utils_1.sides.b, _this.solveBackBuild);
+    };
+
+    _this.solveFront = function (row, column) {
+      if (_this.baseFunc(row, column, utils_1.sides.f, _this.solveFrontBuild)) {
+        return _this.solveRight(row, column);
+      }
+    };
+
+    _this.solveUp = function (row, column) {
+      if (_this.solveUpBuild(row, column, utils_1.sides.u)) {
+        return _this.solveRight(row, column);
+      }
+    };
+
+    _this.solveDown = function (row, column) {
+      if (_this.baseFunc(row, column, utils_1.sides.d, _this.solveDownBuild)) {
+        return _this.solveRight(row, column);
+      }
+    };
+
+    _this.solveOrder = [_this.solveFront, _this.solveLeft, _this.solveRight, _this.solveBack, _this.solveUp, _this.solveDown];
+
+    _this.solveCube = function (row, column) {
+      if (!_this.check(utils_1.sides.f, _this.getFaceDirection(row, column), utils_1.sides.f)) {
+        for (var i = 0; i < _this.solveOrder.length; i += 1) {
+          if (_this.solveOrder[i](row, column)) {
+            break;
+          }
+        }
+      }
+    }; // for left st 0
+    // for right op 0
+    // for up op 2
+    // for down st 2
+    // for front st 0
+    // for back op 0
+
+
+    _this.solve = function () {
+      var lineLength = _this.sideLength - 1;
+
+      for (var col = 1; col < lineLength; col += 1) {
+        for (var row = 1; row < lineLength; row += 1) {
+          if (!_this.check(utils_1.sides.f, _this.getFaceDirection(row, col), utils_1.sides.f)) {
+            _this.solveCube(row, col);
+
+            if (!_this.check(utils_1.sides.f, _this.getFaceDirection(row, col), utils_1.sides.f)) {
+              console.log('INCORRECT');
+              return false;
+            }
+          }
+        }
+
+        _this.m.L(col);
+      }
+
+      for (var col = 1; col < lineLength; col += 1) {
+        _this.m.L(col, false);
+      }
+    };
+
+    _this.m = rubik.moves;
+    _this.interface = new Array(6);
+    _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[0]);
+    _this.interface[utils_1.sides.r] = __spreadArrays(_this.rubik.opRotations[0]);
+    _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[2]);
+    _this.interface[utils_1.sides.d] = __spreadArrays(_this.rubik.stRotations[2]);
+    _this.interface[utils_1.sides.f] = __spreadArrays(_this.rubik.stRotations[0]);
+    _this.interface[utils_1.sides.b] = __spreadArrays(_this.rubik.opRotations[0]);
+    return _this;
+  }
+
+  return SolveWhiteCenterRubik;
+}(rubikSolutionBase_1.default);
+
+exports.default = SolveWhiteCenterRubik;
+},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveYellowCenterRubik.ts":[function(require,module,exports) {
+"use strict";
+
+var __extends = this && this.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (b.hasOwnProperty(p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var __spreadArrays = this && this.__spreadArrays || function () {
+  for (var s = 0, i = 0, il = arguments.length; i < il; i++) {
+    s += arguments[i].length;
+  }
+
+  for (var r = Array(s), k = 0, i = 0; i < il; i++) {
+    for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++) {
+      r[k] = a[j];
+    }
+  }
+
+  return r;
+};
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* eslint-disable max-len */
+
+var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
+
+var utils_1 = require("../utils");
+
+var SolveYellowCenterRubik =
+/** @class */
+function (_super) {
+  __extends(SolveYellowCenterRubik, _super);
+
+  function SolveYellowCenterRubik(rubik) {
+    var _this = _super.call(this, rubik) || this;
+
+    _this.baseFind = function (row, column, side, color, operation, check) {
+      var nextPos = _this.getFaceDirection(row, column);
+
+      var origPos = nextPos;
+
+      for (var i = 0; i < 4; i += 1) {
+        var currentRow = Math.floor(nextPos / _this.sideLength);
+        var currentCol = nextPos % _this.sideLength;
+
+        if (check(side, nextPos, color)) {
+          var result = operation(nextPos, origPos, column, row, currentCol, currentRow);
+
+          if (result === true) {
+            return true;
+          }
+        }
+
+        nextPos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
+      }
+
+      return false;
+    };
+
+    _this.localFind = function (row, col, side, operation) {
+      return _this.baseFind(row, col, side, utils_1.sides.b, operation, _this.check);
+    };
+
+    _this.middle = Math.floor(_this.sideLength / 2);
+
+    _this.solveLeftBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
+      console.log('solving left');
+
+      for (var j = 0; j < 4; j += 1) {
+        if (_this.check(utils_1.sides.r, origPos, utils_1.sides.b)) {
+          _this.m.B(row);
+
+          break;
+        }
+
+        _this.m.R();
+      }
+
+      return true;
+    };
+
+    _this.solveRightBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
+      console.log('solving right');
+
+      for (var j = 0; j < 4; j += 1) {
+        if (_this.check(utils_1.sides.l, origPos, utils_1.sides.b)) {
+          _this.m.B(row, false);
+
+          break;
+        }
+
+        _this.m.L();
+      }
+
+      return true;
+    };
+
+    _this.solveDownBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
+      console.log('solving down');
+
+      for (var j = 0; j < 4; j += 1) {
+        if (_this.check(utils_1.sides.d, origPos, utils_1.sides.b)) {
+          _this.m.B(row);
+
+          _this.m.B(row);
+
+          break;
+        }
+
+        _this.m.D();
+      }
+
+      return true;
+    };
+
+    _this.solveFrontBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
+      console.log('solving front');
+
+      if (currentCol >= column && currentCol !== _this.middle) {
+        // move front piece to the right
+        _this.m.D(currentRow); // correct
+        // rotate opposite to the right once
+
+
+        if (currentCol < _this.middle && currentRow > _this.middle || currentCol > _this.middle && currentRow < _this.middle) {
+          _this.m.R(0, false);
+        } else {
+          _this.m.R();
+        } // rotate back to down
+
+
+        _this.m.B(currentCol); // correct
+        // undo
+
+
+        if (currentCol < _this.middle && currentRow > _this.middle || currentCol > _this.middle && currentRow < _this.middle) {
+          _this.m.R();
+        } else {
+          _this.m.R(0, false);
+        }
+
+        _this.m.D(currentRow, false); // correct
+
+
+        _this.m.B(currentCol, false);
+
+        return true;
+      }
+    };
+
+    _this.solveUpBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
+      console.log('solving up');
+      var futurePos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
+      var futureCol = futurePos % _this.sideLength;
+      var futureRow = Math.floor(futurePos / _this.sideLength);
+
+      if (currentCol !== column) {
+        _this.m.U();
+
+        _this.m.B(futureRow);
+
+        _this.m.U(0, false);
+
+        return true;
+      }
+    };
+
+    _this.solveLeft = function (row, column) {
+      return _this.localFind(row, column, utils_1.sides.r, _this.solveLeftBuild);
+    };
+
+    _this.solveRight = function (row, column) {
+      return _this.localFind(row, column, utils_1.sides.l, _this.solveRightBuild);
+    };
+
+    _this.solveUp = function (row, column) {
+      if (_this.localFind(row, column, utils_1.sides.u, _this.solveUpBuild)) {
+        return _this.solveRight(row, column);
+      }
+    };
+
+    _this.solveFront = function (row, column) {
+      if (_this.localFind(row, column, utils_1.sides.b, _this.solveFrontBuild)) {
+        // return solveRight(row, column);
+        return _this.solveUp(row, column);
+      }
+    };
+
+    _this.solveDown = function (row, column) {
+      if (_this.localFind(row, column, utils_1.sides.d, _this.solveDownBuild)) {
+        return _this.solveRight(row, column);
+      }
+    };
+
+    _this.solveOrder = [// solveFront,
+    _this.solveUp, _this.solveLeft, _this.solveRight, _this.solveDown];
+
+    _this.solveCube = function (row, column) {
+      if (!_this.check(utils_1.sides.u, _this.getFaceDirection(row, column), utils_1.sides.b)) {
+        for (var i = 0; i < _this.solveOrder.length; i += 1) {
+          //   console.log(this.solveOrder[i]);
+          if (_this.solveOrder[i](row, column)) {
+            break;
+          }
+        }
+      }
+    };
+
+    _this.lineLength = _this.sideLength - 1;
+
+    _this.completeFirstMiddleHalf = function () {
+      console.log('found middle');
+
+      _this.m.U();
+
+      for (var i = 1; i < _this.middle; i += 1) {
+        _this.m.R(i);
+      }
+
+      _this.m.U(0, false);
+
+      _this.m.U(0, false);
+
+      for (var i = 1; i < _this.middle; i += 1) {
+        _this.m.R(i);
+      }
+
+      _this.m.U(0, false);
+
+      _this.m.U(0, false);
+
+      for (var i = 1; i < _this.middle; i += 1) {
+        _this.m.R(i, false);
+      }
+    };
+
+    _this.completeSecondMiddleHalf = function () {
+      console.log('found second middle');
+
+      _this.m.U();
+
+      for (var i = _this.middle + 1; i < _this.middle * 2; i += 1) {
+        _this.m.R(i);
+      }
+
+      _this.m.U(0, false);
+
+      _this.m.U(0, false);
+
+      for (var i = _this.middle + 1; i < _this.middle * 2; i += 1) {
+        _this.m.R(i);
+      }
+
+      _this.m.U(0, false);
+
+      _this.m.U(0, false);
+
+      for (var i = _this.middle + 1; i < _this.middle * 2; i += 1) {
+        _this.m.R(i, false);
+      }
+    };
+
+    _this.solve = function () {
+      for (var row = 1; row < _this.lineLength; row += 1) {
+        if (!_this.check(utils_1.sides.u, _this.getFaceDirection(row, _this.middle), utils_1.sides.b)) {
+          console.log('solving');
+
+          if (row === _this.middle) {
+            _this.completeFirstMiddleHalf();
+          } else {
+            _this.solveCube(row, _this.middle);
+
+            if (!_this.check(utils_1.sides.u, _this.getFaceDirection(row, _this.middle), utils_1.sides.b)) {
+              console.log('INCORRECT');
+              return false;
+            }
+          }
+        }
+      }
+
+      _this.completeSecondMiddleHalf();
+
+      _this.m.B(); // special case for middle column
+
+
+      for (var col = 1; col < _this.lineLength; col += 1) {
+        for (var row = 1; row < _this.lineLength; row += 1) {
+          _this.solveFront(row, col);
+        }
+
+        for (var row = 1; row < _this.lineLength; row += 1) {
+          if (col === _this.middle) {// no nothing
+          } else if (!_this.check(utils_1.sides.u, _this.getFaceDirection(row, col), utils_1.sides.b)) {
+            console.log('solving');
+
+            _this.solveCube(row, col);
+
+            if (!_this.check(utils_1.sides.u, _this.getFaceDirection(row, col), utils_1.sides.b)) {
+              console.log('INCORRECT');
+              return false;
+            }
+          }
+        }
+
+        if (col === _this.middle) {// do nothing
+        } else {
+          _this.m.R(col);
+
+          _this.m.U();
+
+          _this.m.U();
+
+          _this.m.R(col);
+
+          _this.m.U();
+
+          _this.m.U();
+
+          _this.m.R(col, false);
+        }
+      }
+    };
+
+    _this.m = rubik.moves;
+    _this.interface = new Array(6);
+    _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[1]);
+    _this.interface[utils_1.sides.r] = __spreadArrays(_this.rubik.opRotations[1]);
+    _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[0]);
+    _this.interface[utils_1.sides.d] = __spreadArrays(_this.rubik.stRotations[0]);
+    _this.interface[utils_1.sides.f] = null;
+    _this.interface[utils_1.sides.b] = __spreadArrays(_this.rubik.opRotations[0]);
+    return _this;
+  }
+
+  return SolveYellowCenterRubik;
+}(rubikSolutionBase_1.default);
+
+exports.default = SolveYellowCenterRubik;
+},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../utils":"rubik/utils.ts"}],"index.ts":[function(require,module,exports) {
 "use strict";
 
 var __importStar = this && this.__importStar || function (mod) {
@@ -85948,6 +85685,12 @@ var OrbitControls_1 = require("../node_modules/three/examples/jsm/controls/Orbit
 var view_1 = __importDefault(require("./rubik/view"));
 
 var model_1 = __importDefault(require("./rubik/model"));
+
+var solveStandardRubik_1 = __importDefault(require("./rubik/solutions/solveStandardRubik"));
+
+var solveWhiteCenterRubik_1 = __importDefault(require("./rubik/solutions/solveWhiteCenterRubik"));
+
+var solveYellowCenterRubik_1 = __importDefault(require("./rubik/solutions/solveYellowCenterRubik"));
 
 function createLight() {
   var color = 0xFFFFFF;
@@ -86045,10 +85788,9 @@ function () {
     } else {
       this.rubikView.rubikModel.generateRandomMoves(moves);
     } // this.rubikView.translateGeneratedMoves();
-    // this.rubikView.startNextMove();
 
 
-    this.rubikView.colorizeRubik();
+    this.rubikView.startNextMove(); // this.rubikView.colorizeRubik();
   };
 
   MainScene.prototype.solveRubik = function (animate) {
@@ -86057,9 +85799,14 @@ function () {
     }
 
     if (this.rubikView.rubikModel.sideLength === 3) {
-      this.rubikView.rubikModel.solve();
+      // this.rubikView.rubikModel.solve();
+      var solveStandardRubik = new solveStandardRubik_1.default(this.rubikView.rubikModel);
+      solveStandardRubik.solve(); // this.rubikView.rubikModel
     } else {
-      this.rubikView.rubikModel.solveBigCube();
+      var solveWhiteCenterRubik = new solveWhiteCenterRubik_1.default(this.rubikView.rubikModel);
+      solveWhiteCenterRubik.solve();
+      var solveYellowCenterRubik = new solveYellowCenterRubik_1.default(this.rubikView.rubikModel);
+      solveYellowCenterRubik.solve();
     }
 
     if (animate) {
@@ -86119,7 +85866,7 @@ window.onload = function () {
   };
 
   solve.onclick = function () {
-    main.solveRubik(false);
+    main.solveRubik(true);
   };
 
   main.createRubik(3);
@@ -86129,7 +85876,7 @@ window.onload = function () {
 //   main.render();
 // }
 // init();
-},{"../node_modules/three/src/Three":"../node_modules/three/src/Three.js","../node_modules/three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","./rubik/view":"rubik/view.ts","./rubik/model":"rubik/model.ts"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"../node_modules/three/src/Three":"../node_modules/three/src/Three.js","../node_modules/three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","./rubik/view":"rubik/view.ts","./rubik/model":"rubik/model.ts","./rubik/solutions/solveStandardRubik":"rubik/solutions/solveStandardRubik.ts","./rubik/solutions/solveWhiteCenterRubik":"rubik/solutions/solveWhiteCenterRubik.ts","./rubik/solutions/solveYellowCenterRubik":"rubik/solutions/solveYellowCenterRubik.ts"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -86157,7 +85904,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57425" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59399" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

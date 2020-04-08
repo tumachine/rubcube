@@ -30,6 +30,9 @@ export enum colors {
   yellow = 5,
 }
 
+// hashes for correctly identifying color combinations on a cube
+export const colorHashes: Array<number> = [1, 10, 100, 1000, 10000, 100000];
+
 // function roundRect(ctx, x, y, w, h, r) {
 //   ctx.beginPath();
 //   ctx.moveTo(x + r, y);
