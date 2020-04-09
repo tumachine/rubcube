@@ -84042,6 +84042,7 @@ exports.default = RubikModel;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+/* eslint-disable max-len */
 
 var utils_1 = require("../utils");
 
@@ -84069,6 +84070,64 @@ function () {
 
     this.getLineCubeColor = function (line, num) {
       return _this.rubik.sideLength * (num + 1) + 1 + line;
+    };
+
+    this.findHighestPos = function (row, column, side) {
+      var nextPos = _this.getFaceDirection(row, column);
+
+      var highestPos = nextPos;
+      var found = false;
+
+      for (var i = 0; i < 4; i += 1) {
+        // highest column is a row
+        var currentRow = Math.floor(nextPos / _this.sideLength);
+        var currentCol = nextPos % _this.sideLength;
+        highestPos = nextPos > highestPos ? nextPos : highestPos;
+
+        if (_this.check(side, nextPos, _this.primaryColor)) {
+          // place it on a row where column is at
+          found = true;
+        }
+
+        nextPos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
+      }
+
+      return {
+        highestPos: highestPos,
+        found: found
+      };
+    }; // finds cube and gives amount of rotations
+
+
+    this.baseFind = function (row, column, side, operation) {
+      var nextPos = _this.getFaceDirection(row, column);
+
+      var origPos = nextPos;
+
+      for (var i = 0; i < 4; i += 1) {
+        var currentRow = Math.floor(nextPos / _this.sideLength);
+        var currentCol = nextPos % _this.sideLength;
+
+        if (_this.check(side, nextPos, _this.primaryColor)) {
+          var result = operation({
+            nextPos: nextPos,
+            origPos: origPos,
+            column: column,
+            row: row,
+            currentCol: currentCol,
+            currentRow: currentRow,
+            rotations: i
+          });
+
+          if (result === true) {
+            return true;
+          }
+        }
+
+        nextPos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
+      }
+
+      return false;
     };
 
     this.rubik = rubik;
@@ -85059,77 +85118,46 @@ function (_super) {
   function SolveWhiteCenterRubik(rubik) {
     var _this = _super.call(this, rubik) || this;
 
-    _this.baseFunc = function (row, column, side, operation) {
-      var nextPos = _this.getFaceDirection(row, column);
-
-      var origPos = nextPos;
-
-      for (var i = 0; i < 4; i += 1) {
-        var currentRow = Math.floor(nextPos / _this.sideLength);
-        var currentCol = nextPos % _this.sideLength;
-
-        if (_this.check(side, nextPos, utils_1.sides.f)) {
-          var result = operation(nextPos, origPos, column, row, currentCol, currentRow);
-
-          if (result === true) {
-            return true;
-          }
-        }
-
-        nextPos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
-      }
-
-      return false;
+    _this.localFind = function (row, col, side, operation) {
+      return _this.baseFind(row, col, side, operation);
     };
 
-    _this.solveLeftBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
-      for (var j = 0; j < 4; j += 1) {
-        if (_this.check(utils_1.sides.l, origPos, utils_1.sides.f)) {
-          _this.m.D(row);
-
-          break;
-        }
-
-        _this.m.L();
+    _this.solveLeftBuild = function (r) {
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.L(0, false);
       }
+
+      _this.m.D(r.row);
 
       return true;
     };
 
-    _this.solveRightBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
-      for (var j = 0; j < 4; j += 1) {
-        if (_this.check(utils_1.sides.r, origPos, utils_1.sides.f)) {
-          _this.m.D(row, false);
-
-          break;
-        }
-
-        _this.m.R();
+    _this.solveRightBuild = function (r) {
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.R(0, false);
       }
+
+      _this.m.D(r.row, false);
 
       return true;
     };
 
-    _this.solveBackBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
-      for (var j = 0; j < 4; j += 1) {
-        if (_this.check(utils_1.sides.b, origPos, utils_1.sides.f)) {
-          _this.m.D(row);
-
-          _this.m.D(row);
-
-          break;
-        }
-
-        _this.m.B();
+    _this.solveBackBuild = function (r) {
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.B(0, false);
       }
+
+      _this.m.D(r.row);
+
+      _this.m.D(r.row);
 
       return true;
     };
 
-    _this.solveDownBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
-      var rotatedFront = Math.abs(currentCol - (_this.sideLength - 1));
+    _this.solveDownBuild = function (r) {
+      var rotatedFront = Math.abs(r.currentCol - (_this.sideLength - 1));
 
-      if (rotatedFront >= column) {
+      if (rotatedFront >= r.column) {
         _this.m.D();
 
         _this.m.F(rotatedFront, false);
@@ -85138,14 +85166,15 @@ function (_super) {
 
         return true;
       }
+
+      return false;
     };
 
-    _this.solveFrontBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
-      var futurePos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
+    _this.solveFrontBuild = function (r) {
+      var futurePos = r.currentRow + (_this.sideLength - 1 - r.currentCol) * _this.sideLength;
       var futureRow = Math.floor(futurePos / _this.sideLength);
-      var futureCol = futurePos % _this.sideLength;
 
-      if (currentCol !== column) {
+      if (r.currentCol !== r.column) {
         _this.m.F();
 
         _this.m.D(futureRow);
@@ -85154,41 +85183,25 @@ function (_super) {
 
         return true;
       }
+
+      return false;
     };
 
-    _this.solveUpBuild = function (row, column, side) {
-      var nextPos = _this.getFaceDirection(row, column);
-
-      var currentRow = null;
-      var currentCol = null;
-      var highestPos = nextPos;
-      var found = false;
-
-      for (var i = 0; i < 4; i += 1) {
-        // highest column is a row
-        currentRow = Math.floor(nextPos / _this.sideLength);
-        currentCol = nextPos % _this.sideLength;
-        highestPos = nextPos > highestPos ? nextPos : highestPos;
-
-        if (_this.check(side, nextPos, utils_1.sides.f)) {
-          // place it on a row where column is at
-          found = true;
-        }
-
-        nextPos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
-      }
+    _this.solveUpBuild = function (row, column) {
+      var _a = _this.findHighestPos(row, column, utils_1.sides.u),
+          highestPos = _a.highestPos,
+          found = _a.found;
 
       if (found) {
         for (var i = 0; i < 4; i += 1) {
-          if (_this.check(side, highestPos, utils_1.sides.f)) {
-            currentRow = Math.floor(highestPos / _this.sideLength);
+          if (_this.check(utils_1.sides.u, highestPos, utils_1.sides.f)) {
+            var moveRow = Math.floor(highestPos / _this.sideLength);
 
             _this.m.D();
 
-            _this.m.F(currentRow);
+            _this.m.F(moveRow);
 
-            _this.m.D(0, false); // console.log('UP white is in ', nextPos, i);
-
+            _this.m.D(0, false);
 
             return true;
           }
@@ -85201,33 +85214,39 @@ function (_super) {
     };
 
     _this.solveLeft = function (row, column) {
-      return _this.baseFunc(row, column, utils_1.sides.l, _this.solveLeftBuild);
+      return _this.localFind(row, column, utils_1.sides.l, _this.solveLeftBuild);
     };
 
     _this.solveRight = function (row, column) {
-      return _this.baseFunc(row, column, utils_1.sides.r, _this.solveRightBuild);
+      return _this.localFind(row, column, utils_1.sides.r, _this.solveRightBuild);
     };
 
     _this.solveBack = function (row, column) {
-      return _this.baseFunc(row, column, utils_1.sides.b, _this.solveBackBuild);
+      return _this.localFind(row, column, utils_1.sides.b, _this.solveBackBuild);
     };
 
     _this.solveFront = function (row, column) {
-      if (_this.baseFunc(row, column, utils_1.sides.f, _this.solveFrontBuild)) {
+      if (_this.localFind(row, column, utils_1.sides.f, _this.solveFrontBuild)) {
         return _this.solveRight(row, column);
       }
+
+      return false;
     };
 
     _this.solveUp = function (row, column) {
-      if (_this.solveUpBuild(row, column, utils_1.sides.u)) {
+      if (_this.solveUpBuild(row, column)) {
         return _this.solveRight(row, column);
       }
+
+      return false;
     };
 
     _this.solveDown = function (row, column) {
-      if (_this.baseFunc(row, column, utils_1.sides.d, _this.solveDownBuild)) {
+      if (_this.localFind(row, column, utils_1.sides.d, _this.solveDownBuild)) {
         return _this.solveRight(row, column);
       }
+
+      return false;
     };
 
     _this.solveOrder = [_this.solveFront, _this.solveLeft, _this.solveRight, _this.solveBack, _this.solveUp, _this.solveDown];
@@ -85240,13 +85259,7 @@ function (_super) {
           }
         }
       }
-    }; // for left st 0
-    // for right op 0
-    // for up op 2
-    // for down st 2
-    // for front st 0
-    // for back op 0
-
+    };
 
     _this.solve = function () {
       var lineLength = _this.sideLength - 1;
@@ -85279,6 +85292,7 @@ function (_super) {
     _this.interface[utils_1.sides.d] = __spreadArrays(_this.rubik.stRotations[2]);
     _this.interface[utils_1.sides.f] = __spreadArrays(_this.rubik.stRotations[0]);
     _this.interface[utils_1.sides.b] = __spreadArrays(_this.rubik.opRotations[0]);
+    _this.primaryColor = utils_1.sides.f;
     return _this;
   }
 
@@ -85342,6 +85356,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
 
+var moveActions_1 = __importDefault(require("../moveActions"));
+
 var utils_1 = require("../utils");
 
 var SolveYellowCenterRubik =
@@ -85352,160 +85368,124 @@ function (_super) {
   function SolveYellowCenterRubik(rubik) {
     var _this = _super.call(this, rubik) || this;
 
-    _this.baseFind = function (row, column, side, color, operation, check) {
-      var nextPos = _this.getFaceDirection(row, column);
+    _this.localFind = function (row, col, side, operation) {
+      return _this.baseFind(row, col, side, operation);
+    };
 
-      var origPos = nextPos;
+    _this.middle = Math.floor(_this.sideLength / 2);
 
-      for (var i = 0; i < 4; i += 1) {
-        var currentRow = Math.floor(nextPos / _this.sideLength);
-        var currentCol = nextPos % _this.sideLength;
+    _this.solveLeftBuild = function (r) {
+      // console.log('solving left');
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.L(0, false);
+      }
 
-        if (check(side, nextPos, color)) {
-          var result = operation(nextPos, origPos, column, row, currentCol, currentRow);
+      _this.m.F(r.row);
 
-          if (result === true) {
-            return true;
-          }
+      return true;
+    };
+
+    _this.solveRightBuild = function (r) {
+      // console.log('solving right');
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.R(0, false);
+      }
+
+      _this.m.F(r.row, false);
+
+      return true;
+    };
+
+    _this.solveDownBuild = function (r) {
+      // console.log('solving down');
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.D(0, false);
+      }
+
+      _this.m.F(r.row);
+
+      _this.m.F(r.row);
+
+      return true;
+    };
+
+    _this.solveFrontBuild = function (r) {
+      // console.log('solving front');
+      if (r.currentCol >= r.column && r.currentCol !== _this.middle) {
+        // move front piece to the right
+        _this.m.D(r.currentRow); // correct
+        // rotate opposite to the right once
+
+
+        if (r.currentCol < _this.middle && r.currentRow > _this.middle || r.currentCol > _this.middle && r.currentRow < _this.middle) {
+          _this.m.L(0, false);
+        } else {
+          _this.m.L();
+        } // rotate back to down
+
+
+        _this.m.F(r.currentCol); // correct
+        // undo
+
+
+        if (r.currentCol < _this.middle && r.currentRow > _this.middle || r.currentCol > _this.middle && r.currentRow < _this.middle) {
+          _this.m.L();
+        } else {
+          _this.m.L(0, false);
         }
 
-        nextPos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
+        _this.m.D(r.currentRow, false); // correct
+
+
+        _this.m.F(r.currentCol, false);
+
+        return true;
       }
 
       return false;
     };
 
-    _this.localFind = function (row, col, side, operation) {
-      return _this.baseFind(row, col, side, utils_1.sides.b, operation, _this.check);
-    };
-
-    _this.middle = Math.floor(_this.sideLength / 2);
-
-    _this.solveLeftBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
-      console.log('solving left');
-
-      for (var j = 0; j < 4; j += 1) {
-        if (_this.check(utils_1.sides.r, origPos, utils_1.sides.b)) {
-          _this.m.B(row);
-
-          break;
-        }
-
-        _this.m.R();
-      }
-
-      return true;
-    };
-
-    _this.solveRightBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
-      console.log('solving right');
-
-      for (var j = 0; j < 4; j += 1) {
-        if (_this.check(utils_1.sides.l, origPos, utils_1.sides.b)) {
-          _this.m.B(row, false);
-
-          break;
-        }
-
-        _this.m.L();
-      }
-
-      return true;
-    };
-
-    _this.solveDownBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
-      console.log('solving down');
-
-      for (var j = 0; j < 4; j += 1) {
-        if (_this.check(utils_1.sides.d, origPos, utils_1.sides.b)) {
-          _this.m.B(row);
-
-          _this.m.B(row);
-
-          break;
-        }
-
-        _this.m.D();
-      }
-
-      return true;
-    };
-
-    _this.solveFrontBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
-      console.log('solving front');
-
-      if (currentCol >= column && currentCol !== _this.middle) {
-        // move front piece to the right
-        _this.m.D(currentRow); // correct
-        // rotate opposite to the right once
-
-
-        if (currentCol < _this.middle && currentRow > _this.middle || currentCol > _this.middle && currentRow < _this.middle) {
-          _this.m.R(0, false);
-        } else {
-          _this.m.R();
-        } // rotate back to down
-
-
-        _this.m.B(currentCol); // correct
-        // undo
-
-
-        if (currentCol < _this.middle && currentRow > _this.middle || currentCol > _this.middle && currentRow < _this.middle) {
-          _this.m.R();
-        } else {
-          _this.m.R(0, false);
-        }
-
-        _this.m.D(currentRow, false); // correct
-
-
-        _this.m.B(currentCol, false);
-
-        return true;
-      }
-    };
-
-    _this.solveUpBuild = function (nextPos, origPos, column, row, currentCol, currentRow) {
-      console.log('solving up');
-      var futurePos = currentRow + (_this.sideLength - 1 - currentCol) * _this.sideLength;
+    _this.solveUpBuild = function (r) {
+      // console.log('solving up');
+      var futurePos = r.currentRow + (_this.sideLength - 1 - r.currentCol) * _this.sideLength;
       var futureCol = futurePos % _this.sideLength;
       var futureRow = Math.floor(futurePos / _this.sideLength);
 
-      if (currentCol !== column) {
+      if (r.currentCol !== r.column) {
         _this.m.U();
 
-        _this.m.B(futureRow);
+        _this.m.F(futureRow);
 
         _this.m.U(0, false);
 
         return true;
       }
+
+      return false;
     };
 
     _this.solveLeft = function (row, column) {
-      return _this.localFind(row, column, utils_1.sides.r, _this.solveLeftBuild);
+      return _this.localFind(row, column, _this.ls.l, _this.solveLeftBuild);
     };
 
     _this.solveRight = function (row, column) {
-      return _this.localFind(row, column, utils_1.sides.l, _this.solveRightBuild);
+      return _this.localFind(row, column, _this.ls.r, _this.solveRightBuild);
     };
 
     _this.solveUp = function (row, column) {
-      if (_this.localFind(row, column, utils_1.sides.u, _this.solveUpBuild)) {
+      if (_this.localFind(row, column, _this.ls.u, _this.solveUpBuild)) {
         return _this.solveRight(row, column);
       }
     };
 
     _this.solveFront = function (row, column) {
-      if (_this.localFind(row, column, utils_1.sides.b, _this.solveFrontBuild)) {
-        // return solveRight(row, column);
+      if (_this.localFind(row, column, _this.ls.f, _this.solveFrontBuild)) {
         return _this.solveUp(row, column);
       }
     };
 
     _this.solveDown = function (row, column) {
-      if (_this.localFind(row, column, utils_1.sides.d, _this.solveDownBuild)) {
+      if (_this.localFind(row, column, _this.ls.d, _this.solveDownBuild)) {
         return _this.solveRight(row, column);
       }
     };
@@ -85514,9 +85494,8 @@ function (_super) {
     _this.solveUp, _this.solveLeft, _this.solveRight, _this.solveDown];
 
     _this.solveCube = function (row, column) {
-      if (!_this.check(utils_1.sides.u, _this.getFaceDirection(row, column), utils_1.sides.b)) {
+      if (!_this.check(_this.ls.u, _this.getFaceDirection(row, column), _this.ls.f)) {
         for (var i = 0; i < _this.solveOrder.length; i += 1) {
-          //   console.log(this.solveOrder[i]);
           if (_this.solveOrder[i](row, column)) {
             break;
           }
@@ -85532,7 +85511,7 @@ function (_super) {
       _this.m.U();
 
       for (var i = 1; i < _this.middle; i += 1) {
-        _this.m.R(i);
+        _this.m.L(i);
       }
 
       _this.m.U(0, false);
@@ -85540,7 +85519,7 @@ function (_super) {
       _this.m.U(0, false);
 
       for (var i = 1; i < _this.middle; i += 1) {
-        _this.m.R(i);
+        _this.m.L(i);
       }
 
       _this.m.U(0, false);
@@ -85548,7 +85527,7 @@ function (_super) {
       _this.m.U(0, false);
 
       for (var i = 1; i < _this.middle; i += 1) {
-        _this.m.R(i, false);
+        _this.m.L(i, false);
       }
     };
 
@@ -85558,7 +85537,7 @@ function (_super) {
       _this.m.U();
 
       for (var i = _this.middle + 1; i < _this.middle * 2; i += 1) {
-        _this.m.R(i);
+        _this.m.L(i);
       }
 
       _this.m.U(0, false);
@@ -85566,7 +85545,7 @@ function (_super) {
       _this.m.U(0, false);
 
       for (var i = _this.middle + 1; i < _this.middle * 2; i += 1) {
-        _this.m.R(i);
+        _this.m.L(i);
       }
 
       _this.m.U(0, false);
@@ -85574,13 +85553,13 @@ function (_super) {
       _this.m.U(0, false);
 
       for (var i = _this.middle + 1; i < _this.middle * 2; i += 1) {
-        _this.m.R(i, false);
+        _this.m.L(i, false);
       }
     };
 
     _this.solve = function () {
       for (var row = 1; row < _this.lineLength; row += 1) {
-        if (!_this.check(utils_1.sides.u, _this.getFaceDirection(row, _this.middle), utils_1.sides.b)) {
+        if (!_this.check(_this.ls.u, _this.getFaceDirection(row, _this.middle), _this.ls.f)) {
           console.log('solving');
 
           if (row === _this.middle) {
@@ -85588,7 +85567,7 @@ function (_super) {
           } else {
             _this.solveCube(row, _this.middle);
 
-            if (!_this.check(utils_1.sides.u, _this.getFaceDirection(row, _this.middle), utils_1.sides.b)) {
+            if (!_this.check(_this.ls.u, _this.getFaceDirection(row, _this.middle), _this.ls.f)) {
               console.log('INCORRECT');
               return false;
             }
@@ -85598,7 +85577,7 @@ function (_super) {
 
       _this.completeSecondMiddleHalf();
 
-      _this.m.B(); // special case for middle column
+      _this.m.F(); // special case for middle column
 
 
       for (var col = 1; col < _this.lineLength; col += 1) {
@@ -85608,12 +85587,12 @@ function (_super) {
 
         for (var row = 1; row < _this.lineLength; row += 1) {
           if (col === _this.middle) {// no nothing
-          } else if (!_this.check(utils_1.sides.u, _this.getFaceDirection(row, col), utils_1.sides.b)) {
+          } else if (!_this.check(_this.ls.u, _this.getFaceDirection(row, col), _this.ls.f)) {
             console.log('solving');
 
             _this.solveCube(row, col);
 
-            if (!_this.check(utils_1.sides.u, _this.getFaceDirection(row, col), utils_1.sides.b)) {
+            if (!_this.check(_this.ls.u, _this.getFaceDirection(row, col), _this.ls.f)) {
               console.log('INCORRECT');
               return false;
             }
@@ -85622,24 +85601,39 @@ function (_super) {
 
         if (col === _this.middle) {// do nothing
         } else {
-          _this.m.R(col);
+          _this.m.L(col);
 
           _this.m.U();
 
           _this.m.U();
 
-          _this.m.R(col);
+          _this.m.L(col);
 
           _this.m.U();
 
           _this.m.U();
 
-          _this.m.R(col, false);
+          _this.m.L(col, false);
         }
       }
-    };
+    }; // this.m = rubik.moves;
 
-    _this.m = rubik.moves;
+
+    _this.m = new moveActions_1.default();
+    _this.m.L = rubik.moves.R;
+    _this.m.R = rubik.moves.L;
+    _this.m.F = rubik.moves.B;
+    _this.m.B = rubik.moves.F;
+    _this.m.U = rubik.moves.U;
+    _this.m.D = rubik.moves.D;
+    _this.ls = {
+      l: utils_1.sides.r,
+      r: utils_1.sides.l,
+      f: utils_1.sides.b,
+      b: utils_1.sides.f,
+      u: utils_1.sides.u,
+      d: utils_1.sides.d
+    };
     _this.interface = new Array(6);
     _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[1]);
     _this.interface[utils_1.sides.r] = __spreadArrays(_this.rubik.opRotations[1]);
@@ -85647,6 +85641,7 @@ function (_super) {
     _this.interface[utils_1.sides.d] = __spreadArrays(_this.rubik.stRotations[0]);
     _this.interface[utils_1.sides.f] = null;
     _this.interface[utils_1.sides.b] = __spreadArrays(_this.rubik.opRotations[0]);
+    _this.primaryColor = _this.ls.f;
     return _this;
   }
 
@@ -85654,7 +85649,7 @@ function (_super) {
 }(rubikSolutionBase_1.default);
 
 exports.default = SolveYellowCenterRubik;
-},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../utils":"rubik/utils.ts"}],"index.ts":[function(require,module,exports) {
+},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../moveActions":"rubik/moveActions.ts","../utils":"rubik/utils.ts"}],"index.ts":[function(require,module,exports) {
 "use strict";
 
 var __importStar = this && this.__importStar || function (mod) {
@@ -85819,7 +85814,7 @@ function () {
   };
 
   MainScene.prototype.test = function () {
-    var length = 11;
+    var length = 21;
     var rubikModel = new model_1.default(length);
     this.camera.position.set(length * 1.5, length * 1.2, length * 2);
     this.camera.far = length * 4;
@@ -85828,10 +85823,14 @@ function () {
 
     this.rubikView = new view_1.default(rubikModel);
     this.rubikView.rubik.name = 'rubik';
-    this.scene.add(this.rubikView.rubik);
-    this.rubikView.placeTextOnRubik();
-    this.rubikView.rubikModel.generateRandomMoves(50, true);
-    this.rubikView.rubikModel.solveBigCube();
+    this.scene.add(this.rubikView.rubik); // this.rubikView.placeTextOnRubik();
+
+    this.rubikView.rubikModel.generateRandomMoves(50, true); // this.rubikView.rubikModel.solveBigCube();
+
+    var solveWhiteCenterRubik = new solveWhiteCenterRubik_1.default(this.rubikView.rubikModel);
+    solveWhiteCenterRubik.solve();
+    var solveYellowCenterRubik = new solveYellowCenterRubik_1.default(this.rubikView.rubikModel);
+    solveYellowCenterRubik.solve();
     this.rubikView.colorizeRubik();
   };
 
@@ -85842,34 +85841,29 @@ var main = new MainScene();
 var size = 3;
 
 window.onload = function () {
-  // main.test();
-  var sizeUp = document.getElementById('sizeUp');
-  var sizeDown = document.getElementById('sizeDown');
-  var scramble = document.getElementById('scramble');
-  var solve = document.getElementById('solve');
+  main.test(); // const sizeUp = document.getElementById('sizeUp');
+  // const sizeDown = document.getElementById('sizeDown');
+  // const scramble = document.getElementById('scramble');
+  // const solve = document.getElementById('solve');
+  // sizeUp.onclick = () => {
+  //   size += 2;
+  //   main.createRubik(size);
+  // };
+  // sizeDown.onclick = () => {
+  //   if (size > 3) {
+  //     console.log(size);
+  //     size -= 2;
+  //     main.createRubik(size);
+  //   }
+  // };
+  // scramble.onclick = () => {
+  //   main.scrambleRubik(30);
+  // };
+  // solve.onclick = () => {
+  //   main.solveRubik(true);
+  // };
+  // main.createRubik(3);
 
-  sizeUp.onclick = function () {
-    size += 2;
-    main.createRubik(size);
-  };
-
-  sizeDown.onclick = function () {
-    if (size > 3) {
-      console.log(size);
-      size -= 2;
-      main.createRubik(size);
-    }
-  };
-
-  scramble.onclick = function () {
-    main.scrambleRubik(30);
-  };
-
-  solve.onclick = function () {
-    main.solveRubik(true);
-  };
-
-  main.createRubik(3);
   main.render();
 }; // function init() {
 //   main.createRubik(3);
@@ -85904,7 +85898,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59399" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55388" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

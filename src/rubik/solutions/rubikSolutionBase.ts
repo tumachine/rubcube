@@ -1,11 +1,9 @@
+/* eslint-disable max-len */
 import { colorHashes } from '../utils';
 import RubikModel from '../model';
 import Face from '../face';
 import MoveActions from '../moveActions';
-
-interface RubikSolutionBaseInterface {
-  solve(): void;
-}
+import { OperationAfterFound, FindReturn, HighestPos } from './d';
 
 class RubikSolutionBase {
     public rubik: RubikModel;
@@ -15,6 +13,9 @@ class RubikSolutionBase {
     public f: Face;
 
     public sideLength: number;
+
+    // side
+    public primaryColor: number;
 
     public constructor(rubik: RubikModel) {
       this.rubik = rubik;
@@ -31,6 +32,50 @@ class RubikSolutionBase {
     public getFaceDirection = (row, col) => col + row * this.rubik.sideLength;
 
     public getLineCubeColor = (line, num) => this.rubik.sideLength * (num + 1) + 1 + line;
+
+    public findHighestPos = (row: number, column: number, side: number): HighestPos => {
+      let nextPos = this.getFaceDirection(row, column);
+      let highestPos = nextPos;
+      let found = false;
+      for (let i = 0; i < 4; i += 1) {
+        // highest column is a row
+        const currentRow = Math.floor(nextPos / this.sideLength);
+        const currentCol = nextPos % this.sideLength;
+        highestPos = nextPos > highestPos ? nextPos : highestPos;
+        if (this.check(side, nextPos, this.primaryColor)) {
+          // place it on a row where column is at
+          found = true;
+        }
+        nextPos = currentRow + (this.sideLength - 1 - currentCol) * this.sideLength;
+      }
+      return { highestPos, found };
+    }
+
+    // finds cube and gives amount of rotations
+    public baseFind = (row: number, column: number, side: number, operation: OperationAfterFound): boolean => {
+      let nextPos = this.getFaceDirection(row, column);
+      const origPos = nextPos;
+      for (let i = 0; i < 4; i += 1) {
+        const currentRow = Math.floor(nextPos / this.sideLength);
+        const currentCol = nextPos % this.sideLength;
+        if (this.check(side, nextPos, this.primaryColor)) {
+          const result = operation({
+            nextPos,
+            origPos,
+            column,
+            row,
+            currentCol,
+            currentRow,
+            rotations: i,
+          });
+          if (result === true) {
+            return true;
+          }
+        }
+        nextPos = currentRow + (this.sideLength - 1 - currentCol) * this.sideLength;
+      }
+      return false;
+    }
 }
 
 export default RubikSolutionBase;

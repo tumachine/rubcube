@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
+import { OperationAfterFound, FindReturn } from './d';
 import MoveActions from '../moveActions';
 import RubikModel from '../model';
 import { sides as s, colorHashes } from '../utils';
@@ -20,108 +21,69 @@ class SolveWhiteCenterRubik extends RubikSolutionBase {
     this.interface[s.d] = [...this.rubik.stRotations[2]];
     this.interface[s.f] = [...this.rubik.stRotations[0]];
     this.interface[s.b] = [...this.rubik.opRotations[0]];
+
+    this.primaryColor = s.f;
   }
 
+  localFind = (row: number, col: number, side: number, operation: OperationAfterFound) => this.baseFind(row, col, side, operation);
 
-    baseFunc = (row, column, side, operation) => {
-      let nextPos = this.getFaceDirection(row, column);
-      const origPos = nextPos;
-      for (let i = 0; i < 4; i += 1) {
-        const currentRow = Math.floor(nextPos / this.sideLength);
-        const currentCol = nextPos % this.sideLength;
-        if (this.check(side, nextPos, s.f)) {
-          const result = operation(nextPos, origPos, column, row, currentCol, currentRow);
-          if (result === true) {
-            return true;
-          }
-        }
-        nextPos = currentRow + (this.sideLength - 1 - currentCol) * this.sideLength;
+    solveLeftBuild = (r: FindReturn): boolean => {
+      for (let i = 0; i < r.rotations; i += 1) {
+        this.m.L(0, false);
       }
-      return false;
-    }
-
-    solveLeftBuild = (nextPos, origPos, column, row, currentCol, currentRow) => {
-      for (let j = 0; j < 4; j += 1) {
-        if (this.check(s.l, origPos, s.f)) {
-          this.m.D(row);
-          break;
-        }
-        this.m.L();
-      }
+      this.m.D(r.row);
       return true;
     }
 
-    solveRightBuild = (nextPos, origPos, column, row, currentCol, currentRow) => {
-      for (let j = 0; j < 4; j += 1) {
-        if (this.check(s.r, origPos, s.f)) {
-          this.m.D(row, false);
-          break;
-        }
-        this.m.R();
+    solveRightBuild = (r: FindReturn): boolean => {
+      for (let i = 0; i < r.rotations; i += 1) {
+        this.m.R(0, false);
       }
+      this.m.D(r.row, false);
       return true;
     }
 
-    solveBackBuild = (nextPos, origPos, column, row, currentCol, currentRow) => {
-      for (let j = 0; j < 4; j += 1) {
-        if (this.check(s.b, origPos, s.f)) {
-          this.m.D(row);
-          this.m.D(row);
-          break;
-        }
-        this.m.B();
+    solveBackBuild = (r: FindReturn): boolean => {
+      for (let i = 0; i < r.rotations; i += 1) {
+        this.m.B(0, false);
       }
+      this.m.D(r.row);
+      this.m.D(r.row);
       return true;
     }
 
-    solveDownBuild = (nextPos, origPos, column, row, currentCol, currentRow) => {
-      const rotatedFront = Math.abs(currentCol - (this.sideLength - 1));
-      if (rotatedFront >= column) {
+    solveDownBuild = (r: FindReturn): boolean => {
+      const rotatedFront = Math.abs(r.currentCol - (this.sideLength - 1));
+      if (rotatedFront >= r.column) {
         this.m.D();
         this.m.F(rotatedFront, false);
         this.m.D(0, false);
         return true;
       }
+      return false;
     }
 
-    solveFrontBuild = (nextPos, origPos, column, row, currentCol, currentRow) => {
-      const futurePos = currentRow + (this.sideLength - 1 - currentCol) * this.sideLength;
+    solveFrontBuild = (r: FindReturn): boolean => {
+      const futurePos = r.currentRow + (this.sideLength - 1 - r.currentCol) * this.sideLength;
       const futureRow = Math.floor(futurePos / this.sideLength);
-      const futureCol = futurePos % this.sideLength;
-      if (currentCol !== column) {
+      if (r.currentCol !== r.column) {
         this.m.F();
         this.m.D(futureRow);
         this.m.F(0, false);
         return true;
       }
+      return false;
     }
 
-    solveUpBuild = (row, column, side) => {
-      let nextPos = this.getFaceDirection(row, column);
-      let currentRow = null;
-      let currentCol = null;
-      let highestPos = nextPos;
-      let found = false;
-      for (let i = 0; i < 4; i += 1) {
-        // highest column is a row
-        currentRow = Math.floor(nextPos / this.sideLength);
-        currentCol = nextPos % this.sideLength;
-        highestPos = nextPos > highestPos ? nextPos : highestPos;
-        if (this.check(side, nextPos, s.f)) {
-          // place it on a row where column is at
-          found = true;
-        }
-        nextPos = currentRow + (this.sideLength - 1 - currentCol) * this.sideLength;
-      }
-
+    solveUpBuild = (row, column): boolean => {
+      const { highestPos, found } = this.findHighestPos(row, column, s.u);
       if (found) {
         for (let i = 0; i < 4; i += 1) {
-          if (this.check(side, highestPos, s.f)) {
-            currentRow = Math.floor(highestPos / this.sideLength);
+          if (this.check(s.u, highestPos, s.f)) {
+            const moveRow = Math.floor(highestPos / this.sideLength);
             this.m.D();
-            this.m.F(currentRow);
+            this.m.F(moveRow);
             this.m.D(0, false);
-            // console.log('UP white is in ', nextPos, i);
             return true;
           }
           this.m.U();
@@ -130,28 +92,31 @@ class SolveWhiteCenterRubik extends RubikSolutionBase {
       return false;
     }
 
-    solveLeft = (row, column) => this.baseFunc(row, column, s.l, this.solveLeftBuild);
+    solveLeft = (row, column) => this.localFind(row, column, s.l, this.solveLeftBuild);
 
-    solveRight = (row, column) => this.baseFunc(row, column, s.r, this.solveRightBuild);
+    solveRight = (row, column) => this.localFind(row, column, s.r, this.solveRightBuild);
 
-    solveBack = (row, column) => this.baseFunc(row, column, s.b, this.solveBackBuild);
+    solveBack = (row, column) => this.localFind(row, column, s.b, this.solveBackBuild);
 
     solveFront = (row, column) => {
-      if (this.baseFunc(row, column, s.f, this.solveFrontBuild)) {
+      if (this.localFind(row, column, s.f, this.solveFrontBuild)) {
         return this.solveRight(row, column);
       }
+      return false;
     }
 
     solveUp = (row, column) => {
-      if (this.solveUpBuild(row, column, s.u)) {
+      if (this.solveUpBuild(row, column)) {
         return this.solveRight(row, column);
       }
+      return false;
     }
 
     solveDown = (row, column) => {
-      if (this.baseFunc(row, column, s.d, this.solveDownBuild)) {
+      if (this.localFind(row, column, s.d, this.solveDownBuild)) {
         return this.solveRight(row, column);
       }
+      return false;
     }
 
     solveOrder = [
@@ -174,12 +139,6 @@ class SolveWhiteCenterRubik extends RubikSolutionBase {
       }
     }
 
-    // for left st 0
-    // for right op 0
-    // for up op 2
-    // for down st 2
-    // for front st 0
-    // for back op 0
     solve = () => {
       const lineLength = this.sideLength - 1;
 
