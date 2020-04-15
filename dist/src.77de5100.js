@@ -83161,52 +83161,89 @@ var orange = 0xFFA500;
 var colors = [green, blue, orange, red, white, yellow];
 var sidesOrientaion = new Array(6);
 
-sidesOrientaion[utils_1.sides.f] = function (mesh) {
-  return mesh.translateZ(0.5);
+sidesOrientaion[utils_1.sides.f] = function (mesh, detach) {
+  if (detach === void 0) {
+    detach = 0;
+  }
+
+  mesh.translateZ(0.5 + detach);
 };
 
-sidesOrientaion[utils_1.sides.b] = function (mesh) {
-  return mesh.translateZ(-0.5);
+sidesOrientaion[utils_1.sides.b] = function (mesh, detach) {
+  if (detach === void 0) {
+    detach = 0;
+  }
+
+  mesh.translateZ(-0.5 - detach);
+  mesh.rotateY(THREE.MathUtils.DEG2RAD * 180);
 };
 
-sidesOrientaion[utils_1.sides.l] = function (mesh) {
-  mesh.translateX(-0.5);
+sidesOrientaion[utils_1.sides.l] = function (mesh, detach) {
+  if (detach === void 0) {
+    detach = 0;
+  }
+
+  mesh.translateX(-0.5 - detach);
+  mesh.rotateY(THREE.MathUtils.DEG2RAD * 90);
+  mesh.rotateY(THREE.MathUtils.DEG2RAD * 180);
+};
+
+sidesOrientaion[utils_1.sides.r] = function (mesh, detach) {
+  if (detach === void 0) {
+    detach = 0;
+  }
+
+  mesh.translateX(0.5 + detach);
   mesh.rotateY(THREE.MathUtils.DEG2RAD * 90);
 };
 
-sidesOrientaion[utils_1.sides.r] = function (mesh) {
-  mesh.translateX(0.5);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * 90);
-};
+sidesOrientaion[utils_1.sides.u] = function (mesh, detach) {
+  if (detach === void 0) {
+    detach = 0;
+  }
 
-sidesOrientaion[utils_1.sides.u] = function (mesh) {
-  mesh.translateY(0.5);
+  mesh.translateY(0.5 + detach);
   mesh.rotateX(THREE.MathUtils.DEG2RAD * 90);
+  mesh.rotateX(THREE.MathUtils.DEG2RAD * 180);
 };
 
-sidesOrientaion[utils_1.sides.d] = function (mesh) {
-  mesh.translateY(-0.5);
+sidesOrientaion[utils_1.sides.d] = function (mesh, detach) {
+  if (detach === void 0) {
+    detach = 0;
+  }
+
+  mesh.translateY(-0.5 - detach);
   mesh.rotateX(THREE.MathUtils.DEG2RAD * 90);
 };
 
 var Cube =
 /** @class */
 function () {
+  // constructor(x: number, y: number, z: number) {
+  //   this.cube = new THREE.Object3D();
+  //   this.boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+  //   this.boxMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, vertexColors: true });
+  //   this.box = new THREE.Mesh(this.boxGeometry, this.boxMaterial);
+  //   this.cube.add(this.box);
+  //   this.cube.position.set(x, y, z);
+  // }
+  // setColor(faceSide: number, color: number) {
+  //   this.boxGeometry.faces[faceSide].color.setHex(colors[color]);
+  //   this.boxGeometry.faces[faceSide + 1].color.setHex(colors[color]);
+  // }
   function Cube(x, y, z) {
     this.cube = new THREE.Object3D();
-    this.boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-    this.boxMaterial = new THREE.MeshPhongMaterial({
-      color: 0xFFFFFF,
-      vertexColors: true
-    });
-    this.box = new THREE.Mesh(this.boxGeometry, this.boxMaterial);
-    this.cube.add(this.box);
     this.cube.position.set(x, y, z);
   }
 
   Cube.prototype.setColor = function (faceSide, color) {
-    this.boxGeometry.faces[faceSide].color.setHex(colors[color]);
-    this.boxGeometry.faces[faceSide + 1].color.setHex(colors[color]);
+    var material = new THREE.MeshBasicMaterial();
+    material.color.set(colors[color]); // material.side = THREE.DoubleSide;
+
+    var mesh = new THREE.Mesh(new THREE.PlaneGeometry(boxWidth, boxHeight), // new THREE.PlaneGeometry(1, 1),
+    material);
+    sidesOrientaion[faceSide](mesh, 0);
+    this.cube.add(mesh);
   };
 
   Cube.prototype.getCube = function () {
@@ -83219,7 +83256,8 @@ function () {
     canvas.width = 256;
     canvas.height = 256;
     context.font = 'Bold 120px Arial';
-    context.fillStyle = 'rgba(0,0,0,0.95)';
+    context.fillStyle = 'rgba(0,0,0,0.95)'; // context.fillStyle = 'rgba(255,255,255,0.95)';
+
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.fillText(text, 128, 128);
@@ -83231,7 +83269,7 @@ function () {
     });
     material.transparent = true;
     var mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
-    sidesOrientaion[faceSide](mesh);
+    sidesOrientaion[faceSide](mesh, 0.05);
     this.cube.add(mesh);
   };
 
@@ -83398,6 +83436,12 @@ function () {
 
     this.placeTextOnRubik = function () {
       for (var cube = 0; cube < _this.rubikModel.totalColors; cube += 1) {
+        // this.interface[s.l] = [...this.rubik.stRotations[2]];
+        // this.interface[s.r] = [...this.rubik.opRotations[0]];
+        // this.interface[s.u] = [...this.rubik.opRotations[3]];
+        // this.interface[s.d] = [...this.rubik.stRotations[1]];
+        // this.interface[s.f] = null;
+        // this.interface[s.b] = [...this.rubik.opRotations[0]];
         // text left
         // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].addText(cube.toString(), sides.l);
         _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.l][_this.rubikModel.stRotations[2][cube]]].addText(cube.toString(), utils_1.sides.l); // text right
@@ -83417,42 +83461,59 @@ function () {
         // this.cubes[this.rubikModel.matrixReference[sides.f][this.rubikModel.stRotations[0][cube]]].addText(cube.toString(), sides.f);
         // text back
         // this.cubes[this.rubikModel.matrixReference[sides.b][cube]].addText(cube.toString(), sides.b);
-        // this.cubes[this.rubikModel.matrixReference[sides.b][this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), sides.b);
 
+
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.b][_this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), utils_1.sides.b);
       }
     };
 
     this.colorizeRubik = function () {
-      var faceSides = {
-        left: 0,
-        right: 2,
-        top: 4,
-        bottom: 6,
-        front: 8,
-        back: 10
-      }; // console.log(this.cubes)
+      // const faceSides = {
+      //   left: 0,
+      //   right: 2,
+      //   top: 4,
+      //   bottom: 6,
+      //   front: 8,
+      //   back: 10,
+      // };
+      // console.log(this.cubes)
       // maybe there is a simpler way of representing rubik graphically
-
+      // for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
+      //   // color left
+      //   this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.l][cube]);
+      //   // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.l][cube]);
+      //   // color right
+      //   this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.r][cube]);
+      //   // this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.r][cube]);
+      //   // color top
+      //   this.cubes[this.rubikModel.matrixReference[sides.u][cube]].setColor(faceSides.top, this.rubikModel.matrix[sides.u][cube]);
+      //   // color bottom
+      //   this.cubes[this.rubikModel.matrixReference[sides.d][cube]].setColor(faceSides.bottom, this.rubikModel.matrix[sides.d][cube]);
+      //   // color front
+      //   this.cubes[this.rubikModel.matrixReference[sides.f][cube]].setColor(faceSides.front, this.rubikModel.matrix[sides.f][cube]);
+      //   // color back
+      //   this.cubes[this.rubikModel.matrixReference[sides.b][cube]].setColor(faceSides.back, this.rubikModel.matrix[sides.b][cube]);
+      // }
       for (var cube = 0; cube < _this.rubikModel.totalColors; cube += 1) {
         // color left
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.l][cube]].setColor(faceSides.right, _this.rubikModel.matrix[utils_1.sides.l][cube]); // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.l][cube]);
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.l][cube]].setColor(utils_1.sides.l, _this.rubikModel.matrix[utils_1.sides.l][cube]); // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.l][cube]);
         // color right
 
 
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.r][cube]].setColor(faceSides.left, _this.rubikModel.matrix[utils_1.sides.r][cube]); // this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.r][cube]);
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.r][cube]].setColor(utils_1.sides.r, _this.rubikModel.matrix[utils_1.sides.r][cube]); // this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.r][cube]);
         // color top
 
 
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.u][cube]].setColor(faceSides.top, _this.rubikModel.matrix[utils_1.sides.u][cube]); // color bottom
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.u][cube]].setColor(utils_1.sides.u, _this.rubikModel.matrix[utils_1.sides.u][cube]); // color bottom
 
 
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.d][cube]].setColor(faceSides.bottom, _this.rubikModel.matrix[utils_1.sides.d][cube]); // color front
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.d][cube]].setColor(utils_1.sides.d, _this.rubikModel.matrix[utils_1.sides.d][cube]); // color front
 
 
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.f][cube]].setColor(faceSides.front, _this.rubikModel.matrix[utils_1.sides.f][cube]); // color back
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.f][cube]].setColor(utils_1.sides.f, _this.rubikModel.matrix[utils_1.sides.f][cube]); // color back
 
 
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.b][cube]].setColor(faceSides.back, _this.rubikModel.matrix[utils_1.sides.b][cube]);
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.b][cube]].setColor(utils_1.sides.b, _this.rubikModel.matrix[utils_1.sides.b][cube]);
       }
     };
 
@@ -83636,8 +83697,7 @@ function () {
         }
       }
 
-      console.log('Generated random moves');
-      console.log(_this.moveHistory);
+      console.log('Generated random moves'); // console.log(this.moveHistory);
     };
 
     this.regMove = function (m) {
@@ -85375,97 +85435,102 @@ function (_super) {
     _this.middle = Math.floor(_this.sideLength / 2);
 
     _this.solveLeftBuild = function (r) {
-      // console.log('solving left');
-      for (var i = 0; i < r.rotations; i += 1) {
-        _this.m.L(0, false);
+      console.log('YELLOW CENTER: solving left');
+
+      if (r.currentRow === r.row) {
+        return false;
       }
 
-      _this.m.F(r.row);
+      _this.m.L();
+
+      var futurePos = r.currentRow + (_this.sideLength - 1 - r.currentCol) * _this.sideLength;
+      var futureCol = futurePos % _this.sideLength; // const futureRow = Math.floor(futurePos / this.sideLength);
+
+      _this.m.B(futureCol, false);
+
+      _this.m.L(0, false);
 
       return true;
     };
 
     _this.solveRightBuild = function (r) {
-      // console.log('solving right');
+      console.log('YELLOW CENTER: solving right'); // console.log('solving right');
+
       for (var i = 0; i < r.rotations; i += 1) {
         _this.m.R(0, false);
       }
 
-      _this.m.F(r.row, false);
+      _this.m.B(r.column);
+
+      _this.m.B(r.column);
 
       return true;
     };
 
     _this.solveDownBuild = function (r) {
-      // console.log('solving down');
+      console.log('YELLOW CENTER: solving down'); // console.log('solving down');
+
       for (var i = 0; i < r.rotations; i += 1) {
         _this.m.D(0, false);
       }
 
-      _this.m.F(r.row);
-
-      _this.m.F(r.row);
+      _this.m.B(r.column, false);
 
       return true;
     };
 
     _this.solveFrontBuild = function (r) {
-      // console.log('solving front');
-      if (r.currentCol >= r.column && r.currentCol !== _this.middle) {
-        // move front piece to the right
-        _this.m.D(r.currentRow); // correct
-        // rotate opposite to the right once
+      console.log('YELLOW CENTER: solving front');
 
-
-        if (r.currentCol < _this.middle && r.currentRow > _this.middle || r.currentCol > _this.middle && r.currentRow < _this.middle) {
-          _this.m.L(0, false);
-        } else {
-          _this.m.L();
-        } // rotate back to down
-
-
-        _this.m.F(r.currentCol); // correct
-        // undo
-
-
-        if (r.currentCol < _this.middle && r.currentRow > _this.middle || r.currentCol > _this.middle && r.currentRow < _this.middle) {
-          _this.m.L();
-        } else {
-          _this.m.L(0, false);
-        }
-
-        _this.m.D(r.currentRow, false); // correct
-
-
-        _this.m.F(r.currentCol, false);
-
-        return true;
+      if (r.currentRow < r.row) {
+        return false;
       }
 
-      return false;
+      var futurePos = r.currentRow + (_this.sideLength - 1 - r.currentCol) * _this.sideLength;
+      var futureCol = futurePos % _this.sideLength; // const futureRow = Math.floor(futurePos / this.sideLength);
+
+      _this.m.F();
+
+      _this.m.L(futureCol, false); // maybe up once or twice
+
+
+      _this.m.U();
+
+      _this.m.U();
+
+      _this.m.L(futureCol);
+
+      _this.m.F(0, false);
+
+      return true;
     };
 
     _this.solveUpBuild = function (r) {
-      // console.log('solving up');
-      var futurePos = r.currentRow + (_this.sideLength - 1 - r.currentCol) * _this.sideLength;
-      var futureCol = futurePos % _this.sideLength;
-      var futureRow = Math.floor(futurePos / _this.sideLength);
+      console.log('YELLOW CENTER: solving up'); // console.log('solving up');
 
-      if (r.currentCol !== r.column) {
-        _this.m.U();
-
-        _this.m.F(futureRow);
-
+      for (var i = 0; i < r.rotations; i += 1) {
         _this.m.U(0, false);
+      }
 
-        return true;
+      _this.m.B(r.column);
+
+      return true;
+    };
+
+    _this.solveLeft = function (row, column) {
+      if (_this.localFind(row, column, _this.ls.l, _this.solveLeftBuild)) {
+        return _this.solveUp(row, column);
       }
 
       return false;
     };
 
-    _this.solveLeft = function (row, column) {
-      return _this.localFind(row, column, _this.ls.l, _this.solveLeftBuild);
+    _this.solveFront = function (row, column) {
+      if (_this.localFind(row, column, _this.ls.f, _this.solveFrontBuild)) {
+        return _this.solveUp(row, column);
+      }
+
+      return false;
     };
 
     _this.solveRight = function (row, column) {
@@ -85473,25 +85538,351 @@ function (_super) {
     };
 
     _this.solveUp = function (row, column) {
-      if (_this.localFind(row, column, _this.ls.u, _this.solveUpBuild)) {
-        return _this.solveRight(row, column);
+      return _this.localFind(row, column, _this.ls.u, _this.solveUpBuild);
+    };
+
+    _this.solveDown = function (row, column) {
+      return _this.localFind(row, column, _this.ls.d, _this.solveDownBuild);
+    };
+
+    _this.solveOrder = [_this.solveLeft, _this.solveFront, _this.solveUp, _this.solveRight, _this.solveDown];
+
+    _this.solveCube = function (row, column) {
+      if (!_this.check(_this.ls.l, _this.getFaceDirection(row, column), _this.ls.f)) {
+        for (var i = 0; i < _this.solveOrder.length; i += 1) {
+          if (_this.solveOrder[i](row, column)) {
+            break;
+          }
+        }
       }
+    };
+
+    _this.lineLength = _this.sideLength - 1;
+
+    _this.solve = function () {
+      for (var row = 1; row < _this.lineLength; row += 1) {
+        if (row !== _this.middle) {
+          for (var col = 1; col < _this.lineLength; col += 1) {
+            console.log(row, col);
+
+            _this.solveCube(row, col); // for (let c = 1; c < col; c += 1) {
+            //   if (!this.check(this.ls.l, this.getFaceDirection(row, c), this.ls.f)) {
+            //     console.log('INCORRECT ROW');
+            //     return false;
+            //   }
+            // }
+
+          } // for top mid
+
+
+          if (row > _this.middle) {
+            _this.m.F();
+
+            _this.m.F();
+
+            _this.m.D(row);
+
+            _this.m.F();
+
+            _this.m.F();
+
+            _this.m.D(row, false);
+          } else if (row < _this.middle) {
+            // for bot mid
+            _this.m.D(row);
+
+            _this.m.F();
+
+            _this.m.F();
+
+            _this.m.D(row, false);
+
+            _this.m.F();
+
+            _this.m.F();
+          }
+        } // console.log('passed row');
+        // for (let r = 1; r < row; r += 1) {
+        //   for (let c = 1; c < this.lineLength; c += 1) {
+        //     if (!this.check(this.ls.f, this.getFaceDirection(r, c), this.ls.f)) {
+        //         console.log('INCORRECT BUILD');
+        //         return false;
+        //       }
+        //     }
+        //   }
+        // }
+
+      }
+    }; // this.m = rubik.moves;
+
+
+    _this.m = new moveActions_1.default();
+    _this.m.L = rubik.moves.R;
+    _this.m.R = rubik.moves.L;
+    _this.m.F = rubik.moves.B;
+    _this.m.B = rubik.moves.F;
+    _this.m.U = rubik.moves.U;
+    _this.m.D = rubik.moves.D;
+    _this.ls = {
+      l: utils_1.sides.r,
+      r: utils_1.sides.l,
+      f: utils_1.sides.b,
+      b: utils_1.sides.f,
+      u: utils_1.sides.u,
+      d: utils_1.sides.d
+    };
+    _this.interface = new Array(6);
+    _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[2]);
+    _this.interface[utils_1.sides.r] = __spreadArrays(_this.rubik.opRotations[0]);
+    _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[3]);
+    _this.interface[utils_1.sides.d] = __spreadArrays(_this.rubik.stRotations[1]);
+    _this.interface[utils_1.sides.f] = null;
+    _this.interface[utils_1.sides.b] = __spreadArrays(_this.rubik.opRotations[0]);
+    _this.primaryColor = _this.ls.f;
+    return _this;
+  }
+
+  return SolveYellowCenterRubik;
+}(rubikSolutionBase_1.default);
+
+exports.default = SolveYellowCenterRubik;
+},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../moveActions":"rubik/moveActions.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveBlueCenterRubik.ts":[function(require,module,exports) {
+"use strict";
+
+var __extends = this && this.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (b.hasOwnProperty(p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var __spreadArrays = this && this.__spreadArrays || function () {
+  for (var s = 0, i = 0, il = arguments.length; i < il; i++) {
+    s += arguments[i].length;
+  }
+
+  for (var r = Array(s), k = 0, i = 0; i < il; i++) {
+    for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++) {
+      r[k] = a[j];
+    }
+  }
+
+  return r;
+};
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* eslint-disable max-len */
+
+var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
+
+var moveActions_1 = __importDefault(require("../moveActions"));
+
+var utils_1 = require("../utils");
+
+var SolveBlueCenterRubik =
+/** @class */
+function (_super) {
+  __extends(SolveBlueCenterRubik, _super);
+
+  function SolveBlueCenterRubik(rubik) {
+    var _this = _super.call(this, rubik) || this;
+
+    _this.localFind = function (row, col, side, operation) {
+      return _this.baseFind(row, col, side, operation);
+    };
+
+    _this.middle = Math.floor(_this.sideLength / 2); // which lines not to touch, which moves were on settled columns
+    // place everything on top
+    // similar for back and bottom
+    // special cases for front and top
+
+    _this.solveBackBuild = function (r) {
+      console.log('BLUE CENTER: solving back');
+
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.B(0, false);
+      }
+
+      var activeCol = Math.abs(r.row - (_this.sideLength - 1));
+
+      _this.m.L(r.column);
+
+      if (r.column < activeCol) {
+        _this.m.U(0, false);
+
+        _this.m.L(r.column, false);
+
+        _this.m.U();
+      }
+
+      return true;
+    };
+
+    _this.solveDownBuild = function (r) {
+      console.log('BLUE CENTER: solving down');
+
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.D(0, false);
+      }
+
+      var activeCol = Math.abs(r.row - (_this.sideLength - 1));
+
+      _this.m.L(r.column);
+
+      _this.m.L(r.column); // if movement would mess up already established columns
+      // record backward movements
+
+
+      if (r.column < activeCol) {
+        _this.m.U(0, false);
+
+        _this.m.L(r.column, false);
+
+        _this.m.L(r.column, false);
+
+        _this.m.U();
+      }
+
+      return true;
+    };
+
+    _this.solveFrontBuild = function (r) {
+      console.log('BLUE CENTER: solving front');
+      var activeCol = Math.abs(r.row - (_this.sideLength - 1));
+
+      if (r.currentCol < activeCol) {
+        console.log('ACTIVE ROW');
+        return false;
+      }
+
+      _this.m.L(r.currentCol, false);
+
+      _this.m.L(r.currentCol, false);
+
+      if (r.currentCol < r.column) {
+        console.log('HAVE TO RECORD');
+
+        _this.moveHistory.push(function () {
+          return _this.m.L(r.currentCol);
+        });
+
+        _this.moveHistory.push(function () {
+          return _this.m.L(r.currentCol);
+        });
+      }
+
+      return true;
+    };
+
+    _this.solveUpBuild = function (r) {
+      console.log('BLUE CENTER: solving up');
+      var activeCol = Math.abs(r.row - (_this.sideLength - 1));
+
+      if (r.row === r.currentRow) {
+        console.log('SAME ROW');
+        return false;
+      }
+
+      var futurePos;
+      var futureCol = r.nextPos % _this.sideLength;
+      var futureRow = Math.floor(r.nextPos / _this.sideLength);
+
+      for (var i = 0; i < 3; i += 1) {
+        futurePos = futureRow + (_this.sideLength - 1 - futureCol) * _this.sideLength;
+        futureCol = futurePos % _this.sideLength;
+        futureRow = Math.floor(futurePos / _this.sideLength);
+      }
+
+      console.log(r.nextPos);
+      console.log(futurePos);
+      console.log(futureCol);
+
+      _this.m.U(0, false);
+
+      _this.m.L(futureCol, false);
+
+      if (futureCol < activeCol) {
+        console.log("FUTURE POS: " + futurePos);
+
+        if (futureCol === _this.middle) {
+          _this.m.B();
+        } else {
+          _this.m.B();
+
+          _this.m.B();
+        }
+
+        _this.m.L(futureCol);
+
+        _this.m.U();
+      } else {
+        _this.m.U();
+      }
+
+      return true;
+    };
+
+    _this.solveBack = function (row, column) {
+      return _this.localFind(row, column, _this.ls.b, _this.solveBackBuild);
+    };
+
+    _this.solveDown = function (row, column) {
+      return _this.localFind(row, column, _this.ls.d, _this.solveDownBuild);
     };
 
     _this.solveFront = function (row, column) {
       if (_this.localFind(row, column, _this.ls.f, _this.solveFrontBuild)) {
-        return _this.solveUp(row, column);
+        _this.solveBack(row, column);
+
+        for (var i = _this.moveHistory.length - 1; i >= 0; i -= 1) {
+          _this.moveHistory[i]();
+        }
+
+        _this.moveHistory = [];
+        return true;
       }
+
+      return false;
     };
 
-    _this.solveDown = function (row, column) {
-      if (_this.localFind(row, column, _this.ls.d, _this.solveDownBuild)) {
-        return _this.solveRight(row, column);
+    _this.solveUp = function (row, column) {
+      if (_this.localFind(row, column, _this.ls.u, _this.solveUpBuild)) {
+        _this.solveBack(row, column);
+
+        return true;
       }
+
+      return false;
     };
 
-    _this.solveOrder = [// solveFront,
-    _this.solveUp, _this.solveLeft, _this.solveRight, _this.solveDown];
+    _this.solveOrder = [_this.solveFront, _this.solveUp, _this.solveDown, _this.solveBack];
 
     _this.solveCube = function (row, column) {
       if (!_this.check(_this.ls.u, _this.getFaceDirection(row, column), _this.ls.f)) {
@@ -85503,117 +85894,290 @@ function (_super) {
       }
     };
 
+    _this.solve = function () {
+      var lineLength = _this.sideLength - 1;
+
+      for (var row = lineLength - 1; row >= 1; row -= 1) {
+        for (var col = 1; col < lineLength; col += 1) {
+          console.log(row, col);
+
+          _this.solveCube(row, col);
+
+          for (var c = 1; c < col; c += 1) {
+            if (!_this.check(_this.ls.u, _this.getFaceDirection(row, c), _this.ls.f)) {
+              console.log('INCORRECT AA');
+              return false;
+            }
+          }
+        }
+
+        var activeCol = Math.abs(row - (_this.sideLength - 1));
+        console.log("Active Col: " + activeCol);
+
+        _this.m.U(0, false);
+
+        _this.m.L(activeCol, true);
+
+        console.log('COMPLETE');
+      }
+    };
+
+    _this.m = new moveActions_1.default();
+    _this.m.L = rubik.moves.F;
+    _this.m.R = rubik.moves.B;
+    _this.m.F = rubik.moves.R;
+    _this.m.B = rubik.moves.L;
+    _this.m.U = rubik.moves.U;
+    _this.m.D = rubik.moves.D;
+    _this.ls = {
+      l: utils_1.sides.f,
+      r: utils_1.sides.b,
+      f: utils_1.sides.r,
+      b: utils_1.sides.l,
+      u: utils_1.sides.u,
+      d: utils_1.sides.d
+    };
+    _this.interface = new Array(6);
+    _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[2]);
+    _this.interface[utils_1.sides.r] = __spreadArrays(_this.rubik.opRotations[0]);
+    _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[3]);
+    _this.interface[utils_1.sides.d] = __spreadArrays(_this.rubik.stRotations[1]);
+    _this.interface[utils_1.sides.f] = null;
+    _this.interface[utils_1.sides.b] = null;
+    _this.primaryColor = _this.ls.f;
+    _this.moveHistory = [];
+    return _this;
+  }
+
+  return SolveBlueCenterRubik;
+}(rubikSolutionBase_1.default);
+
+exports.default = SolveBlueCenterRubik;
+},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../moveActions":"rubik/moveActions.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveYellowMiddleLineRubik.ts":[function(require,module,exports) {
+"use strict";
+
+var __extends = this && this.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (b.hasOwnProperty(p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var __spreadArrays = this && this.__spreadArrays || function () {
+  for (var s = 0, i = 0, il = arguments.length; i < il; i++) {
+    s += arguments[i].length;
+  }
+
+  for (var r = Array(s), k = 0, i = 0; i < il; i++) {
+    for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++) {
+      r[k] = a[j];
+    }
+  }
+
+  return r;
+};
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* eslint-disable max-len */
+
+var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
+
+var moveActions_1 = __importDefault(require("../moveActions"));
+
+var utils_1 = require("../utils");
+
+var SolveYellowMiddleLineRubik =
+/** @class */
+function (_super) {
+  __extends(SolveYellowMiddleLineRubik, _super);
+
+  function SolveYellowMiddleLineRubik(rubik) {
+    var _this = _super.call(this, rubik) || this;
+
+    _this.localFind = function (row, col, side, operation) {
+      return _this.baseFind(row, col, side, operation);
+    };
+
+    _this.middle = Math.floor(_this.sideLength / 2);
+
+    _this.solveLeftBuild = function (r) {
+      console.log('YELLOW MIDDLE: solving left');
+
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.L(0, false);
+      }
+
+      _this.m.F(0, false);
+
+      _this.m.D(r.column);
+
+      _this.m.F();
+
+      _this.m.D(r.column, false);
+
+      return true;
+    };
+
+    _this.solveRightBuild = function (r) {
+      console.log('YELLOW MIDDLE: solving right');
+
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.R(0, false);
+      }
+
+      _this.m.F();
+
+      _this.m.U(r.column);
+
+      _this.m.F(0, false);
+
+      _this.m.U(r.column, false);
+
+      return true;
+    };
+
+    _this.solveDownBuild = function (r) {
+      console.log('YELLOW MIDDLE: solving down');
+
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.D(0, false);
+      }
+
+      _this.m.F();
+
+      _this.m.F();
+
+      _this.m.R(r.column);
+
+      _this.m.F();
+
+      _this.m.R(r.column, false);
+
+      _this.m.F();
+
+      return true;
+    };
+
+    _this.solveUpBuild = function (r) {
+      console.log('YELLOW MIDDLE: solving up');
+
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.U(0, false);
+      }
+
+      _this.m.L(r.column);
+
+      _this.m.F();
+
+      _this.m.L(r.column, false);
+
+      _this.m.F(0, false);
+
+      return true;
+    };
+
+    _this.solveFrontBuild = function (r) {
+      console.log('YELLOW MIDDLE: solving front');
+
+      if (r.currentRow === r.row) {
+        return false;
+      }
+
+      var futurePos = r.currentRow + (_this.sideLength - 1 - r.currentCol) * _this.sideLength;
+      var futureCol = futurePos % _this.sideLength; // const futureRow = Math.floor(futurePos / this.sideLength);
+
+      _this.m.F();
+
+      _this.m.L(futureCol, false);
+
+      _this.m.U();
+
+      _this.m.U();
+
+      _this.m.L(futureCol);
+
+      _this.m.F(0, false);
+
+      return true;
+    };
+
+    _this.solveLeft = function (row, column) {
+      return _this.localFind(row, column, _this.ls.l, _this.solveLeftBuild);
+    };
+
+    _this.solveFront = function (row, column) {
+      if (_this.localFind(row, column, _this.ls.f, _this.solveFrontBuild)) {
+        return _this.solveUp(row, column);
+      }
+
+      return false;
+    };
+
+    _this.solveRight = function (row, column) {
+      return _this.localFind(row, column, _this.ls.r, _this.solveRightBuild);
+    };
+
+    _this.solveUp = function (row, column) {
+      return _this.localFind(row, column, _this.ls.u, _this.solveUpBuild);
+    };
+
+    _this.solveDown = function (row, column) {
+      return _this.localFind(row, column, _this.ls.d, _this.solveDownBuild);
+    };
+
+    _this.solveOrder = [_this.solveDown, _this.solveUp, _this.solveLeft, _this.solveFront, _this.solveRight];
+
+    _this.solveCube = function (row, column) {
+      if (!_this.check(_this.ls.f, _this.getFaceDirection(row, column), _this.ls.f)) {
+        for (var i = 0; i < _this.solveOrder.length; i += 1) {
+          if (_this.solveOrder[i](row, column)) {
+            break;
+          }
+        }
+      }
+    };
+
     _this.lineLength = _this.sideLength - 1;
 
-    _this.completeFirstMiddleHalf = function () {
-      console.log('found middle');
-
-      _this.m.U();
-
-      for (var i = 1; i < _this.middle; i += 1) {
-        _this.m.L(i);
-      }
-
-      _this.m.U(0, false);
-
-      _this.m.U(0, false);
-
-      for (var i = 1; i < _this.middle; i += 1) {
-        _this.m.L(i);
-      }
-
-      _this.m.U(0, false);
-
-      _this.m.U(0, false);
-
-      for (var i = 1; i < _this.middle; i += 1) {
-        _this.m.L(i, false);
-      }
-    };
-
-    _this.completeSecondMiddleHalf = function () {
-      console.log('found second middle');
-
-      _this.m.U();
-
-      for (var i = _this.middle + 1; i < _this.middle * 2; i += 1) {
-        _this.m.L(i);
-      }
-
-      _this.m.U(0, false);
-
-      _this.m.U(0, false);
-
-      for (var i = _this.middle + 1; i < _this.middle * 2; i += 1) {
-        _this.m.L(i);
-      }
-
-      _this.m.U(0, false);
-
-      _this.m.U(0, false);
-
-      for (var i = _this.middle + 1; i < _this.middle * 2; i += 1) {
-        _this.m.L(i, false);
-      }
-    };
-
     _this.solve = function () {
-      for (var row = 1; row < _this.lineLength; row += 1) {
-        if (!_this.check(_this.ls.u, _this.getFaceDirection(row, _this.middle), _this.ls.f)) {
-          console.log('solving');
-
-          if (row === _this.middle) {
-            _this.completeFirstMiddleHalf();
-          } else {
-            _this.solveCube(row, _this.middle);
-
-            if (!_this.check(_this.ls.u, _this.getFaceDirection(row, _this.middle), _this.ls.f)) {
-              console.log('INCORRECT');
-              return false;
-            }
-          }
-        }
-      }
-
-      _this.completeSecondMiddleHalf();
-
-      _this.m.F(); // special case for middle column
-
-
       for (var col = 1; col < _this.lineLength; col += 1) {
-        for (var row = 1; row < _this.lineLength; row += 1) {
-          _this.solveFront(row, col);
-        }
+        console.log(_this.middle, col);
 
-        for (var row = 1; row < _this.lineLength; row += 1) {
-          if (col === _this.middle) {// no nothing
-          } else if (!_this.check(_this.ls.u, _this.getFaceDirection(row, col), _this.ls.f)) {
-            console.log('solving');
+        if (col !== _this.middle) {
+          _this.solveCube(_this.middle, col); // for (let c = 1; c < col; c += 1) {
+          //   if (!this.check(this.ls.f, this.getFaceDirection(this.middle, c), this.ls.f)) {
+          //     console.log('INCORRECT AA');
+          //     return false;
+          //   }
+          // }
 
-            _this.solveCube(row, col);
-
-            if (!_this.check(_this.ls.u, _this.getFaceDirection(row, col), _this.ls.f)) {
-              console.log('INCORRECT');
-              return false;
-            }
-          }
-        }
-
-        if (col === _this.middle) {// do nothing
-        } else {
-          _this.m.L(col);
-
-          _this.m.U();
-
-          _this.m.U();
-
-          _this.m.L(col);
-
-          _this.m.U();
-
-          _this.m.U();
-
-          _this.m.L(col, false);
         }
       }
     }; // this.m = rubik.moves;
@@ -85645,10 +86209,10 @@ function (_super) {
     return _this;
   }
 
-  return SolveYellowCenterRubik;
+  return SolveYellowMiddleLineRubik;
 }(rubikSolutionBase_1.default);
 
-exports.default = SolveYellowCenterRubik;
+exports.default = SolveYellowMiddleLineRubik;
 },{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../moveActions":"rubik/moveActions.ts","../utils":"rubik/utils.ts"}],"index.ts":[function(require,module,exports) {
 "use strict";
 
@@ -85686,6 +86250,10 @@ var solveStandardRubik_1 = __importDefault(require("./rubik/solutions/solveStand
 var solveWhiteCenterRubik_1 = __importDefault(require("./rubik/solutions/solveWhiteCenterRubik"));
 
 var solveYellowCenterRubik_1 = __importDefault(require("./rubik/solutions/solveYellowCenterRubik"));
+
+var solveBlueCenterRubik_1 = __importDefault(require("./rubik/solutions/solveBlueCenterRubik"));
+
+var solveYellowMiddleLineRubik_1 = __importDefault(require("./rubik/solutions/solveYellowMiddleLineRubik"));
 
 function createLight() {
   var color = 0xFFFFFF;
@@ -85771,8 +86339,8 @@ function () {
 
     this.rubikView = new view_1.default(rubikModel);
     this.rubikView.rubik.name = 'rubik';
-    this.scene.add(this.rubikView.rubik);
-    this.rubikView.placeTextOnRubik();
+    this.scene.add(this.rubikView.rubik); // this.rubikView.placeTextOnRubik();
+
     this.rubikView.colorizeRubik();
     console.log("created rubik of size: " + length);
   };
@@ -85802,6 +86370,8 @@ function () {
       solveWhiteCenterRubik.solve();
       var solveYellowCenterRubik = new solveYellowCenterRubik_1.default(this.rubikView.rubikModel);
       solveYellowCenterRubik.solve();
+      var solveBlueCenterRubik = new solveBlueCenterRubik_1.default(this.rubikView.rubikModel);
+      solveBlueCenterRubik.solve();
     }
 
     if (animate) {
@@ -85825,13 +86395,17 @@ function () {
     this.rubikView.rubik.name = 'rubik';
     this.scene.add(this.rubikView.rubik); // this.rubikView.placeTextOnRubik();
 
-    this.rubikView.rubikModel.generateRandomMoves(50, true); // this.rubikView.rubikModel.solveBigCube();
+    this.rubikView.rubikModel.generateRandomMoves(500, true); // this.rubikView.rubikModel.solveBigCube();
 
     var solveWhiteCenterRubik = new solveWhiteCenterRubik_1.default(this.rubikView.rubikModel);
     solveWhiteCenterRubik.solve();
+    var solveYellowMiddleLineRubik = new solveYellowMiddleLineRubik_1.default(this.rubikView.rubikModel);
+    solveYellowMiddleLineRubik.solve();
     var solveYellowCenterRubik = new solveYellowCenterRubik_1.default(this.rubikView.rubikModel);
     solveYellowCenterRubik.solve();
-    this.rubikView.colorizeRubik();
+    var solveBlueCenterRubik = new solveBlueCenterRubik_1.default(this.rubikView.rubikModel);
+    solveBlueCenterRubik.solve();
+    this.rubikView.colorizeRubik(); // this.rubikView.placeTextOnRubik();
   };
 
   return MainScene;
@@ -85870,7 +86444,7 @@ window.onload = function () {
 //   main.render();
 // }
 // init();
-},{"../node_modules/three/src/Three":"../node_modules/three/src/Three.js","../node_modules/three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","./rubik/view":"rubik/view.ts","./rubik/model":"rubik/model.ts","./rubik/solutions/solveStandardRubik":"rubik/solutions/solveStandardRubik.ts","./rubik/solutions/solveWhiteCenterRubik":"rubik/solutions/solveWhiteCenterRubik.ts","./rubik/solutions/solveYellowCenterRubik":"rubik/solutions/solveYellowCenterRubik.ts"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"../node_modules/three/src/Three":"../node_modules/three/src/Three.js","../node_modules/three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","./rubik/view":"rubik/view.ts","./rubik/model":"rubik/model.ts","./rubik/solutions/solveStandardRubik":"rubik/solutions/solveStandardRubik.ts","./rubik/solutions/solveWhiteCenterRubik":"rubik/solutions/solveWhiteCenterRubik.ts","./rubik/solutions/solveYellowCenterRubik":"rubik/solutions/solveYellowCenterRubik.ts","./rubik/solutions/solveBlueCenterRubik":"rubik/solutions/solveBlueCenterRubik.ts","./rubik/solutions/solveYellowMiddleLineRubik":"rubik/solutions/solveYellowMiddleLineRubik.ts"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -85898,7 +86472,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55388" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53389" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

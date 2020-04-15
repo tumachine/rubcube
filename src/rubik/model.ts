@@ -108,7 +108,7 @@ class RubikModel {
       }
     }
     console.log('Generated random moves');
-    console.log(this.moveHistory);
+    // console.log(this.moveHistory);
   }
 
   regMove = (m: Move) => {

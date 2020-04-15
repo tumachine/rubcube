@@ -174,7 +174,12 @@ class RubikView {
 
   placeTextOnRubik = () => {
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-
+    // this.interface[s.l] = [...this.rubik.stRotations[2]];
+    // this.interface[s.r] = [...this.rubik.opRotations[0]];
+    // this.interface[s.u] = [...this.rubik.opRotations[3]];
+    // this.interface[s.d] = [...this.rubik.stRotations[1]];
+    // this.interface[s.f] = null;
+    // this.interface[s.b] = [...this.rubik.opRotations[0]];
       // text left
       // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].addText(cube.toString(), sides.l);
       this.cubes[this.rubikModel.matrixReference[sides.l][this.rubikModel.stRotations[2][cube]]].addText(cube.toString(), sides.l);
@@ -192,37 +197,53 @@ class RubikView {
       // this.cubes[this.rubikModel.matrixReference[sides.f][this.rubikModel.stRotations[0][cube]]].addText(cube.toString(), sides.f);
       // text back
       // this.cubes[this.rubikModel.matrixReference[sides.b][cube]].addText(cube.toString(), sides.b);
-      // this.cubes[this.rubikModel.matrixReference[sides.b][this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), sides.b);
+      this.cubes[this.rubikModel.matrixReference[sides.b][this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), sides.b);
     }
   }
 
   colorizeRubik = () => {
-    const faceSides = {
-      left: 0,
-      right: 2,
-      top: 4,
-      bottom: 6,
-      front: 8,
-      back: 10,
-    };
+    // const faceSides = {
+    //   left: 0,
+    //   right: 2,
+    //   top: 4,
+    //   bottom: 6,
+    //   front: 8,
+    //   back: 10,
+    // };
 
     // console.log(this.cubes)
     // maybe there is a simpler way of representing rubik graphically
+    // for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
+    //   // color left
+    //   this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.l][cube]);
+    //   // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.l][cube]);
+    //   // color right
+    //   this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.r][cube]);
+    //   // this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.r][cube]);
+    //   // color top
+    //   this.cubes[this.rubikModel.matrixReference[sides.u][cube]].setColor(faceSides.top, this.rubikModel.matrix[sides.u][cube]);
+    //   // color bottom
+    //   this.cubes[this.rubikModel.matrixReference[sides.d][cube]].setColor(faceSides.bottom, this.rubikModel.matrix[sides.d][cube]);
+    //   // color front
+    //   this.cubes[this.rubikModel.matrixReference[sides.f][cube]].setColor(faceSides.front, this.rubikModel.matrix[sides.f][cube]);
+    //   // color back
+    //   this.cubes[this.rubikModel.matrixReference[sides.b][cube]].setColor(faceSides.back, this.rubikModel.matrix[sides.b][cube]);
+    // }
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
       // color left
-      this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.l][cube]);
+      this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(sides.l, this.rubikModel.matrix[sides.l][cube]);
       // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.l][cube]);
       // color right
-      this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.r][cube]);
+      this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(sides.r, this.rubikModel.matrix[sides.r][cube]);
       // this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.r][cube]);
       // color top
-      this.cubes[this.rubikModel.matrixReference[sides.u][cube]].setColor(faceSides.top, this.rubikModel.matrix[sides.u][cube]);
+      this.cubes[this.rubikModel.matrixReference[sides.u][cube]].setColor(sides.u, this.rubikModel.matrix[sides.u][cube]);
       // color bottom
-      this.cubes[this.rubikModel.matrixReference[sides.d][cube]].setColor(faceSides.bottom, this.rubikModel.matrix[sides.d][cube]);
+      this.cubes[this.rubikModel.matrixReference[sides.d][cube]].setColor(sides.d, this.rubikModel.matrix[sides.d][cube]);
       // color front
-      this.cubes[this.rubikModel.matrixReference[sides.f][cube]].setColor(faceSides.front, this.rubikModel.matrix[sides.f][cube]);
+      this.cubes[this.rubikModel.matrixReference[sides.f][cube]].setColor(sides.f, this.rubikModel.matrix[sides.f][cube]);
       // color back
-      this.cubes[this.rubikModel.matrixReference[sides.b][cube]].setColor(faceSides.back, this.rubikModel.matrix[sides.b][cube]);
+      this.cubes[this.rubikModel.matrixReference[sides.b][cube]].setColor(sides.b, this.rubikModel.matrix[sides.b][cube]);
     }
   }
 }

@@ -7,6 +7,8 @@ import RubikModel from './rubik/model';
 import SolveStandardRubik from './rubik/solutions/solveStandardRubik';
 import SolveWhiteCenterRubik from './rubik/solutions/solveWhiteCenterRubik'
 import SolveYellowCenterRubik from './rubik/solutions/solveYellowCenterRubik';
+import SolveBlueCenterRubik from './rubik/solutions/solveBlueCenterRubik';
+import SolveYellowMiddleLineRubik from './rubik/solutions/solveYellowMiddleLineRubik';
 
 function createLight() {
   const color = 0xFFFFFF;
@@ -80,7 +82,7 @@ class MainScene {
     this.rubikView.rubik.name = 'rubik';
 
     this.scene.add(this.rubikView.rubik);
-    this.rubikView.placeTextOnRubik();
+    // this.rubikView.placeTextOnRubik();
     this.rubikView.colorizeRubik();
     console.log(`created rubik of size: ${length}`);
   }
@@ -107,6 +109,8 @@ class MainScene {
       solveWhiteCenterRubik.solve();
       const solveYellowCenterRubik = new SolveYellowCenterRubik(this.rubikView.rubikModel);
       solveYellowCenterRubik.solve();
+      const solveBlueCenterRubik = new SolveBlueCenterRubik(this.rubikView.rubikModel);
+      solveBlueCenterRubik.solve();
     }
 
     if (animate) {
@@ -160,14 +164,19 @@ class MainScene {
     this.scene.add(this.rubikView.rubik);
     // this.rubikView.placeTextOnRubik();
 
-    this.rubikView.rubikModel.generateRandomMoves(50, true);
+    this.rubikView.rubikModel.generateRandomMoves(500, true);
     // this.rubikView.rubikModel.solveBigCube();
     const solveWhiteCenterRubik = new SolveWhiteCenterRubik(this.rubikView.rubikModel);
     solveWhiteCenterRubik.solve();
+    const solveYellowMiddleLineRubik = new SolveYellowMiddleLineRubik(this.rubikView.rubikModel);
+    solveYellowMiddleLineRubik.solve();
     const solveYellowCenterRubik = new SolveYellowCenterRubik(this.rubikView.rubikModel);
     solveYellowCenterRubik.solve();
+    const solveBlueCenterRubik = new SolveBlueCenterRubik(this.rubikView.rubikModel);
+    solveBlueCenterRubik.solve();
 
     this.rubikView.colorizeRubik();
+    // this.rubikView.placeTextOnRubik();
   }
 }
 const main = new MainScene();
