@@ -49,7 +49,7 @@ class SolveYellowMiddleLineRubik extends RubikSolutionBase {
     middle = Math.floor(this.sideLength / 2);
 
     solveLeftBuild = (r: FindReturn): boolean => {
-      console.log('YELLOW MIDDLE: solving left');
+      // console.log('YELLOW MIDDLE: solving left');
       for (let i = 0; i < r.rotations; i += 1) {
         this.m.L(0, false);
       }
@@ -61,7 +61,7 @@ class SolveYellowMiddleLineRubik extends RubikSolutionBase {
     }
 
     solveRightBuild = (r: FindReturn): boolean => {
-      console.log('YELLOW MIDDLE: solving right');
+      // console.log('YELLOW MIDDLE: solving right');
       for (let i = 0; i < r.rotations; i += 1) {
         this.m.R(0, false);
       }
@@ -73,7 +73,7 @@ class SolveYellowMiddleLineRubik extends RubikSolutionBase {
     }
 
     solveDownBuild = (r: FindReturn): boolean => {
-      console.log('YELLOW MIDDLE: solving down');
+      // console.log('YELLOW MIDDLE: solving down');
       for (let i = 0; i < r.rotations; i += 1) {
         this.m.D(0, false);
       }
@@ -87,7 +87,7 @@ class SolveYellowMiddleLineRubik extends RubikSolutionBase {
     }
 
     solveUpBuild = (r: FindReturn): boolean => {
-      console.log('YELLOW MIDDLE: solving up');
+      // console.log('YELLOW MIDDLE: solving up');
       for (let i = 0; i < r.rotations; i += 1) {
         this.m.U(0, false);
       }
@@ -99,7 +99,7 @@ class SolveYellowMiddleLineRubik extends RubikSolutionBase {
     }
 
     solveFrontBuild = (r: FindReturn): boolean => {
-      console.log('YELLOW MIDDLE: solving front');
+      // console.log('YELLOW MIDDLE: solving front');
       if (r.currentRow === r.row) {
         return false;
       }
@@ -157,7 +157,7 @@ class SolveYellowMiddleLineRubik extends RubikSolutionBase {
 
     solve = () => {
       for (let col = 1; col < this.lineLength; col += 1) {
-        console.log(this.middle, col);
+        // console.log(this.middle, col);
         if (col !== this.middle) {
           this.solveCube(this.middle, col);
           // for (let c = 1; c < col; c += 1) {

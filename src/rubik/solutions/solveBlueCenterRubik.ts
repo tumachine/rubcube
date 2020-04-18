@@ -54,7 +54,7 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
     // similar for back and bottom
     // special cases for front and top
     solveBackBuild = (r: FindReturn): boolean => {
-      console.log('BLUE CENTER: solving back');
+      // console.log('BLUE CENTER: solving back');
       for (let i = 0; i < r.rotations; i += 1) {
         this.m.B(0, false);
       }
@@ -71,7 +71,7 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
     }
 
     solveDownBuild = (r: FindReturn): boolean => {
-      console.log('BLUE CENTER: solving down');
+      // console.log('BLUE CENTER: solving down');
       for (let i = 0; i < r.rotations; i += 1) {
         this.m.D(0, false);
       }
@@ -91,10 +91,10 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
     }
 
     solveFrontBuild = (r: FindReturn): boolean => {
-      console.log('BLUE CENTER: solving front');
+      // console.log('BLUE CENTER: solving front');
       const activeCol = Math.abs(r.row - (this.sideLength - 1));
       if (r.currentCol < activeCol) {
-        console.log('ACTIVE ROW');
+        // console.log('ACTIVE ROW');
         return false;
       }
 
@@ -102,7 +102,7 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
       this.m.L(r.currentCol, false);
 
       if (r.currentCol < r.column) {
-        console.log('HAVE TO RECORD');
+        // console.log('HAVE TO RECORD');
         this.moveHistory.push(() => this.m.L(r.currentCol));
         this.moveHistory.push(() => this.m.L(r.currentCol));
       }
@@ -111,11 +111,11 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
     }
 
     solveUpBuild = (r: FindReturn): boolean => {
-      console.log('BLUE CENTER: solving up');
+      // console.log('BLUE CENTER: solving up');
       const activeCol = Math.abs(r.row - (this.sideLength - 1));
 
       if (r.row === r.currentRow) {
-        console.log('SAME ROW');
+        // console.log('SAME ROW');
         return false;
       }
 
@@ -128,15 +128,15 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
         futureCol = futurePos % this.sideLength;
         futureRow = Math.floor(futurePos / this.sideLength);
       }
-      console.log(r.nextPos);
-      console.log(futurePos);
-      console.log(futureCol);
+      // console.log(r.nextPos);
+      // console.log(futurePos);
+      // console.log(futureCol);
 
       this.m.U(0, false);
       this.m.L(futureCol, false);
 
       if (futureCol < activeCol) {
-        console.log(`FUTURE POS: ${futurePos}`);
+        // console.log(`FUTURE POS: ${futurePos}`);
 
         if (futureCol === this.middle) {
           this.m.B();
@@ -199,20 +199,29 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
 
       for (let row = lineLength - 1; row >= 1; row -= 1) {
         for (let col = 1; col < lineLength; col += 1) {
-          console.log(row, col);
+          // console.log(row, col);
           this.solveCube(row, col);
-          for (let c = 1; c < col; c += 1) {
-            if (!this.check(this.ls.u, this.getFaceDirection(row, c), this.ls.f)) {
-              console.log('INCORRECT AA');
-              return false;
-            }
-          }
+          // for (let c = 1; c < col; c += 1) {
+          //   if (!this.check(this.ls.u, this.getFaceDirection(row, c), this.ls.f)) {
+          //     // console.log('INCORRECT AA');
+          //     return false;
+          //   }
+          // }
         }
         const activeCol = Math.abs(row - (this.sideLength - 1));
-        console.log(`Active Col: ${activeCol}`);
+        // console.log(`Active Col: ${activeCol}`);
         this.m.U(0, false);
         this.m.L(activeCol, true);
-        console.log('COMPLETE');
+        // console.log('COMPLETE');
+      }
+
+      for (let c = 1; c < lineLength; c += 1) {
+        for (let r = 1; r < lineLength; r += 1) {
+          if (!this.check(this.ls.f, this.getFaceDirection(r, c), this.ls.f)) {
+            console.log('INCORRECT solution');
+            return false;
+          }
+        }
       }
     }
 }

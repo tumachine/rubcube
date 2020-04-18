@@ -9,6 +9,9 @@ import SolveWhiteCenterRubik from './rubik/solutions/solveWhiteCenterRubik'
 import SolveYellowCenterRubik from './rubik/solutions/solveYellowCenterRubik';
 import SolveBlueCenterRubik from './rubik/solutions/solveBlueCenterRubik';
 import SolveYellowMiddleLineRubik from './rubik/solutions/solveYellowMiddleLineRubik';
+import SolveRedCenterRubik from './rubik/solutions/solveRedCenterRubik';
+import { sides } from './rubik/utils';
+import SolveGreenOrangeCenterRubik from './rubik/solutions/solveGreenOrangeCenterRubik';
 
 function createLight() {
   const color = 0xFFFFFF;
@@ -107,10 +110,16 @@ class MainScene {
     } else {
       const solveWhiteCenterRubik = new SolveWhiteCenterRubik(this.rubikView.rubikModel);
       solveWhiteCenterRubik.solve();
+      const solveYellowMiddleLineRubik = new SolveYellowMiddleLineRubik(this.rubikView.rubikModel);
+      solveYellowMiddleLineRubik.solve();
       const solveYellowCenterRubik = new SolveYellowCenterRubik(this.rubikView.rubikModel);
       solveYellowCenterRubik.solve();
       const solveBlueCenterRubik = new SolveBlueCenterRubik(this.rubikView.rubikModel);
       solveBlueCenterRubik.solve();
+      const solveRedCenterRubik = new SolveRedCenterRubik(this.rubikView.rubikModel);
+      solveRedCenterRubik.solve();
+      const solveGreenOrangeCenterRubik = new SolveGreenOrangeCenterRubik(this.rubikView.rubikModel);
+      solveGreenOrangeCenterRubik.solve();
     }
 
     if (animate) {
@@ -148,21 +157,21 @@ class MainScene {
   }
 
   test() {
-    const length = 21;
+    const length = 9;
     const rubikModel = new RubikModel(length);
 
     this.camera.position.set(length * 1.5, length * 1.2, length * 2);
     this.camera.far = length * 4;
     this.camera.updateProjectionMatrix();
-    // this.camera.lookAt(this.controls.target);
+    // // this.camera.lookAt(this.controls.target);
 
-    // this.controls.enabled = true;
+    // // this.controls.enabled = true;
 
     this.rubikView = new RubikView(rubikModel);
     this.rubikView.rubik.name = 'rubik';
 
     this.scene.add(this.rubikView.rubik);
-    // this.rubikView.placeTextOnRubik();
+    // // this.rubikView.placeTextOnRubik();
 
     this.rubikView.rubikModel.generateRandomMoves(500, true);
     // this.rubikView.rubikModel.solveBigCube();
@@ -174,6 +183,10 @@ class MainScene {
     solveYellowCenterRubik.solve();
     const solveBlueCenterRubik = new SolveBlueCenterRubik(this.rubikView.rubikModel);
     solveBlueCenterRubik.solve();
+    const solveRedCenterRubik = new SolveRedCenterRubik(this.rubikView.rubikModel);
+    solveRedCenterRubik.solve();
+    const solveGreenOrangeCenterRubik = new SolveGreenOrangeCenterRubik(this.rubikView.rubikModel);
+    solveGreenOrangeCenterRubik.solve();
 
     this.rubikView.colorizeRubik();
     // this.rubikView.placeTextOnRubik();
@@ -202,7 +215,7 @@ window.onload = () => {
   //   }
   // };
   // scramble.onclick = () => {
-  //   main.scrambleRubik(30);
+  //   main.scrambleRubik(40);
   // };
   // solve.onclick = () => {
   //   main.solveRubik(true);

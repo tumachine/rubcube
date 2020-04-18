@@ -48,7 +48,7 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
     middle = Math.floor(this.sideLength / 2);
 
     solveLeftBuild = (r: FindReturn): boolean => {
-      console.log('YELLOW CENTER: solving left');
+      // console.log('YELLOW CENTER: solving left');
       if (r.currentRow === r.row) {
         return false;
       }
@@ -63,7 +63,7 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
     }
 
     solveRightBuild = (r: FindReturn): boolean => {
-      console.log('YELLOW CENTER: solving right');
+      // console.log('YELLOW CENTER: solving right');
       // console.log('solving right');
       for (let i = 0; i < r.rotations; i += 1) {
         this.m.R(0, false);
@@ -74,7 +74,7 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
     }
 
     solveDownBuild = (r: FindReturn): boolean => {
-      console.log('YELLOW CENTER: solving down');
+      // console.log('YELLOW CENTER: solving down');
       // console.log('solving down');
       for (let i = 0; i < r.rotations; i += 1) {
         this.m.D(0, false);
@@ -84,7 +84,7 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
     }
 
     solveFrontBuild = (r: FindReturn): boolean => {
-      console.log('YELLOW CENTER: solving front');
+      // console.log('YELLOW CENTER: solving front');
       if (r.currentRow < r.row) {
         return false;
       }
@@ -104,7 +104,7 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
     }
 
     solveUpBuild = (r: FindReturn): boolean => {
-      console.log('YELLOW CENTER: solving up');
+      // console.log('YELLOW CENTER: solving up');
       // console.log('solving up');
       for (let i = 0; i < r.rotations; i += 1) {
         this.m.U(0, false);
@@ -158,7 +158,7 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
       for (let row = 1; row < this.lineLength; row += 1) {
         if (row !== this.middle) {
           for (let col = 1; col < this.lineLength; col += 1) {
-            console.log(row, col);
+            // console.log(row, col);
             this.solveCube(row, col);
             // for (let c = 1; c < col; c += 1) {
             //   if (!this.check(this.ls.l, this.getFaceDirection(row, c), this.ls.f)) {
@@ -195,6 +195,15 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
         //     }
         //   }
         // }
+      }
+
+      for (let c = 1; c < this.lineLength; c += 1) {
+        for (let r = 1; r < this.lineLength; r += 1) {
+          if (!this.check(this.ls.f, this.getFaceDirection(r, c), this.ls.f)) {
+            console.log('INCORRECT solution');
+            return false;
+          }
+        }
       }
     }
 }

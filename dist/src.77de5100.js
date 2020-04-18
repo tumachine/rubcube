@@ -83437,33 +83437,26 @@ function () {
     this.placeTextOnRubik = function () {
       for (var cube = 0; cube < _this.rubikModel.totalColors; cube += 1) {
         // this.interface[s.l] = [...this.rubik.stRotations[2]];
-        // this.interface[s.r] = [...this.rubik.opRotations[0]];
         // this.interface[s.u] = [...this.rubik.opRotations[3]];
-        // this.interface[s.d] = [...this.rubik.stRotations[1]];
-        // this.interface[s.f] = null;
-        // this.interface[s.b] = [...this.rubik.opRotations[0]];
         // text left
         // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].addText(cube.toString(), sides.l);
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.l][_this.rubikModel.stRotations[2][cube]]].addText(cube.toString(), utils_1.sides.l); // text right
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.l][_this.rubikModel.stRotations[0][cube]]].addText(cube.toString(), utils_1.sides.l); // text right
         // this.cubes[this.rubikModel.matrixReference[sides.r][cube]].addText(cube.toString(), sides.r);
-
-
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.r][_this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), utils_1.sides.r); // text top
+        // this.cubes[this.rubikModel.matrixReference[sides.r][this.rubikModel.stRotations[0][cube]]].addText(cube.toString(), sides.r);
+        // text top
         // this.cubes[this.rubikModel.matrixReference[sides.u][cube]].addText(cube.toString(), sides.u);
 
 
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.u][_this.rubikModel.opRotations[3][cube]]].addText(cube.toString(), utils_1.sides.u); // text bottom
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.u][_this.rubikModel.opRotations[1][cube]]].addText(cube.toString(), utils_1.sides.u); // text bottom
         // this.cubes[this.rubikModel.matrixReference[sides.d][cube]].addText(cube.toString(), sides.d);
-
-
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.d][_this.rubikModel.stRotations[1][cube]]].addText(cube.toString(), utils_1.sides.d); // text front
+        // this.cubes[this.rubikModel.matrixReference[sides.d][this.rubikModel.opRotations[1][cube]]].addText(cube.toString(), sides.d);
+        // text front
         // this.cubes[this.rubikModel.matrixReference[sides.f][cube]].addText(cube.toString(), sides.f);
         // this.cubes[this.rubikModel.matrixReference[sides.f][this.rubikModel.stRotations[0][cube]]].addText(cube.toString(), sides.f);
         // text back
         // this.cubes[this.rubikModel.matrixReference[sides.b][cube]].addText(cube.toString(), sides.b);
+        // this.cubes[this.rubikModel.matrixReference[sides.b][this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), sides.b);
 
-
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.b][_this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), utils_1.sides.b);
       }
     };
 
@@ -83529,7 +83522,7 @@ function () {
 
     this.isMoving = false;
     this.moveDirection = null;
-    this.rotationSpeed = 0.2;
+    this.rotationSpeed = 0.4;
     this.pivot = new THREE.Object3D();
     this.activeGroup = [];
   }
@@ -85326,14 +85319,11 @@ function (_super) {
 
       for (var col = 1; col < lineLength; col += 1) {
         for (var row = 1; row < lineLength; row += 1) {
-          if (!_this.check(utils_1.sides.f, _this.getFaceDirection(row, col), utils_1.sides.f)) {
-            _this.solveCube(row, col);
+          _this.solveCube(row, col); // if (!this.check(s.f, this.getFaceDirection(row, col), s.f)) {
+          //   console.log('INCORRECT');
+          //   return false;
+          // }
 
-            if (!_this.check(utils_1.sides.f, _this.getFaceDirection(row, col), utils_1.sides.f)) {
-              console.log('INCORRECT');
-              return false;
-            }
-          }
         }
 
         _this.m.L(col);
@@ -85341,6 +85331,15 @@ function (_super) {
 
       for (var col = 1; col < lineLength; col += 1) {
         _this.m.L(col, false);
+      }
+
+      for (var c = 1; c < lineLength; c += 1) {
+        for (var r = 1; r < lineLength; r += 1) {
+          if (!_this.check(utils_1.sides.f, _this.getFaceDirection(r, c), utils_1.sides.f)) {
+            console.log('INCORRECT solution');
+            return false;
+          }
+        }
       }
     };
 
@@ -85435,8 +85434,7 @@ function (_super) {
     _this.middle = Math.floor(_this.sideLength / 2);
 
     _this.solveLeftBuild = function (r) {
-      console.log('YELLOW CENTER: solving left');
-
+      // console.log('YELLOW CENTER: solving left');
       if (r.currentRow === r.row) {
         return false;
       }
@@ -85454,8 +85452,8 @@ function (_super) {
     };
 
     _this.solveRightBuild = function (r) {
-      console.log('YELLOW CENTER: solving right'); // console.log('solving right');
-
+      // console.log('YELLOW CENTER: solving right');
+      // console.log('solving right');
       for (var i = 0; i < r.rotations; i += 1) {
         _this.m.R(0, false);
       }
@@ -85468,8 +85466,8 @@ function (_super) {
     };
 
     _this.solveDownBuild = function (r) {
-      console.log('YELLOW CENTER: solving down'); // console.log('solving down');
-
+      // console.log('YELLOW CENTER: solving down');
+      // console.log('solving down');
       for (var i = 0; i < r.rotations; i += 1) {
         _this.m.D(0, false);
       }
@@ -85480,8 +85478,7 @@ function (_super) {
     };
 
     _this.solveFrontBuild = function (r) {
-      console.log('YELLOW CENTER: solving front');
-
+      // console.log('YELLOW CENTER: solving front');
       if (r.currentRow < r.row) {
         return false;
       }
@@ -85506,8 +85503,8 @@ function (_super) {
     };
 
     _this.solveUpBuild = function (r) {
-      console.log('YELLOW CENTER: solving up'); // console.log('solving up');
-
+      // console.log('YELLOW CENTER: solving up');
+      // console.log('solving up');
       for (var i = 0; i < r.rotations; i += 1) {
         _this.m.U(0, false);
       }
@@ -85563,8 +85560,7 @@ function (_super) {
       for (var row = 1; row < _this.lineLength; row += 1) {
         if (row !== _this.middle) {
           for (var col = 1; col < _this.lineLength; col += 1) {
-            console.log(row, col);
-
+            // console.log(row, col);
             _this.solveCube(row, col); // for (let c = 1; c < col; c += 1) {
             //   if (!this.check(this.ls.l, this.getFaceDirection(row, c), this.ls.f)) {
             //     console.log('INCORRECT ROW');
@@ -85612,6 +85608,15 @@ function (_super) {
         //   }
         // }
 
+      }
+
+      for (var c = 1; c < _this.lineLength; c += 1) {
+        for (var r = 1; r < _this.lineLength; r += 1) {
+          if (!_this.check(_this.ls.f, _this.getFaceDirection(r, c), _this.ls.f)) {
+            console.log('INCORRECT solution');
+            return false;
+          }
+        }
       }
     }; // this.m = rubik.moves;
 
@@ -85724,8 +85729,7 @@ function (_super) {
     // special cases for front and top
 
     _this.solveBackBuild = function (r) {
-      console.log('BLUE CENTER: solving back');
-
+      // console.log('BLUE CENTER: solving back');
       for (var i = 0; i < r.rotations; i += 1) {
         _this.m.B(0, false);
       }
@@ -85746,8 +85750,7 @@ function (_super) {
     };
 
     _this.solveDownBuild = function (r) {
-      console.log('BLUE CENTER: solving down');
-
+      // console.log('BLUE CENTER: solving down');
       for (var i = 0; i < r.rotations; i += 1) {
         _this.m.D(0, false);
       }
@@ -85774,11 +85777,11 @@ function (_super) {
     };
 
     _this.solveFrontBuild = function (r) {
-      console.log('BLUE CENTER: solving front');
+      // console.log('BLUE CENTER: solving front');
       var activeCol = Math.abs(r.row - (_this.sideLength - 1));
 
       if (r.currentCol < activeCol) {
-        console.log('ACTIVE ROW');
+        // console.log('ACTIVE ROW');
         return false;
       }
 
@@ -85787,8 +85790,7 @@ function (_super) {
       _this.m.L(r.currentCol, false);
 
       if (r.currentCol < r.column) {
-        console.log('HAVE TO RECORD');
-
+        // console.log('HAVE TO RECORD');
         _this.moveHistory.push(function () {
           return _this.m.L(r.currentCol);
         });
@@ -85802,11 +85804,11 @@ function (_super) {
     };
 
     _this.solveUpBuild = function (r) {
-      console.log('BLUE CENTER: solving up');
+      // console.log('BLUE CENTER: solving up');
       var activeCol = Math.abs(r.row - (_this.sideLength - 1));
 
       if (r.row === r.currentRow) {
-        console.log('SAME ROW');
+        // console.log('SAME ROW');
         return false;
       }
 
@@ -85818,19 +85820,17 @@ function (_super) {
         futurePos = futureRow + (_this.sideLength - 1 - futureCol) * _this.sideLength;
         futureCol = futurePos % _this.sideLength;
         futureRow = Math.floor(futurePos / _this.sideLength);
-      }
+      } // console.log(r.nextPos);
+      // console.log(futurePos);
+      // console.log(futureCol);
 
-      console.log(r.nextPos);
-      console.log(futurePos);
-      console.log(futureCol);
 
       _this.m.U(0, false);
 
       _this.m.L(futureCol, false);
 
       if (futureCol < activeCol) {
-        console.log("FUTURE POS: " + futurePos);
-
+        // console.log(`FUTURE POS: ${futurePos}`);
         if (futureCol === _this.middle) {
           _this.m.B();
         } else {
@@ -85899,26 +85899,31 @@ function (_super) {
 
       for (var row = lineLength - 1; row >= 1; row -= 1) {
         for (var col = 1; col < lineLength; col += 1) {
-          console.log(row, col);
+          // console.log(row, col);
+          _this.solveCube(row, col); // for (let c = 1; c < col; c += 1) {
+          //   if (!this.check(this.ls.u, this.getFaceDirection(row, c), this.ls.f)) {
+          //     // console.log('INCORRECT AA');
+          //     return false;
+          //   }
+          // }
 
-          _this.solveCube(row, col);
-
-          for (var c = 1; c < col; c += 1) {
-            if (!_this.check(_this.ls.u, _this.getFaceDirection(row, c), _this.ls.f)) {
-              console.log('INCORRECT AA');
-              return false;
-            }
-          }
         }
 
-        var activeCol = Math.abs(row - (_this.sideLength - 1));
-        console.log("Active Col: " + activeCol);
+        var activeCol = Math.abs(row - (_this.sideLength - 1)); // console.log(`Active Col: ${activeCol}`);
 
         _this.m.U(0, false);
 
-        _this.m.L(activeCol, true);
+        _this.m.L(activeCol, true); // console.log('COMPLETE');
 
-        console.log('COMPLETE');
+      }
+
+      for (var c = 1; c < lineLength; c += 1) {
+        for (var r = 1; r < lineLength; r += 1) {
+          if (!_this.check(_this.ls.f, _this.getFaceDirection(r, c), _this.ls.f)) {
+            console.log('INCORRECT solution');
+            return false;
+          }
+        }
       }
     };
 
@@ -86028,8 +86033,7 @@ function (_super) {
     _this.middle = Math.floor(_this.sideLength / 2);
 
     _this.solveLeftBuild = function (r) {
-      console.log('YELLOW MIDDLE: solving left');
-
+      // console.log('YELLOW MIDDLE: solving left');
       for (var i = 0; i < r.rotations; i += 1) {
         _this.m.L(0, false);
       }
@@ -86046,8 +86050,7 @@ function (_super) {
     };
 
     _this.solveRightBuild = function (r) {
-      console.log('YELLOW MIDDLE: solving right');
-
+      // console.log('YELLOW MIDDLE: solving right');
       for (var i = 0; i < r.rotations; i += 1) {
         _this.m.R(0, false);
       }
@@ -86064,8 +86067,7 @@ function (_super) {
     };
 
     _this.solveDownBuild = function (r) {
-      console.log('YELLOW MIDDLE: solving down');
-
+      // console.log('YELLOW MIDDLE: solving down');
       for (var i = 0; i < r.rotations; i += 1) {
         _this.m.D(0, false);
       }
@@ -86086,8 +86088,7 @@ function (_super) {
     };
 
     _this.solveUpBuild = function (r) {
-      console.log('YELLOW MIDDLE: solving up');
-
+      // console.log('YELLOW MIDDLE: solving up');
       for (var i = 0; i < r.rotations; i += 1) {
         _this.m.U(0, false);
       }
@@ -86104,8 +86105,7 @@ function (_super) {
     };
 
     _this.solveFrontBuild = function (r) {
-      console.log('YELLOW MIDDLE: solving front');
-
+      // console.log('YELLOW MIDDLE: solving front');
       if (r.currentRow === r.row) {
         return false;
       }
@@ -86168,8 +86168,7 @@ function (_super) {
 
     _this.solve = function () {
       for (var col = 1; col < _this.lineLength; col += 1) {
-        console.log(_this.middle, col);
-
+        // console.log(this.middle, col);
         if (col !== _this.middle) {
           _this.solveCube(_this.middle, col); // for (let c = 1; c < col; c += 1) {
           //   if (!this.check(this.ls.f, this.getFaceDirection(this.middle, c), this.ls.f)) {
@@ -86213,6 +86212,619 @@ function (_super) {
 }(rubikSolutionBase_1.default);
 
 exports.default = SolveYellowMiddleLineRubik;
+},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../moveActions":"rubik/moveActions.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveRedCenterRubik.ts":[function(require,module,exports) {
+"use strict";
+
+var __extends = this && this.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (b.hasOwnProperty(p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var __spreadArrays = this && this.__spreadArrays || function () {
+  for (var s = 0, i = 0, il = arguments.length; i < il; i++) {
+    s += arguments[i].length;
+  }
+
+  for (var r = Array(s), k = 0, i = 0; i < il; i++) {
+    for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++) {
+      r[k] = a[j];
+    }
+  }
+
+  return r;
+};
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* eslint-disable max-len */
+
+var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
+
+var moveActions_1 = __importDefault(require("../moveActions"));
+
+var utils_1 = require("../utils");
+
+var SolveRedCenterRubik =
+/** @class */
+function (_super) {
+  __extends(SolveRedCenterRubik, _super);
+
+  function SolveRedCenterRubik(rubik) {
+    var _this = _super.call(this, rubik) || this;
+
+    _this.localFind = function (row, col, side, operation) {
+      return _this.baseFind(row, col, side, operation);
+    };
+
+    _this.middle = Math.floor(_this.sideLength / 2);
+
+    _this.solveUpBuild = function (r) {
+      // console.log('RED CENTER: solving up');
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.U();
+      }
+
+      _this.m.L(r.column); // if (r.row > this.middle && r.column > this.middle) {
+      //   this.m.F();
+      //   this.m.L(r.column, false);
+      //   this.m.F(0, false);
+      // } else {
+
+
+      _this.m.F(0, false);
+
+      _this.m.L(r.column, false);
+
+      _this.m.F(); // }
+
+
+      return true;
+    };
+
+    _this.solveDownBuild = function (r) {
+      // console.log('RED CENTER: solving down');
+      if (r.currentCol < r.row) {
+        return false;
+      }
+
+      _this.m.F(0, false);
+
+      _this.m.L(r.currentCol, false);
+
+      _this.m.L(r.currentCol, false); // rotate once or twice
+
+
+      if (r.column === _this.middle) {
+        _this.m.U();
+      } else {
+        _this.m.U();
+
+        _this.m.U();
+      }
+
+      _this.m.L(r.currentCol);
+
+      _this.m.L(r.currentCol);
+
+      _this.m.F();
+
+      return true;
+    };
+
+    _this.solveFrontBuild = function (r) {
+      // console.log('RED CENTER: solving front');
+      if (r.currentRow === r.row) {
+        return false;
+      }
+
+      if (r.currentRow === r.row && r.currentCol === r.row) {
+        return false;
+      }
+
+      var futurePos = r.currentRow + (_this.sideLength - 1 - r.currentCol) * _this.sideLength;
+      var futureCol = futurePos % _this.sideLength;
+      var futureRow = Math.floor(futurePos / _this.sideLength); // console.log(r.nextPos);
+      // console.log(futurePos);
+      // console.log(futureCol);
+
+      _this.m.F(0, false);
+
+      _this.m.L(futureCol, false);
+
+      if (futureCol === _this.middle) {
+        _this.m.U();
+      } else {
+        _this.m.U();
+
+        _this.m.U();
+      }
+
+      _this.m.L(futureCol);
+
+      _this.m.F();
+
+      return true;
+    };
+
+    _this.solveDown = function (row, column) {
+      if (_this.localFind(row, column, _this.ls.d, _this.solveDownBuild)) {
+        _this.solveUp(row, column);
+
+        return true;
+      }
+
+      return false;
+    };
+
+    _this.solveFront = function (row, column) {
+      if (_this.localFind(row, column, _this.ls.f, _this.solveFrontBuild)) {
+        _this.solveUp(row, column);
+
+        return true;
+      }
+
+      return false;
+    };
+
+    _this.solveBack = function (row, column) {
+      // console.log('RED CENTER: solving back');
+      var futurePos = row + (_this.sideLength - 1 - column) * _this.sideLength;
+      var futureCol = futurePos % _this.sideLength;
+      var futureRow = Math.floor(futurePos / _this.sideLength);
+
+      _this.m.L(row);
+
+      if (row <= _this.middle) {
+        _this.m.U();
+      } else {
+        _this.m.U();
+
+        _this.m.U();
+      }
+
+      _this.m.L(row, false);
+
+      _this.solveUp(row, column);
+
+      return true;
+    };
+
+    _this.solveUp = function (row, column) {
+      return _this.localFind(row, column, _this.ls.u, _this.solveUpBuild);
+    };
+
+    _this.solveOrder = [_this.solveFront, _this.solveUp, _this.solveDown, _this.solveBack];
+
+    _this.solveCube = function (row, column) {
+      if (!_this.check(_this.ls.f, _this.getFaceDirection(row, column), _this.ls.d)) {
+        for (var i = 0; i < _this.solveOrder.length; i += 1) {
+          if (_this.solveOrder[i](row, column)) {
+            break;
+          }
+        }
+      }
+    };
+
+    _this.solveUpFirstBuild = function (r) {
+      // console.log('RED CENTER: solving up first');
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.U();
+      }
+
+      _this.m.L(r.column);
+
+      _this.m.F(0, false);
+
+      _this.m.F(0, false);
+
+      _this.m.L(r.column, false);
+
+      _this.m.F(0, false);
+
+      _this.m.F(0, false);
+
+      return true;
+    };
+
+    _this.solveDownFirstBuild = function (r) {
+      // console.log('RED CENTER: solving down first');
+      var opposite = Math.abs(r.column + 1 - _this.sideLength);
+
+      if (r.currentCol < opposite) {
+        return false;
+      }
+
+      _this.m.L(r.currentCol, false);
+
+      _this.m.F(0, false);
+
+      _this.m.F(0, false);
+
+      _this.m.L(r.currentCol);
+
+      _this.m.F(0, false);
+
+      _this.m.F(0, false);
+
+      return true;
+    };
+
+    _this.solveFrontFirstBuild = function (r) {
+      // console.log('RED CENTER: solving front first');
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.F();
+      }
+
+      return true;
+    };
+
+    _this.solveDownFirst = function (row, column) {
+      if (_this.localFind(row, column, _this.ls.d, _this.solveDownFirstBuild)) {
+        _this.solveFrontFirst(row, column);
+
+        return true;
+      }
+
+      return false;
+    };
+
+    _this.solveFrontFirst = function (row, column) {
+      return _this.localFind(row, column, _this.ls.f, _this.solveFrontFirstBuild);
+    };
+
+    _this.solveUpFirst = function (row, column) {
+      return _this.localFind(row, column, _this.ls.u, _this.solveUpFirstBuild);
+    };
+
+    _this.solveFirstOrder = [_this.solveDownFirst, _this.solveFrontFirst, _this.solveUpFirst];
+
+    _this.solveFirstCube = function (column) {
+      var opposite = _this.sideLength - column - 1; // console.log(`Opposite: ${opposite}`);
+
+      if (!_this.check(_this.ls.f, _this.getFaceDirection(opposite, opposite), _this.ls.d)) {
+        for (var i = 0; i < _this.solveFirstOrder.length; i += 1) {
+          if (_this.solveFirstOrder[i](opposite, opposite)) {
+            _this.m.L(column, false);
+
+            _this.m.F();
+
+            _this.m.F();
+
+            break;
+          }
+        }
+      } else {
+        _this.m.L(column, false);
+
+        _this.m.F();
+
+        _this.m.F();
+      }
+    };
+
+    _this.solve = function () {
+      var lineLength = _this.sideLength - 1; // this.solveFirstCube(5);
+      // if (!this.check(this.ls.f, this.getFaceDirection(5, 5), this.ls.d)) {
+      //   console.log('INCORRECT AA');
+      //   return false;
+      // }
+      // for (let col = 1; col < lineLength; col += 1) {
+      //   console.log(col, col);
+      //   console.log(this.getFaceDirection(col, col));
+      //   this.solveFirstCube(col);
+      //   if (!this.check(this.ls.f, this.getFaceDirection(col, col), this.ls.d)) {
+      //     console.log('INCORRECT AA');
+      //     return false;
+      //   }
+      //   this.m.L(col);
+      // }
+
+      for (var row = 1; row < lineLength; row += 1) {
+        _this.solveFirstCube(row); // if (!this.check(this.ls.f, this.getFaceDirection(row, row), this.ls.d)) {
+        //   console.log('INCORRECT opposite');
+        //   return false;
+        // }
+
+
+        for (var col = 1; col < lineLength; col += 1) {
+          // console.log(row, col);
+          if (col !== row) {
+            _this.solveCube(row, col);
+          } // if (!this.check(this.ls.f, this.getFaceDirection(row, col), this.ls.d)) {
+          //   console.log('INCORRECT small');
+          //   return false;
+          // }
+          // for (let c = 1; c < col; c += 1) {
+          //   if (!this.check(this.ls.f, this.getFaceDirection(row, c), this.ls.d)) {
+          //     console.log('INCORRECT AA');
+          //     return false;
+          //   }
+          // }
+          // for (let c = 1; c < row - 1; c += 1) {
+          //   for (let r = 1; r < lineLength; r += 1) {
+          //     if (!this.check(this.ls.d, this.getFaceDirection(r, c), this.ls.d)) {
+          //       console.log('INCORRECT solution');
+          //       return false;
+          //     }
+          //   }
+          // }
+
+        }
+
+        _this.m.F(0, false);
+
+        _this.m.L(row); // console.log('COMPLETE');
+
+      }
+
+      for (var c = 1; c < lineLength; c += 1) {
+        for (var r = 1; r < lineLength; r += 1) {
+          if (!_this.check(_this.ls.d, _this.getFaceDirection(r, c), _this.ls.d)) {
+            console.log('INCORRECT solution');
+            return false;
+          }
+        }
+      }
+    };
+
+    _this.m = new moveActions_1.default();
+    _this.m.L = rubik.moves.B;
+    _this.m.R = rubik.moves.F;
+    _this.m.F = rubik.moves.L;
+    _this.m.B = rubik.moves.R;
+    _this.m.U = rubik.moves.U;
+    _this.m.D = rubik.moves.D;
+    _this.ls = {
+      f: utils_1.sides.l,
+      d: utils_1.sides.d,
+      u: utils_1.sides.u
+    };
+    _this.interface = new Array(6);
+    _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.opRotations[2]);
+    _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.stRotations[3]);
+    _this.interface[utils_1.sides.d] = __spreadArrays(_this.rubik.opRotations[1]);
+    _this.primaryColor = _this.ls.d;
+    _this.moveHistory = [];
+    return _this;
+  }
+
+  return SolveRedCenterRubik;
+}(rubikSolutionBase_1.default);
+
+exports.default = SolveRedCenterRubik;
+},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../moveActions":"rubik/moveActions.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveGreenOrangeCenterRubik.ts":[function(require,module,exports) {
+"use strict";
+
+var __extends = this && this.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (b.hasOwnProperty(p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var __spreadArrays = this && this.__spreadArrays || function () {
+  for (var s = 0, i = 0, il = arguments.length; i < il; i++) {
+    s += arguments[i].length;
+  }
+
+  for (var r = Array(s), k = 0, i = 0; i < il; i++) {
+    for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++) {
+      r[k] = a[j];
+    }
+  }
+
+  return r;
+};
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* eslint-disable max-len */
+
+var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
+
+var moveActions_1 = __importDefault(require("../moveActions"));
+
+var utils_1 = require("../utils");
+
+var SolveGreenOrangeCenterRubik =
+/** @class */
+function (_super) {
+  __extends(SolveGreenOrangeCenterRubik, _super);
+
+  function SolveGreenOrangeCenterRubik(rubik) {
+    var _this = _super.call(this, rubik) || this;
+
+    _this.localFind = function (row, col, side, operation) {
+      return _this.baseFind(row, col, side, operation);
+    };
+
+    _this.middle = Math.floor(_this.sideLength / 2); // which lines not to touch, which moves were on settled columns
+
+    _this.solveUpBuild = function (r) {
+      // console.log('BLUE CENTER: solving up');
+      for (var i = 0; i < r.rotations; i += 1) {
+        _this.m.U(0, false);
+      }
+
+      return true;
+    };
+
+    _this.solveFront = function (row, column) {
+      if (_this.localFind(row, column, _this.ls.u, _this.solveUpBuild)) {
+        var currentPos = _this.getFaceDirection(row, column);
+
+        var futureCol = currentPos % _this.sideLength;
+        var futureRow = Math.floor(currentPos / _this.sideLength);
+        var futurePos = void 0;
+
+        for (var i = 0; i < 3; i += 1) {
+          futurePos = futureRow + (_this.sideLength - 1 - futureCol) * _this.sideLength;
+          futureCol = futurePos % _this.sideLength;
+          futureRow = Math.floor(futurePos / _this.sideLength);
+        }
+
+        var prevPos = row + (_this.sideLength - 1 - column) * _this.sideLength;
+        var prevCol = prevPos % _this.sideLength;
+        var prevRow = Math.floor(prevPos / _this.sideLength);
+
+        _this.m.L(column, false);
+
+        if (column === prevCol) {
+          _this.m.U(0, false);
+
+          _this.m.L(futureCol, false);
+
+          _this.m.U();
+
+          _this.m.L(column);
+
+          _this.m.U(0, false);
+
+          _this.m.L(futureCol);
+        } else {
+          _this.m.U();
+
+          _this.m.L(prevCol, false);
+
+          _this.m.U(0, false);
+
+          _this.m.L(column);
+
+          _this.m.U();
+
+          _this.m.L(prevCol);
+        }
+
+        return true;
+      }
+
+      return false;
+    };
+
+    _this.solveCube = function (row, column) {
+      for (var i = 0; i < 4; i += 1) {
+        if (!_this.check(_this.ls.f, _this.getFaceDirection(row, column), _this.ls.f)) {
+          _this.solveFront(row, column);
+        }
+      }
+    };
+
+    _this.solve = function () {
+      var lineLength = _this.sideLength - 1; //   this.solveCube(2, 1);
+
+      for (var col = 1; col < lineLength; col += 1) {
+        for (var row = 1; row < lineLength; row += 1) {
+          _this.solveCube(row, col); // for (let c = 1; c < col; c += 1) {
+          //   if (!this.check(this.ls.u, this.getFaceDirection(row, c), this.ls.f)) {
+          //     // console.log('INCORRECT AA');
+          //     return false;
+          //   }
+          // }
+
+        } // console.log('COMPLETE');
+
+      }
+
+      for (var c = 1; c < lineLength; c += 1) {
+        for (var r = 1; r < lineLength; r += 1) {
+          if (!_this.check(_this.ls.f, _this.getFaceDirection(r, c), _this.ls.f)) {
+            console.log('INCORRECT solution');
+            return false;
+          }
+
+          if (!_this.check(_this.ls.u, _this.getFaceDirection(r, c), _this.ls.u)) {
+            console.log('INCORRECT solution');
+            return false;
+          }
+        }
+      }
+    };
+
+    _this.m = new moveActions_1.default();
+    _this.m.L = rubik.moves.B;
+    _this.m.R = rubik.moves.F;
+    _this.m.F = rubik.moves.L;
+    _this.m.B = rubik.moves.R;
+    _this.m.U = rubik.moves.U;
+    _this.m.D = rubik.moves.D;
+    _this.ls = {
+      l: utils_1.sides.b,
+      r: utils_1.sides.f,
+      f: utils_1.sides.l,
+      b: utils_1.sides.r,
+      u: utils_1.sides.u,
+      d: utils_1.sides.d
+    };
+    _this.interface = new Array(6);
+    _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[0]);
+    _this.interface[utils_1.sides.r] = null;
+    _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[1]);
+    _this.interface[utils_1.sides.d] = null;
+    _this.interface[utils_1.sides.f] = null;
+    _this.interface[utils_1.sides.b] = null;
+    _this.primaryColor = _this.ls.f;
+    _this.moveHistory = [];
+    return _this;
+  }
+
+  return SolveGreenOrangeCenterRubik;
+}(rubikSolutionBase_1.default);
+
+exports.default = SolveGreenOrangeCenterRubik;
 },{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../moveActions":"rubik/moveActions.ts","../utils":"rubik/utils.ts"}],"index.ts":[function(require,module,exports) {
 "use strict";
 
@@ -86254,6 +86866,10 @@ var solveYellowCenterRubik_1 = __importDefault(require("./rubik/solutions/solveY
 var solveBlueCenterRubik_1 = __importDefault(require("./rubik/solutions/solveBlueCenterRubik"));
 
 var solveYellowMiddleLineRubik_1 = __importDefault(require("./rubik/solutions/solveYellowMiddleLineRubik"));
+
+var solveRedCenterRubik_1 = __importDefault(require("./rubik/solutions/solveRedCenterRubik"));
+
+var solveGreenOrangeCenterRubik_1 = __importDefault(require("./rubik/solutions/solveGreenOrangeCenterRubik"));
 
 function createLight() {
   var color = 0xFFFFFF;
@@ -86368,10 +86984,16 @@ function () {
     } else {
       var solveWhiteCenterRubik = new solveWhiteCenterRubik_1.default(this.rubikView.rubikModel);
       solveWhiteCenterRubik.solve();
+      var solveYellowMiddleLineRubik = new solveYellowMiddleLineRubik_1.default(this.rubikView.rubikModel);
+      solveYellowMiddleLineRubik.solve();
       var solveYellowCenterRubik = new solveYellowCenterRubik_1.default(this.rubikView.rubikModel);
       solveYellowCenterRubik.solve();
       var solveBlueCenterRubik = new solveBlueCenterRubik_1.default(this.rubikView.rubikModel);
       solveBlueCenterRubik.solve();
+      var solveRedCenterRubik = new solveRedCenterRubik_1.default(this.rubikView.rubikModel);
+      solveRedCenterRubik.solve();
+      var solveGreenOrangeCenterRubik = new solveGreenOrangeCenterRubik_1.default(this.rubikView.rubikModel);
+      solveGreenOrangeCenterRubik.solve();
     }
 
     if (animate) {
@@ -86384,16 +87006,16 @@ function () {
   };
 
   MainScene.prototype.test = function () {
-    var length = 21;
+    var length = 9;
     var rubikModel = new model_1.default(length);
     this.camera.position.set(length * 1.5, length * 1.2, length * 2);
     this.camera.far = length * 4;
-    this.camera.updateProjectionMatrix(); // this.camera.lookAt(this.controls.target);
-    // this.controls.enabled = true;
+    this.camera.updateProjectionMatrix(); // // this.camera.lookAt(this.controls.target);
+    // // this.controls.enabled = true;
 
     this.rubikView = new view_1.default(rubikModel);
     this.rubikView.rubik.name = 'rubik';
-    this.scene.add(this.rubikView.rubik); // this.rubikView.placeTextOnRubik();
+    this.scene.add(this.rubikView.rubik); // // this.rubikView.placeTextOnRubik();
 
     this.rubikView.rubikModel.generateRandomMoves(500, true); // this.rubikView.rubikModel.solveBigCube();
 
@@ -86405,6 +87027,10 @@ function () {
     solveYellowCenterRubik.solve();
     var solveBlueCenterRubik = new solveBlueCenterRubik_1.default(this.rubikView.rubikModel);
     solveBlueCenterRubik.solve();
+    var solveRedCenterRubik = new solveRedCenterRubik_1.default(this.rubikView.rubikModel);
+    solveRedCenterRubik.solve();
+    var solveGreenOrangeCenterRubik = new solveGreenOrangeCenterRubik_1.default(this.rubikView.rubikModel);
+    solveGreenOrangeCenterRubik.solve();
     this.rubikView.colorizeRubik(); // this.rubikView.placeTextOnRubik();
   };
 
@@ -86431,7 +87057,7 @@ window.onload = function () {
   //   }
   // };
   // scramble.onclick = () => {
-  //   main.scrambleRubik(30);
+  //   main.scrambleRubik(40);
   // };
   // solve.onclick = () => {
   //   main.solveRubik(true);
@@ -86444,7 +87070,7 @@ window.onload = function () {
 //   main.render();
 // }
 // init();
-},{"../node_modules/three/src/Three":"../node_modules/three/src/Three.js","../node_modules/three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","./rubik/view":"rubik/view.ts","./rubik/model":"rubik/model.ts","./rubik/solutions/solveStandardRubik":"rubik/solutions/solveStandardRubik.ts","./rubik/solutions/solveWhiteCenterRubik":"rubik/solutions/solveWhiteCenterRubik.ts","./rubik/solutions/solveYellowCenterRubik":"rubik/solutions/solveYellowCenterRubik.ts","./rubik/solutions/solveBlueCenterRubik":"rubik/solutions/solveBlueCenterRubik.ts","./rubik/solutions/solveYellowMiddleLineRubik":"rubik/solutions/solveYellowMiddleLineRubik.ts"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"../node_modules/three/src/Three":"../node_modules/three/src/Three.js","../node_modules/three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","./rubik/view":"rubik/view.ts","./rubik/model":"rubik/model.ts","./rubik/solutions/solveStandardRubik":"rubik/solutions/solveStandardRubik.ts","./rubik/solutions/solveWhiteCenterRubik":"rubik/solutions/solveWhiteCenterRubik.ts","./rubik/solutions/solveYellowCenterRubik":"rubik/solutions/solveYellowCenterRubik.ts","./rubik/solutions/solveBlueCenterRubik":"rubik/solutions/solveBlueCenterRubik.ts","./rubik/solutions/solveYellowMiddleLineRubik":"rubik/solutions/solveYellowMiddleLineRubik.ts","./rubik/solutions/solveRedCenterRubik":"rubik/solutions/solveRedCenterRubik.ts","./rubik/solutions/solveGreenOrangeCenterRubik":"rubik/solutions/solveGreenOrangeCenterRubik.ts"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -86472,7 +87098,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53389" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56469" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

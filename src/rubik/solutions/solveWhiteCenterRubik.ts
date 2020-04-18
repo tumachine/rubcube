@@ -144,19 +144,26 @@ class SolveWhiteCenterRubik extends RubikSolutionBase {
 
       for (let col = 1; col < lineLength; col += 1) {
         for (let row = 1; row < lineLength; row += 1) {
-          if (!this.check(s.f, this.getFaceDirection(row, col), s.f)) {
-            this.solveCube(row, col);
-            if (!this.check(s.f, this.getFaceDirection(row, col), s.f)) {
-              console.log('INCORRECT');
-              return false;
-            }
-          }
+          this.solveCube(row, col);
+          // if (!this.check(s.f, this.getFaceDirection(row, col), s.f)) {
+          //   console.log('INCORRECT');
+          //   return false;
+          // }
         }
         this.m.L(col);
       }
 
       for (let col = 1; col < lineLength; col += 1) {
         this.m.L(col, false);
+      }
+
+      for (let c = 1; c < lineLength; c += 1) {
+        for (let r = 1; r < lineLength; r += 1) {
+          if (!this.check(s.f, this.getFaceDirection(r, c), s.f)) {
+            console.log('INCORRECT solution');
+            return false;
+          }
+        }
       }
     }
 }
