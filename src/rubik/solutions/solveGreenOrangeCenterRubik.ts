@@ -12,8 +12,6 @@ class SolveGreenOrangeCenterRubik extends RubikSolutionBase {
   // local sides
   private ls;
 
-  private moveHistory: Function[];
-
   public constructor(rubik: RubikModel) {
     super(rubik);
 

@@ -12,6 +12,7 @@ import SolveYellowMiddleLineRubik from './rubik/solutions/solveYellowMiddleLineR
 import SolveRedCenterRubik from './rubik/solutions/solveRedCenterRubik';
 import { sides } from './rubik/utils';
 import SolveGreenOrangeCenterRubik from './rubik/solutions/solveGreenOrangeCenterRubik';
+import SolveEdgesRubik from './rubik/solutions/solveEdgesRubik';
 
 function createLight() {
   const color = 0xFFFFFF;
@@ -120,6 +121,9 @@ class MainScene {
       solveRedCenterRubik.solve();
       const solveGreenOrangeCenterRubik = new SolveGreenOrangeCenterRubik(this.rubikView.rubikModel);
       solveGreenOrangeCenterRubik.solve();
+      const solveEdgesRubik = new SolveEdgesRubik(this.rubikView.rubikModel);
+      const solveStandardRubik = new SolveStandardRubik(this.rubikView.rubikModel);
+      solveStandardRubik.solve();
     }
 
     if (animate) {
@@ -157,7 +161,7 @@ class MainScene {
   }
 
   test() {
-    const length = 9;
+    const length = 25;
     const rubikModel = new RubikModel(length);
 
     this.camera.position.set(length * 1.5, length * 1.2, length * 2);
@@ -187,6 +191,7 @@ class MainScene {
     solveRedCenterRubik.solve();
     const solveGreenOrangeCenterRubik = new SolveGreenOrangeCenterRubik(this.rubikView.rubikModel);
     solveGreenOrangeCenterRubik.solve();
+    const solveEdgesRubik = new SolveEdgesRubik(this.rubikView.rubikModel);
 
     this.rubikView.colorizeRubik();
     // this.rubikView.placeTextOnRubik();
@@ -198,29 +203,29 @@ let size = 3;
 
 
 window.onload = () => {
-  main.test();
-  // const sizeUp = document.getElementById('sizeUp');
-  // const sizeDown = document.getElementById('sizeDown');
-  // const scramble = document.getElementById('scramble');
-  // const solve = document.getElementById('solve');
-  // sizeUp.onclick = () => {
-  //   size += 2;
-  //   main.createRubik(size);
-  // };
-  // sizeDown.onclick = () => {
-  //   if (size > 3) {
-  //     console.log(size);
-  //     size -= 2;
-  //     main.createRubik(size);
-  //   }
-  // };
-  // scramble.onclick = () => {
-  //   main.scrambleRubik(40);
-  // };
-  // solve.onclick = () => {
-  //   main.solveRubik(true);
-  // };
-  // main.createRubik(3);
+  // main.test();
+  const sizeUp = document.getElementById('sizeUp');
+  const sizeDown = document.getElementById('sizeDown');
+  const scramble = document.getElementById('scramble');
+  const solve = document.getElementById('solve');
+  sizeUp.onclick = () => {
+    size += 2;
+    main.createRubik(size);
+  };
+  sizeDown.onclick = () => {
+    if (size > 3) {
+      console.log(size);
+      size -= 2;
+      main.createRubik(size);
+    }
+  };
+  scramble.onclick = () => {
+    main.scrambleRubik(70);
+  };
+  solve.onclick = () => {
+    main.solveRubik(true);
+  };
+  main.createRubik(3);
   main.render();
 };
 
