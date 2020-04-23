@@ -29,83 +29,81 @@ class SolveStandardRubik extends RubikSolutionBase {
 
     this.generateFaceSideCases();
 
-    this.frontOrient = [
-      // left
-      {
-        U: this.m.L,
-        D: this.m.R,
-        L: this.m.D,
-        R: this.m.U,
-        F: this.m.F,
-        B: this.m.B,
-      },
-      // right
-      {
-        U: this.m.R,
-        D: this.m.L,
-        L: this.m.U,
-        R: this.m.D,
-        F: this.m.F,
-        B: this.m.B,
-      },
-      // up
-      {
-        U: this.m.U,
-        D: this.m.D,
-        L: this.m.L,
-        R: this.m.R,
-        F: this.m.F,
-        B: this.m.B,
-      },
-      // down
-      {
-        U: this.m.D,
-        D: this.m.U,
-        L: this.m.R,
-        R: this.m.L,
-        F: this.m.F,
-        B: this.m.B,
-      },
-    ];
+    const frontLeft = {
+      U: this.m.L,
+      D: this.m.R,
+      L: this.m.D,
+      R: this.m.U,
+      F: this.m.F,
+      B: this.m.B,
+    };
 
-    this.sideOrient = [
-      // left
-      {
-        U: this.m.B,
-        D: this.m.F,
-        L: this.m.D,
-        R: this.m.U,
-        F: this.m.L,
-        B: this.m.R,
-      },
-      // right
-      {
-        U: this.m.B,
-        D: this.m.F,
-        L: this.m.U,
-        R: this.m.D,
-        F: this.m.R,
-        B: this.m.L,
-      },
-      // up
-      {
-        U: this.m.B,
-        D: this.m.F,
-        L: this.m.L,
-        R: this.m.R,
-        F: this.m.U,
-        B: this.m.D,
-      },
-      // down
-      {
-        U: this.m.B,
-        D: this.m.F,
-        L: this.m.R,
-        R: this.m.L,
-        F: this.m.D,
-        B: this.m.U,
-      },
-    ];
+    const frontRight = {
+      U: this.m.R,
+      D: this.m.L,
+      L: this.m.U,
+      R: this.m.D,
+      F: this.m.F,
+      B: this.m.B,
+    };
+
+    const frontUp = {
+      U: this.m.U,
+      D: this.m.D,
+      L: this.m.L,
+      R: this.m.R,
+      F: this.m.F,
+      B: this.m.B,
+    };
+
+    const frontDown = {
+      U: this.m.D,
+      D: this.m.U,
+      L: this.m.R,
+      R: this.m.L,
+      F: this.m.F,
+      B: this.m.B,
+    };
+
+    this.frontOrient = [frontLeft, frontRight, frontUp, frontDown];
+
+    const sideLeft = {
+      U: this.m.B,
+      D: this.m.F,
+      L: this.m.D,
+      R: this.m.U,
+      F: this.m.L,
+      B: this.m.R,
+    };
+
+    const sideRight = {
+      U: this.m.B,
+      D: this.m.F,
+      L: this.m.U,
+      R: this.m.D,
+      F: this.m.R,
+      B: this.m.L,
+    };
+
+    const sideUp = {
+      U: this.m.B,
+      D: this.m.F,
+      L: this.m.L,
+      R: this.m.R,
+      F: this.m.U,
+      B: this.m.D,
+    };
+
+    const sideDown = {
+      U: this.m.B,
+      D: this.m.F,
+      L: this.m.R,
+      R: this.m.L,
+      F: this.m.D,
+      B: this.m.U,
+    };
+
+    this.sideOrient = [sideLeft, sideRight, sideUp, sideDown];
   }
 
   private generateFaceSideCases = () => {
@@ -120,6 +118,136 @@ class SolveStandardRubik extends RubikSolutionBase {
         this.faceCornerCases[i][j] = leftFaceCornerCases[(j + i) % 4];
       }
     }
+  }
+
+  solveEvenParities = () => {
+    const findFlippedEdge = (): number => {
+      for (let i = 0; i < this.sideOrient.length; i += 1) {
+        if (this.check(i, this.f.u, s.b)) {
+          return i;
+        }
+      }
+      return -1;
+    };
+
+    const findSwappedPieces = (): number => {
+      for (let i = 0; i < this.sideOrient.length; i += 1) {
+        if (!this.check(i, this.f.u, i) || !this.check(i, this.f.ur, i)) {
+          return i;
+        }
+      }
+      return -1;
+    };
+
+
+    const rotateAll = (move: MoveInterface, clockwise = true) => {
+      for (let i = 0; i < this.sideLength; i += 1) {
+        move(i, clockwise);
+      }
+    };
+
+    const rotateAllMoves = [
+      () => rotateAll(this.m.U),
+      () => rotateAll(this.m.U, false),
+      () => rotateAll(this.m.R),
+      () => rotateAll(this.m.L),
+    ];
+
+    for (let i = 0; i < 5; i += 1) {
+      let edge = findFlippedEdge();
+      if (edge !== -1) {
+        // console.log('Found flipped edge');
+        this.solveFlippedEdge(this.sideOrient[edge]);
+        rotateAllMoves[edge]();
+        this.solveYellowLayer();
+      }
+      edge = findSwappedPieces();
+      if (edge !== -1) {
+        // console.log('Found swapped pieces');
+        this.solveRotatedPieces(this.sideOrient[edge]);
+        this.solveYellowLayer();
+      }
+      if (edge === -1) {
+        break;
+      }
+    }
+  }
+
+  rotateHalf = (move: MoveInterface, clockwise = true) => {
+    for (let i = 0; i < this.middle; i += 1) {
+      move(i, clockwise);
+    }
+  }
+
+  // flipped edge: OLL Parity 3Rw U2 x 3Rw U2 3Rw U2 3Rw' U2 3Lw U2 3Rw' U2 3Rw U2 3Rw' U2 3Rw'
+  solveFlippedEdge = (m: MoveActions) => {
+    this.rotateHalf(m.R);
+    m.U();
+    m.U();
+
+    this.rotateHalf(m.R);
+
+    m.F();
+    m.F();
+
+    this.rotateHalf(m.R);
+
+    m.F();
+    m.F();
+
+    this.rotateHalf(m.R, false);
+
+    m.F();
+    m.F();
+
+    this.rotateHalf(m.L);
+
+    m.F();
+    m.F();
+
+    this.rotateHalf(m.R, false);
+
+    m.F();
+    m.F();
+
+    this.rotateHalf(m.R);
+
+    m.F();
+    m.F();
+
+    this.rotateHalf(m.R, false);
+
+    m.F();
+    m.F();
+
+    this.rotateHalf(m.R, false);
+  }
+
+  // swapped pieces: PLL Parity 3Rw2 F2 U2 3Rw2 R2 U2 F2 3Rw2
+  solveRotatedPieces = (m: MoveActions) => {
+    this.rotateHalf(m.R);
+    this.rotateHalf(m.R);
+
+    m.F();
+    m.F();
+
+    m.U();
+    m.U();
+
+    this.rotateHalf(m.R);
+    this.rotateHalf(m.R);
+
+    m.R();
+    m.R();
+
+    m.U();
+    m.U();
+
+    m.F();
+    m.F();
+
+    this.rotateHalf(m.R);
+    this.rotateHalf(m.R);
   }
 
   solveWhiteCross = () => {
@@ -137,7 +265,7 @@ class SolveStandardRubik extends RubikSolutionBase {
   solveWhiteCornerSide = (sc: number[], fc: number[]) => {
     // check if already correct
     if (this.check(sc[0], this.f.dr, sc[0]) && (this.check(sc[1], this.f.dl, sc[1]) && (this.check(s.f, fc[0], s.f)))) {
-      console.log('corner is in a right place');
+      // console.log('corner is in a right place');
       return;
     }
 
@@ -220,7 +348,7 @@ class SolveStandardRubik extends RubikSolutionBase {
       this.frontOrient[sc[1]].L(0, false);
       this.m.B(0, false);
       this.frontOrient[sc[1]].L();
-      console.log('solved case 1');
+      // console.log('solved case 1');
       return;
     }
     // case 2: white in the left
@@ -228,7 +356,7 @@ class SolveStandardRubik extends RubikSolutionBase {
       this.frontOrient[sc[0]].R();
       this.m.B();
       this.frontOrient[sc[0]].R(0, false);
-      console.log('solved case 2');
+      // console.log('solved case 2');
       return;
     }
     // case 3: white in the bottom
@@ -243,7 +371,7 @@ class SolveStandardRubik extends RubikSolutionBase {
       this.m.B(0, false);
 
       this.frontOrient[sc[1]].L();
-      console.log('solved case 3');
+      // console.log('solved case 3');
     }
   }
 
@@ -257,21 +385,21 @@ class SolveStandardRubik extends RubikSolutionBase {
       // up, right, down, left
       if (this.check(sc[0], this.f.l, sc[0]) && this.check(sc[3], this.f.r, s.f)) {
         this.frontOrient[sc[0]].U(0, false);
-        console.log('left left');
+        // console.log('left left');
         return;
       }
       // correct on top
       if (this.check(sc[0], this.f.u, sc[0]) && this.check(s.b, fc[0], s.f)) {
         this.frontOrient[sc[0]].U();
         this.frontOrient[sc[0]].U();
-        console.log('left top');
+        // console.log('left top');
         return;
       }
 
       // correct on right
       if (this.check(sc[0], this.f.r, sc[0]) && this.check(sc[1], this.f.l, s.f)) {
         this.frontOrient[sc[0]].U();
-        console.log('left right');
+        // console.log('left right');
         return;
       }
 
@@ -280,15 +408,15 @@ class SolveStandardRubik extends RubikSolutionBase {
       if (this.check(sc[0], this.f.l, s.f) && this.check(sc[3], this.f.r, sc[0])) {
         this.frontOrient[sc[0]].U();
         this.frontOrient[sc[0]].U();
-        console.log('reverse left left');
+        // console.log('reverse left left');
       } else if (this.check(sc[0], this.f.u, s.f) && this.check(s.b, fc[0], sc[0])) {
         // top
         this.frontOrient[sc[0]].U();
-        console.log('reverse top left');
+        // console.log('reverse top left');
       } else if (this.check(sc[0], this.f.d, s.f) && this.check(s.f, fc[0], sc[0])) {
         // down
         this.frontOrient[sc[0]].U(0, false);
-        console.log('reverse down left');
+        // console.log('reverse down left');
       }
 
       // solve reverse face case
@@ -298,7 +426,7 @@ class SolveStandardRubik extends RubikSolutionBase {
         this.frontOrient[sc[1]].U(0, false);
         this.frontOrient[sc[0]].U();
         this.frontOrient[sc[0]].U();
-        console.log('reverse face case');
+        // console.log('reverse face case');
         return;
       }
 
@@ -309,7 +437,7 @@ class SolveStandardRubik extends RubikSolutionBase {
         this.m.B();
         this.frontOrient[sc[0]].D(0, false);
         this.m.B();
-        console.log('top hard side');
+        // console.log('top hard side');
       }
 
       // solve for bottom left
@@ -319,7 +447,7 @@ class SolveStandardRubik extends RubikSolutionBase {
         this.m.B();
         this.frontOrient[sc[0]].L(0, false);
         this.m.B();
-        console.log('bottom hard side');
+        // console.log('bottom hard side');
       }
 
       // solve for face top
@@ -327,7 +455,7 @@ class SolveStandardRubik extends RubikSolutionBase {
         || (this.check(sc[1], this.f.d, s.f) && this.check(s.f, fc[1], sc[0]))) {
         this.frontOrient[sc[0]].R();
         this.frontOrient[sc[0]].R();
-        console.log('front top hard face');
+        // console.log('front top hard face');
       }
 
       // solve for face right
@@ -335,7 +463,7 @@ class SolveStandardRubik extends RubikSolutionBase {
         || (this.check(sc[2], this.f.d, s.f) && this.check(s.f, fc[2], sc[0]))) {
         this.frontOrient[sc[0]].D();
         this.frontOrient[sc[0]].D();
-        console.log('front right hard face');
+        // console.log('front right hard face');
       }
 
       // solve for face bottom
@@ -343,13 +471,13 @@ class SolveStandardRubik extends RubikSolutionBase {
         || (this.check(sc[3], this.f.d, s.f) && this.check(s.f, fc[3], sc[0]))) {
         this.frontOrient[sc[0]].L();
         this.frontOrient[sc[0]].L();
-        console.log('front bottom hard face');
+        // console.log('front bottom hard face');
       }
 
       // this solves another three cases for bottom
       this.m.B();
 
-      console.log('solving');
+      // console.log('solving');
 
       if (count === 10) {
         break;
@@ -366,6 +494,14 @@ class SolveStandardRubik extends RubikSolutionBase {
     this.solveMiddleLayer();
     this.solveYellowCross();
 
+    this.solveYellowLayer();
+
+    if (this.sideLength % 2 === 0) {
+      this.solveEvenParities();
+    }
+  }
+
+  solveYellowLayer = () => {
     this.solveSwapYellowEdges();
     this.solvePositionYellowCorners();
     this.solveOrientLastLayerCorners();
@@ -445,7 +581,7 @@ class SolveStandardRubik extends RubikSolutionBase {
     orientation.R(0, false);
     orientation.U(0, false);
     orientation.L();
-    console.log('Yellow corner case');
+    // console.log('Yellow corner case');
   }
 
   solvePositionYellowCorners = () => {
@@ -478,7 +614,7 @@ class SolveStandardRubik extends RubikSolutionBase {
 
     findCorrectCube();
     if (totalCorrect === 4) {
-      console.log('yellow corners were initially in correct position');
+      // console.log('yellow corners were initially in correct position');
       return;
     }
 
@@ -491,7 +627,7 @@ class SolveStandardRubik extends RubikSolutionBase {
         // assume that cube will be correct
         findCorrectCube();
         if (totalCorrect === 4) {
-          console.log('yellow corners solved');
+          // console.log('yellow corners solved');
           return;
         }
       } else {
@@ -504,7 +640,7 @@ class SolveStandardRubik extends RubikSolutionBase {
       if (totalCorrect !== 4) {
         this.solvePositionYellowCornersCase(this.sideOrient[(correctPos + 1) % 4]);
       } else {
-        console.log('solved it');
+        // console.log('solved it');
         break;
       }
     }
@@ -529,14 +665,14 @@ class SolveStandardRubik extends RubikSolutionBase {
     // lazy check
     for (let i = 0; i < 4; i += 1) {
       if (this.check(sc[0], this.f.u, sc[0])) {
-        console.log('found correct side for yellow case');
+        // console.log('found correct side for yellow case');
         break;
       }
       this.m.B();
     }
 
     if (checkComplete()) {
-      console.log('All yellow edges are correct');
+      // console.log('All yellow edges are correct');
       return;
     }
 
@@ -547,7 +683,7 @@ class SolveStandardRubik extends RubikSolutionBase {
       this.solveSwapYellowEdgesCase(orientation);
       orientation = this.sideOrient[sc[2]];
       this.solveSwapYellowEdgesCase(orientation);
-      console.log('opposite cubes');
+      // console.log('opposite cubes');
       return;
     }
 
@@ -556,13 +692,13 @@ class SolveStandardRubik extends RubikSolutionBase {
     if (this.check(sc[2], this.f.u, sc[3])) {
       const orientation = this.sideOrient[sc[3]];
       this.solveSwapYellowEdgesCase(orientation);
-      console.log('solved second cube');
+      // console.log('solved second cube');
     }
 
     if (this.check(sc[1], this.f.u, sc[2])) {
       const orientation = this.sideOrient[sc[2]];
       this.solveSwapYellowEdgesCase(orientation);
-      console.log('solved third cube');
+      // console.log('solved third cube');
     }
 
     if (this.check(sc[3], this.f.u, sc[2]) && (this.check(sc[2], this.f.u, sc[1]))) {
@@ -570,7 +706,7 @@ class SolveStandardRubik extends RubikSolutionBase {
       this.solveSwapYellowEdgesCase(orientation);
       orientation = this.sideOrient[sc[3]];
       this.solveSwapYellowEdgesCase(orientation);
-      console.log('solved unique position cube');
+      // console.log('solved unique position cube');
     }
   }
 
@@ -595,7 +731,7 @@ class SolveStandardRubik extends RubikSolutionBase {
     orientation.R(0, false);
     orientation.U(0, false);
     orientation.F(0, false);
-    console.log('Yellow cross case ALL');
+    // console.log('Yellow cross case ALL');
   }
 
   solveYellowCrossShortcutCase = (orientation: MoveActions) => {
@@ -606,7 +742,7 @@ class SolveStandardRubik extends RubikSolutionBase {
     orientation.U(0, false);
     orientation.R(0, false);
     orientation.F(0, false);
-    console.log('Yellow cross case SHORTCUT');
+    // console.log('Yellow cross case SHORTCUT');
   }
 
   solveYellowCross = () => {
@@ -616,7 +752,7 @@ class SolveStandardRubik extends RubikSolutionBase {
     //  line
     //  complete
     let orientation = null;
-    console.log(this.sideCases);
+    // console.log(this.sideCases);
 
     for (let i = 0; i < 10; i += 1) {
       // complete case
@@ -624,32 +760,32 @@ class SolveStandardRubik extends RubikSolutionBase {
         && this.check(s.b, this.f.u, s.b)
         && this.check(s.b, this.f.r, s.b)
         && this.check(s.b, this.f.d, s.b)) {
-        console.log('yellow cross is complete');
+        // console.log('yellow cross is complete');
         break;
       } else if (!this.check(s.b, this.f.l, s.b)
         && !this.check(s.b, this.f.u, s.b)
         && !this.check(s.b, this.f.r, s.b)
         && !this.check(s.b, this.f.d, s.b)) {
         // dot case
-        console.log('dot case');
+        // console.log('dot case');
         orientation = this.sideOrient[this.sideCases[0][0]];
       } else if (this.check(s.b, this.f.l, s.b)
         && this.check(s.b, this.f.r, s.b)) {
         // line case
-        console.log('line case');
+        // console.log('line case');
         orientation = this.sideOrient[this.sideCases[0][1]];
       } else if (this.check(s.b, this.f.u, s.b)
         && this.check(s.b, this.f.d, s.b)) {
         // line case
-        console.log('line case');
+        // console.log('line case');
         orientation = this.sideOrient[this.sideCases[0][0]];
       } else {
         // L case
         for (let j = 0; j < 4; j += 1) {
           if (this.check(s.b, this.faceCases[0][(j + 3) % 4], s.b) && this.check(s.b, this.faceCases[0][(j + 2) % 4], s.b)) {
-            console.log(j);
+            // console.log(j);
             orientation = this.sideOrient[this.sideCases[0][j]];
-            console.log('L case');
+            // console.log('L case');
             break;
           }
         }
@@ -673,7 +809,7 @@ class SolveStandardRubik extends RubikSolutionBase {
     orientation.F();
     orientation.U(0, false);
     orientation.F(0, false);
-    console.log('Middle case LEFT');
+    // console.log('Middle case LEFT');
   }
 
   solveMiddleLayerRightCase = (orientation: MoveActions) => {
@@ -686,7 +822,7 @@ class SolveStandardRubik extends RubikSolutionBase {
     orientation.F(0, false);
     orientation.U();
     orientation.F();
-    console.log('Middle case RIGHT');
+    // console.log('Middle case RIGHT');
   }
 
   solveMiddleLayerSide = (fc, sc) => {
@@ -697,7 +833,7 @@ class SolveStandardRubik extends RubikSolutionBase {
     // check for right side
     // create a check if a side already correct
     if (this.check(sc[0], this.f.r, sc[0]) && (this.check(sc[1], this.f.l, sc[1]))) {
-      console.log('middle layer side already correct');
+      // console.log('middle layer side already correct');
       // already correct
       return;
     }
@@ -706,7 +842,7 @@ class SolveStandardRubik extends RubikSolutionBase {
     // move it to top
     for (let i = 0; i < 4; i += 1) {
       if (this.check(sc[i], this.f.r, sc[1]) && this.check(sc[(i + 1) % 4], this.f.l, sc[0])) {
-        console.log('middle opposite', i);
+        // console.log('middle opposite', i);
         this.solveMiddleLayerRightCase(this.sideOrient[sc[i]]);
         if (i === 0) {
           this.m.B();
@@ -722,7 +858,7 @@ class SolveStandardRubik extends RubikSolutionBase {
         break;
       }
       if (this.check(sc[i], this.f.r, sc[0]) && this.check(sc[(i + 1) % 4], this.f.l, sc[1])) {
-        console.log('middle same ', i);
+        // console.log('middle same ', i);
         this.solveMiddleLayerRightCase(this.sideOrient[sc[i]]);
         if (i === 0) {
           this.m.B();
@@ -740,7 +876,7 @@ class SolveStandardRubik extends RubikSolutionBase {
 
       if (this.check(sc[i], this.f.u, sc[0]) && this.check(s.b, fc[i], sc[1])) {
         // 3 is incorrect
-        console.log('top same', i);
+        // console.log('top same', i);
         if (i === 0) {
           // do nothing
         } else if (i === 1) {
@@ -756,7 +892,7 @@ class SolveStandardRubik extends RubikSolutionBase {
         break;
       }
       if (this.check(sc[i], this.f.u, sc[1]) && this.check(s.b, fc[i], sc[0])) {
-        console.log('top opposite', i);
+        // console.log('top opposite', i);
         if (i === 0) {
           this.m.B(0, false);
         } else if (i === 1) {

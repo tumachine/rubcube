@@ -1,4 +1,3 @@
-
 /* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
 import RubikModel from '../model';
@@ -144,16 +143,18 @@ class SolveYellowMiddleLineRubik extends RubikSolutionBase {
     lineLength = this.sideLength - 1;
 
     solve = () => {
-      for (let col = 1; col < this.lineLength; col += 1) {
-        // console.log(this.middle, col);
-        if (col !== this.middle) {
-          this.solveCube(this.middle, col);
-          // for (let c = 1; c < col; c += 1) {
-          //   if (!this.check(this.ls.f, this.getFaceDirection(this.middle, c), this.ls.f)) {
-          //     console.log('INCORRECT AA');
-          //     return false;
-          //   }
-          // }
+      if (this.sideLength % 2 !== 0) {
+        for (let col = 1; col < this.lineLength; col += 1) {
+          // console.log(this.middle, col);
+          if (col !== this.middle) {
+            this.solveCube(this.middle, col);
+            // for (let c = 1; c < col; c += 1) {
+            //   if (!this.check(this.ls.f, this.getFaceDirection(this.middle, c), this.ls.f)) {
+            //     console.log('INCORRECT AA');
+            //     return false;
+            //   }
+            // }
+          }
         }
       }
     }
