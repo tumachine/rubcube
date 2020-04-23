@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable max-len */
-import { sides as s, colorHashes } from './utils';
+import { sides as s } from './utils';
 import Face from './face';
 import Move from './move';
 import MoveActions from './moveActions';
@@ -28,8 +28,6 @@ class RubikModel {
   public matrix: Array<Array<number>>
 
   public matrixReference: Array<Array<number>>
-
-  // public interface: Array<Array<number>>
 
   public f: Face
 
@@ -366,27 +364,5 @@ class RubikModel {
     }
   }
 }
-
-
-// slices = [
-//     [ // slice
-//         [], // face
-//         [], // face
-//         [], // face
-//         [], // face
-//     ],
-//     [ // slice
-//         [], // face
-//         [], // face
-//         [], // face
-//         [], // face
-//     ],
-//     [ // slice
-//         [], // face
-//         [], // face
-//         [], // face
-//         [], // face
-//     ],
-// ]
 
 export default RubikModel;

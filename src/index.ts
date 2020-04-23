@@ -13,6 +13,7 @@ import SolveRedCenterRubik from './rubik/solutions/solveRedCenterRubik';
 import { sides } from './rubik/utils';
 import SolveGreenOrangeCenterRubik from './rubik/solutions/solveGreenOrangeCenterRubik';
 import SolveEdgesRubik from './rubik/solutions/solveEdgesRubik';
+import SolveEvenRubikParities from './rubik/solutions/solveEvenRubikParities';
 
 function createLight() {
   const color = 0xFFFFFF;
@@ -111,8 +112,12 @@ class MainScene {
     } else {
       const solveWhiteCenterRubik = new SolveWhiteCenterRubik(this.rubikView.rubikModel);
       solveWhiteCenterRubik.solve();
-      const solveYellowMiddleLineRubik = new SolveYellowMiddleLineRubik(this.rubikView.rubikModel);
-      solveYellowMiddleLineRubik.solve();
+
+      if (this.rubikView.rubikModel.sideLength % 2 !== 0) {
+        const solveYellowMiddleLineRubik = new SolveYellowMiddleLineRubik(this.rubikView.rubikModel);
+        solveYellowMiddleLineRubik.solve();
+      }
+
       const solveYellowCenterRubik = new SolveYellowCenterRubik(this.rubikView.rubikModel);
       solveYellowCenterRubik.solve();
       const solveBlueCenterRubik = new SolveBlueCenterRubik(this.rubikView.rubikModel);
@@ -122,8 +127,14 @@ class MainScene {
       const solveGreenOrangeCenterRubik = new SolveGreenOrangeCenterRubik(this.rubikView.rubikModel);
       solveGreenOrangeCenterRubik.solve();
       const solveEdgesRubik = new SolveEdgesRubik(this.rubikView.rubikModel);
+      solveEdgesRubik.solve();
       const solveStandardRubik = new SolveStandardRubik(this.rubikView.rubikModel);
       solveStandardRubik.solve();
+
+      if (this.rubikView.rubikModel.sideLength % 2 === 0) {
+        const solveEvenRubikParities = new SolveEvenRubikParities(this.rubikView.rubikModel);
+        solveEvenRubikParities.solve();
+      }
     }
 
     if (animate) {
@@ -161,7 +172,7 @@ class MainScene {
   }
 
   test() {
-    const length = 25;
+    const length = 4;
     const rubikModel = new RubikModel(length);
 
     this.camera.position.set(length * 1.5, length * 1.2, length * 2);
@@ -177,12 +188,16 @@ class MainScene {
     this.scene.add(this.rubikView.rubik);
     // // this.rubikView.placeTextOnRubik();
 
-    this.rubikView.rubikModel.generateRandomMoves(500, true);
+    this.rubikView.rubikModel.generateRandomMoves(50, true);
     // this.rubikView.rubikModel.solveBigCube();
     const solveWhiteCenterRubik = new SolveWhiteCenterRubik(this.rubikView.rubikModel);
     solveWhiteCenterRubik.solve();
-    const solveYellowMiddleLineRubik = new SolveYellowMiddleLineRubik(this.rubikView.rubikModel);
-    solveYellowMiddleLineRubik.solve();
+
+    if (this.rubikView.rubikModel.sideLength % 2 !== 0) {
+      const solveYellowMiddleLineRubik = new SolveYellowMiddleLineRubik(this.rubikView.rubikModel);
+      solveYellowMiddleLineRubik.solve();
+    }
+
     const solveYellowCenterRubik = new SolveYellowCenterRubik(this.rubikView.rubikModel);
     solveYellowCenterRubik.solve();
     const solveBlueCenterRubik = new SolveBlueCenterRubik(this.rubikView.rubikModel);
@@ -192,6 +207,11 @@ class MainScene {
     const solveGreenOrangeCenterRubik = new SolveGreenOrangeCenterRubik(this.rubikView.rubikModel);
     solveGreenOrangeCenterRubik.solve();
     const solveEdgesRubik = new SolveEdgesRubik(this.rubikView.rubikModel);
+    solveEdgesRubik.solve();
+    const solveStandardRubik = new SolveStandardRubik(this.rubikView.rubikModel);
+    solveStandardRubik.solve();
+    const solveEvenRubikParities = new SolveEvenRubikParities(this.rubikView.rubikModel);
+    solveEvenRubikParities.solve();
 
     this.rubikView.colorizeRubik();
     // this.rubikView.placeTextOnRubik();
@@ -203,29 +223,32 @@ let size = 3;
 
 
 window.onload = () => {
-  // main.test();
-  const sizeUp = document.getElementById('sizeUp');
-  const sizeDown = document.getElementById('sizeDown');
-  const scramble = document.getElementById('scramble');
-  const solve = document.getElementById('solve');
-  sizeUp.onclick = () => {
-    size += 2;
-    main.createRubik(size);
-  };
-  sizeDown.onclick = () => {
-    if (size > 3) {
-      console.log(size);
-      size -= 2;
-      main.createRubik(size);
-    }
-  };
-  scramble.onclick = () => {
-    main.scrambleRubik(70);
-  };
-  solve.onclick = () => {
-    main.solveRubik(true);
-  };
-  main.createRubik(3);
+  const t0 = performance.now();
+  main.test();
+  const t1 = performance.now();
+  console.log('Took', (t1 - t0).toFixed(4), 'milliseconds to generate');
+  // const sizeUp = document.getElementById('sizeUp');
+  // const sizeDown = document.getElementById('sizeDown');
+  // const scramble = document.getElementById('scramble');
+  // const solve = document.getElementById('solve');
+  // sizeUp.onclick = () => {
+  //   size += 1;
+  //   main.createRubik(size);
+  // };
+  // sizeDown.onclick = () => {
+  //   if (size > 3) {
+  //     console.log(size);
+  //     size -= 1;
+  //     main.createRubik(size);
+  //   }
+  // };
+  // scramble.onclick = () => {
+  //   main.scrambleRubik(70);
+  // };
+  // solve.onclick = () => {
+  //   main.solveRubik(true);
+  // };
+  // main.createRubik(3);
   main.render();
 };
 

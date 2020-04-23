@@ -1,8 +1,7 @@
 /* eslint-disable max-len */
-import MoveActions from '../moveActions';
 import RubikModel from '../model';
 import { sides as s, colorHashes } from '../utils';
-import { OperationAfterFound, FindReturn } from './d';
+import { FindReturn } from './d';
 import RubikSolutionBase from './rubikSolutionBase';
 
 interface RotateFunc {
@@ -23,15 +22,41 @@ interface Edge {
 }
 
 class SolveEdgesRubik extends RubikSolutionBase {
-  private m: MoveActions;
+  public UF: Edge;
 
-  // local sides
-  private ls;
+  public UR: Edge;
+
+  public UB: Edge;
+
+  public UL: Edge;
+
+  public DF: Edge;
+
+  public DR: Edge;
+
+  public DB: Edge;
+
+  public DL: Edge;
+
+  public RB: Edge;
+
+  public BL: Edge;
+
+  public LF: Edge;
+
+  public FR: Edge;
+
+  public edges: Edge[];
+
+  public correctEdges: boolean[] = [];
+
+  public currentMiddle: number;
+
+  public secondMiddle: number;
 
   public constructor(rubik: RubikModel) {
     super(rubik);
 
-    this.m = new MoveActions();
     this.m.L = rubik.moves.L;
     this.m.R = rubik.moves.R;
     this.m.F = rubik.moves.F;
@@ -39,7 +64,6 @@ class SolveEdgesRubik extends RubikSolutionBase {
     this.m.U = rubik.moves.U;
     this.m.D = rubik.moves.D;
 
-    this.interface = new Array(6);
     this.interface[s.l] = [...this.rubik.stRotations[0]];
     this.interface[s.r] = [...this.rubik.opRotations[0]];
     this.interface[s.u] = [...this.rubik.opRotations[2]];
@@ -47,7 +71,247 @@ class SolveEdgesRubik extends RubikSolutionBase {
     this.interface[s.f] = [...this.rubik.stRotations[0]];
     this.interface[s.b] = [...this.rubik.opRotations[0]];
 
-    // create arrays which would represent edges of a face
+    this.middle = Math.floor(this.sideLength / 2 - 1);
+    this.secondMiddle = this.middle - 1;
+
+    this.currentMiddle = this.middle;
+
+    for (let i = 0; i < this.sideLength - 2; i += 1) {
+      this.correctEdges.push(false);
+    }
+
+    this.generateEdges();
+  }
+
+  solve = () => {
+    this.solveEdges();
+
+    this.solveParities();
+  }
+
+  solveEdges = () => {
+    for (let i = 0; i < this.edges.length; i += 1) {
+      this.solveEdge(this.edges[i].firstFace, this.edges[i].secondFace);
+    }
+  };
+
+  resetCorrectEdges = () => {
+    for (let i = 0; i < this.correctEdges.length; i += 1) {
+      this.correctEdges[i] = false;
+    }
+  };
+
+  getNextIncorrectEdge = (): number => {
+    for (let i = 0; i < this.correctEdges.length; i += 1) {
+      if (this.correctEdges[i] === false) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
+  // checkEdgeSides = (index: number, edgeOpposite: Edge = this.LF, edgeCorrect: Edge = this.FR): boolean => {
+  //   const correctFirst = this.getColorHash(edgeCorrect.firstFace, edgeCorrect.side[this.middle][0]);
+  //   const correctSecond = this.getColorHash(edgeCorrect.secondFace, edgeCorrect.side[this.middle][1]);
+  //   const oppositeFirst = this.getColorHash(edgeOpposite.firstFace, edgeOpposite.side[index][0]);
+  //   const oppositeSecond = this.getColorHash(edgeOpposite.secondFace, edgeOpposite.side[index][1]);
+  //   return (correctFirst === oppositeFirst) && (correctSecond === oppositeSecond);
+  // };
+
+  checkEdgeSides = (index: number, edgeOpposite: Edge = this.LF, edgeCorrect: Edge = this.FR): boolean => {
+    const correctFirst = this.getColorHash(edgeCorrect.firstFace, edgeCorrect.side[this.currentMiddle][0]);
+    const correctSecond = this.getColorHash(edgeCorrect.secondFace, edgeCorrect.side[this.currentMiddle][1]);
+    const oppositeFirst = this.getColorHash(edgeOpposite.firstFace, edgeOpposite.side[index][0]);
+    const oppositeSecond = this.getColorHash(edgeOpposite.secondFace, edgeOpposite.side[index][1]);
+    return (correctFirst === oppositeFirst) && (correctSecond === oppositeSecond);
+  };
+
+  solveEdgeIndex = (correctHash: number, index: number, e: Edge): boolean => {
+    const oppositeIndex = Math.abs(this.sideLength - 3 - index);
+
+    const hashOnIndex = this.getEdgeHashPosition(e, index);
+    const hashOnOppositeIndex = this.getEdgeHashPosition(e, oppositeIndex);
+
+    if (hashOnIndex === correctHash) {
+      e.rotateOpposite();
+      if (this.checkEdgeSides(index)) {
+        this.moveOppToCorrect(index);
+        this.correctEdges[index] = true;
+      } else {
+        this.flipWholeEdge();
+        this.moveOppToCorrect(oppositeIndex);
+        this.correctEdges[oppositeIndex] = true;
+      }
+      return true;
+    }
+
+    if (hashOnOppositeIndex === correctHash) {
+      e.rotateOpposite();
+      if (this.checkEdgeSides(oppositeIndex)) {
+        this.moveOppToCorrect(oppositeIndex);
+        this.correctEdges[oppositeIndex] = true;
+      } else {
+        this.flipWholeEdge();
+        this.moveOppToCorrect(index);
+        this.correctEdges[index] = true;
+      }
+      return true;
+    }
+
+    return false;
+  };
+
+  solveMiddleEven = (correctHash: number) => {
+    for (let edge = 0; edge < this.edges.length; edge += 1) {
+      const hashOnMiddle = this.getEdgeHashPosition(this.edges[edge], this.middle);
+      const hashOnSecondMiddle = this.getEdgeHashPosition(this.edges[edge], this.secondMiddle);
+      if (hashOnMiddle === correctHash) {
+        this.edges[edge].rotateCorrect();
+        this.correctEdges[this.middle] = true;
+        this.currentMiddle = this.middle;
+        break;
+      } else if (hashOnSecondMiddle === correctHash) {
+        this.edges[edge].rotateCorrect();
+        this.correctEdges[this.secondMiddle] = true;
+        this.currentMiddle = this.secondMiddle;
+        break;
+      }
+    }
+  };
+
+  solveMiddleOdd = (correctHash: number) => {
+    for (let edge = 0; edge < this.edges.length; edge += 1) {
+      const hashOnMiddle = this.getEdgeHashPosition(this.edges[edge], this.middle);
+      if (hashOnMiddle === correctHash) {
+        this.edges[edge].rotateCorrect();
+        this.correctEdges[this.middle] = true;
+        break;
+      }
+    }
+    this.correctEdges[this.middle] = true;
+  };
+
+  solveEdge = (firstFace: number, secondFace: number) => {
+    console.log('solve edge');
+    const correctHash = this.getEdgeHashFromFaces(firstFace, secondFace);
+    this.resetCorrectEdges();
+
+    if (this.sideLength % 2 === 0) {
+      this.solveMiddleEven(correctHash);
+    } else {
+      this.solveMiddleOdd(correctHash);
+    }
+
+    for (let i = 0; i < (this.sideLength - 2) + (this.sideLength - 2); i += 1) {
+      const nextEdge = this.getNextIncorrectEdge();
+      if (nextEdge === -1) {
+        break;
+      }
+      const hashOnBaseIndex = this.getEdgeHashPosition(this.FR, nextEdge);
+      if (correctHash === hashOnBaseIndex) {
+        this.correctEdges[nextEdge] = true;
+      } else {
+        for (let edge = 0; edge < this.edges.length; edge += 1) {
+          if (this.solveEdgeIndex(correctHash, nextEdge, this.edges[edge])) {
+            break;
+          }
+        }
+      }
+    }
+  };
+
+  getNextParity = (): ParityInfo => {
+    const parityIndexes = [];
+    for (let i = 0; i < this.edges.length; i += 1) {
+      let found = false;
+      for (let e = 0; e < this.sideLength - 2; e += 1) {
+        if (!this.checkEdgeSides(e, this.edges[i], this.edges[i])) {
+          found = true;
+          parityIndexes.push(e);
+        }
+      }
+
+      if (found) {
+        return { edge: this.edges[i], parities: parityIndexes };
+      }
+    }
+    return { edge: null, parities: null };
+  };
+
+  rotateFirstHalf = (parityIndexes: number[], move: MoveInterface, clockwise: boolean = true) => {
+    for (let i = 0; i < parityIndexes.length / 2; i += 1) {
+      move(parityIndexes[i] + 1, clockwise);
+    }
+  };
+
+  solveParities = () => {
+    for (let i = 0; i < 8; i += 1) {
+      const { edge, parities } = this.getNextParity();
+      if (edge === null) {
+        break;
+      }
+
+      console.log(`Parity: ${i + 1}`);
+      edge.rotateCorrect();
+      this.m.F(0, false);
+
+      this.rotateFirstHalf(parities, this.m.R, false);
+
+      this.m.U();
+      this.m.U();
+
+      this.rotateFirstHalf(parities, this.m.L);
+
+      this.m.F();
+      this.m.F();
+
+      this.rotateFirstHalf(parities, this.m.L, false);
+
+      this.m.F();
+      this.m.F();
+
+      this.rotateFirstHalf(parities, this.m.R, false);
+      this.rotateFirstHalf(parities, this.m.R, false);
+
+      this.m.U();
+      this.m.U();
+
+      this.rotateFirstHalf(parities, this.m.R);
+
+      this.m.U();
+      this.m.U();
+
+      this.rotateFirstHalf(parities, this.m.R, false);
+
+      this.m.U();
+      this.m.U();
+
+      this.m.F();
+      this.m.F();
+
+      this.rotateFirstHalf(parities, this.m.R, false);
+      this.rotateFirstHalf(parities, this.m.R, false);
+
+      this.m.F();
+      this.m.F();
+    }
+  };
+
+  getEdgeHashFromFaces = (firstFace: number, secondFace: number) => colorHashes[firstFace] + colorHashes[secondFace];
+
+  getEdgeHash = (e: Edge) => this.getEdgeHashFromFaces(e.firstFace, e.secondFace);
+
+  getEdgeHashPosition = (e: Edge, index: number) => this.getColorHash(e.firstFace, e.side[index][0]) + this.getColorHash(e.secondFace, e.side[index][1]);
+
+  checkEdge = (index: number, hash: number, e: Edge): boolean => {
+    const edgeHash = this.getColorHash(e.firstFace, e.side[index][0]) + this.getColorHash(e.secondFace, e.side[index][1]);
+    if (edgeHash === hash) {
+      return true;
+    }
+    return false;
+  }
+
+  generateEdges = () => {
     const down = [];
     const left = [];
     const right = [];
@@ -74,8 +338,6 @@ class SolveEdgesRubik extends RubikSolutionBase {
     for (let i = 0; i < lineLength; i += 1) {
       leftRight.push([right[i], left[i]]);
     }
-    // console.log('Left Right:');
-    // console.log(leftRight);
 
     const upFront = [];
     const upRight = [];
@@ -85,7 +347,6 @@ class SolveEdgesRubik extends RubikSolutionBase {
     const downRight = [];
     const downBack = [];
     const downLeft = [];
-
 
     for (let i = 0; i < lineLength; i += 1) {
       upFront.push([up[lineLength - i - 1], down[lineLength - i - 1]]);
@@ -97,24 +358,8 @@ class SolveEdgesRubik extends RubikSolutionBase {
       downBack.push([down[i], up[i]]);
       downLeft.push([down[i], right[lineLength - i - 1]]);
     }
-    // console.log('Up Front:');
-    // console.log(upFront);
-    // console.log('Up Right:');
-    // console.log(upRight);
-    // console.log('Up Back:');
-    // console.log(upBack);
-    // console.log('Up Left:');
-    // console.log(upLeft);
-    // console.log('Down Front:');
-    // console.log(downFront);
-    // console.log('Down Right:');
-    // console.log(downRight);
-    // console.log('Down Back:');
-    // console.log(downBack);
-    // console.log('Down Left:');
-    // console.log(downLeft);
 
-    const UF: Edge = {
+    this.UF = {
       side: upFront,
       firstFace: s.f,
       secondFace: s.u,
@@ -123,13 +368,11 @@ class SolveEdgesRubik extends RubikSolutionBase {
         this.m.L();
       },
       rotateCorrect: () => {
-        // this.m.U(0, false);
-        // this.m.R(0, false);
         this.m.F();
       },
     };
 
-    const UR: Edge = {
+    this.UR = {
       side: upRight,
       firstFace: s.r,
       secondFace: s.u,
@@ -139,8 +382,6 @@ class SolveEdgesRubik extends RubikSolutionBase {
         this.m.L();
       },
       rotateCorrect: () => {
-        // this.m.R(0, false);
-
         this.m.U(0, false);
         this.m.B(0, false);
         this.m.R();
@@ -149,7 +390,7 @@ class SolveEdgesRubik extends RubikSolutionBase {
     };
 
 
-    const UB: Edge = {
+    this.UB = {
       side: upBack,
       firstFace: s.b,
       secondFace: s.u,
@@ -158,15 +399,13 @@ class SolveEdgesRubik extends RubikSolutionBase {
         this.m.L();
       },
       rotateCorrect: () => {
-        // this.m.U();
-        // this.m.R(0, false);
         this.m.B(0, false);
         this.m.R();
         this.m.R();
       },
     };
 
-    const UL: Edge = {
+    this.UL = {
       side: upLeft,
       firstFace: s.l,
       secondFace: s.u,
@@ -174,9 +413,6 @@ class SolveEdgesRubik extends RubikSolutionBase {
         this.m.L();
       },
       rotateCorrect: () => {
-        // this.m.U();
-        // this.m.U();
-        // this.m.R(0, false);
         this.m.L(0, false);
         this.m.B(0, false);
         this.m.U();
@@ -184,7 +420,7 @@ class SolveEdgesRubik extends RubikSolutionBase {
       },
     };
 
-    const DF: Edge = {
+    this.DF = {
       side: downFront,
       firstFace: s.f,
       secondFace: s.d,
@@ -193,13 +429,11 @@ class SolveEdgesRubik extends RubikSolutionBase {
         this.m.L(0, false);
       },
       rotateCorrect: () => {
-        // this.m.D();
-        // this.m.R();
         this.m.F(0, false);
       },
     };
 
-    const DL: Edge = {
+    this.DL = {
       side: downLeft,
       firstFace: s.l,
       secondFace: s.d,
@@ -207,9 +441,6 @@ class SolveEdgesRubik extends RubikSolutionBase {
         this.m.L(0, false);
       },
       rotateCorrect: () => {
-        // this.m.D();
-        // this.m.D();
-        // this.m.R();
         this.m.D(0, false);
         this.m.B();
         this.m.R();
@@ -217,7 +448,7 @@ class SolveEdgesRubik extends RubikSolutionBase {
       },
     };
 
-    const DB: Edge = {
+    this.DB = {
       side: downBack,
       firstFace: s.b,
       secondFace: s.d,
@@ -226,15 +457,13 @@ class SolveEdgesRubik extends RubikSolutionBase {
         this.m.L(0, false);
       },
       rotateCorrect: () => {
-        // this.m.D(0, false);
-        // this.m.R();
         this.m.B();
         this.m.R();
         this.m.R();
       },
     };
 
-    const DR: Edge = {
+    this.DR = {
       side: downRight,
       firstFace: s.r,
       secondFace: s.d,
@@ -244,7 +473,6 @@ class SolveEdgesRubik extends RubikSolutionBase {
         this.m.L(0, false);
       },
       rotateCorrect: () => {
-        // this.m.R();
         this.m.D();
         this.m.B();
         this.m.R();
@@ -252,16 +480,11 @@ class SolveEdgesRubik extends RubikSolutionBase {
       },
     };
 
-    const FR: Edge = {
+    this.FR = {
       side: leftRight,
       firstFace: s.f,
       secondFace: s.r,
       rotateOpposite: () => {
-        // this.m.R();
-        // this.m.U(0, false);
-        // this.m.B();
-        // this.m.L();
-        // this.m.L();
         // do nothing
       },
       rotateCorrect: () => {
@@ -269,7 +492,7 @@ class SolveEdgesRubik extends RubikSolutionBase {
       },
     };
 
-    const RB: Edge = {
+    this.RB = {
       side: leftRight,
       firstFace: s.r,
       secondFace: s.b,
@@ -280,15 +503,13 @@ class SolveEdgesRubik extends RubikSolutionBase {
         this.m.L();
       },
       rotateCorrect: () => {
-        // this.m.R();
-        // this.m.R();
         this.m.B();
         this.m.U();
         this.m.R(0, false);
       },
     };
 
-    const BL: Edge = {
+    this.BL = {
       side: leftRight,
       firstFace: s.b,
       secondFace: s.l,
@@ -305,7 +526,7 @@ class SolveEdgesRubik extends RubikSolutionBase {
       },
     };
 
-    const LF: Edge = {
+    this.LF = {
       side: leftRight,
       firstFace: s.l,
       secondFace: s.f,
@@ -313,265 +534,26 @@ class SolveEdgesRubik extends RubikSolutionBase {
         // do nothing
       },
       rotateCorrect: () => {
-        // this.m.F();
-        // this.m.F();
         this.m.L(0, false);
         this.m.U(0, false);
         this.m.F();
       },
     };
 
-    // this.m.D(, false);
-
-    // first solve first case
-
-    // we want to find front-up edge
-    const hash = this.getEdgeHash(UF);
-
-    const middle = Math.floor(this.sideLength / 2 - 1);
-
-    // removed front right
-    const edges: Edge[] = [UF, UR, UB, UL, DF, DR, DB, DL, RB, BL, LF, FR];
-
-    const correctEdges: boolean[] = [];
-    for (let i = 0; i < this.sideLength - 2; i += 1) {
-      correctEdges.push(false);
-    }
-
-    const resetCorrectEdges = () => {
-      for (let i = 0; i < correctEdges.length; i += 1) {
-        correctEdges[i] = false;
-      }
-    };
-
-    const getNextIncorrectEdge = (): number => {
-      for (let i = 0; i < correctEdges.length; i += 1) {
-        if (correctEdges[i] === false) {
-          return i;
-        }
-      }
-      return -1;
-    };
-
-    const checkEdgeSides = (index: number, edgeOpposite: Edge = LF, edgeCorrect: Edge = FR): boolean => {
-      const correctFirst = this.getColorHash(edgeCorrect.firstFace, edgeCorrect.side[middle][0]);
-      const correctSecond = this.getColorHash(edgeCorrect.secondFace, edgeCorrect.side[middle][1]);
-      const oppositeFirst = this.getColorHash(edgeOpposite.firstFace, edgeOpposite.side[index][0]);
-      const oppositeSecond = this.getColorHash(edgeOpposite.secondFace, edgeOpposite.side[index][1]);
-      return (correctFirst === oppositeFirst) && (correctSecond === oppositeSecond);
-    };
-
-    const solveEdgeIndex = (correctHash: number, index: number, e: Edge): boolean => {
-      const oppositeIndex = Math.abs(this.sideLength - 3 - index);
-
-      // console.log(index);
-      // console.log(oppositeIndex);
-      const hashOnIndex = this.getEdgeHashPosition(e, index);
-      const hashOnOppositeIndex = this.getEdgeHashPosition(e, oppositeIndex);
-
-      if (hashOnIndex === correctHash) {
-        e.rotateOpposite();
-        if (checkEdgeSides(index)) {
-          this.moveOppToCorrect(index);
-          correctEdges[index] = true;
-        } else {
-          this.flipWholeEdge();
-          this.moveOppToCorrect(oppositeIndex);
-          correctEdges[oppositeIndex] = true;
-        }
-        return true;
-      }
-
-      if (hashOnOppositeIndex === correctHash) {
-        e.rotateOpposite();
-        if (checkEdgeSides(oppositeIndex)) {
-          this.moveOppToCorrect(oppositeIndex);
-          correctEdges[oppositeIndex] = true;
-        } else {
-          this.flipWholeEdge();
-          this.moveOppToCorrect(index);
-          correctEdges[index] = true;
-        }
-        return true;
-      }
-
-      return false;
-    };
-
-    const solveMiddle = (correctHash: number) => {
-      for (let edge = 0; edge < edges.length; edge += 1) {
-        const hashOnMiddle = this.getEdgeHashPosition(edges[edge], middle);
-        if (hashOnMiddle === correctHash) {
-          edges[edge].rotateCorrect();
-          break;
-        }
-      }
-      correctEdges[middle] = true;
-    };
-
-    const solveEdge = (firstFace: number, secondFace: number) => {
-      const correctHash = this.getEdgeHashFromFaces(firstFace, secondFace);
-      resetCorrectEdges();
-      solveMiddle(correctHash);
-      for (let i = 0; i < (this.sideLength - 2) + (this.sideLength - 2); i += 1) {
-        const nextEdge = getNextIncorrectEdge();
-        if (nextEdge === -1) {
-          break;
-        }
-        // console.log(nextEdge);
-        const hashOnBaseIndex = this.getEdgeHashPosition(FR, nextEdge);
-        if (correctHash === hashOnBaseIndex) {
-          correctEdges[nextEdge] = true;
-          // if (checkEdgeSides(nextEdge, FR)) {
-          //   correctEdges[nextEdge] = true;
-          // } else {
-          //   this.moveOppToCorrect(nextEdge);
-          // }
-        } else {
-          for (let edge = 0; edge < edges.length; edge += 1) {
-            if (solveEdgeIndex(correctHash, nextEdge, edges[edge])) {
-              // if (this.getEdgeHashPosition(FR, nextEdge) !== correctHash) {
-              //   console.log('INCORRECT');
-              // }
-              console.log(`Solved: ${i}`);
-              break;
-            }
-          }
-        }
-      }
-    };
-
-    const solveEdges = () => {
-      for (let i = 0; i < edges.length; i += 1) {
-        solveEdge(edges[i].firstFace, edges[i].secondFace);
-      }
-    };
-
-
-    // solveEdge(s.f, s.l);
-    solveEdges();
-
-    // const parities: Edge[] = [];
-    // const foundParitiesIndexes: number[][] = [];
-
-    // const findParities = () => {
-    //   for (let i = 0; i < edges.length; i += 1) {
-    //     let found = false;
-    //     const foundParities: number[] = [];
-    //     for (let e = 0; e < this.sideLength - 2; e += 1) {
-    //       if (!checkEdgeSides(e, edges[i], edges[i])) {
-    //         found = true;
-    //         foundParities.push(e);
-    //       }
-    //     }
-
-    //     if (found) {
-    //       parities.push(edges[i]);
-    //       foundParitiesIndexes.push(foundParities);
-    //     }
-    //   }
-    // };
-
-    const getNextParity = (): ParityInfo => {
-      const parityIndexes = [];
-      for (let i = 0; i < edges.length; i += 1) {
-        let found = false;
-        for (let e = 0; e < this.sideLength - 2; e += 1) {
-          if (!checkEdgeSides(e, edges[i], edges[i])) {
-            found = true;
-            parityIndexes.push(e);
-          }
-        }
-
-        if (found) {
-          return { edge: edges[i], parities: parityIndexes };
-        }
-      }
-      return { edge: null, parities: null };
-    };
-
-    // findParities();
-    // console.log(parities);
-    // console.log(foundParitiesIndexes);
-
-    const rotateFirstHalf = (parityIndexes: number[], move: MoveInterface, clockwise: boolean = true) => {
-      for (let i = 0; i < parityIndexes.length / 2; i += 1) {
-        console.log(parityIndexes[i] + 1);
-        move(parityIndexes[i] + 1, clockwise);
-      }
-    };
-
-    // const { edge, parities } = getNextParity();
-    // if (edge !== null) {
-    //   edge.rotateCorrect();
-    //   this.m.F(0, false);
-    // }
-
-    const solveParities = () => {
-      // move them front up
-      for (let i = 0; i < 8; i += 1) {
-        const { edge, parities } = getNextParity();
-        if (edge === null) {
-          break;
-        }
-
-        console.log(`Parity: ${i + 1}`);
-        edge.rotateCorrect();
-        this.m.F(0, false);
-        // move other parities to left or right
-        // all first half
-        // this.m.R(index, false);
-        rotateFirstHalf(parities, this.m.R, false);
-
-        this.m.U();
-        this.m.U();
-        // all
-        // this.m.L(index);
-        rotateFirstHalf(parities, this.m.L);
-
-        this.m.F();
-        this.m.F();
-
-        // this.m.L(index, false);
-        rotateFirstHalf(parities, this.m.L, false);
-
-        this.m.F();
-        this.m.F();
-
-        // this.m.R(index, false);
-        rotateFirstHalf(parities, this.m.R, false);
-        // this.m.R(index, false);
-        rotateFirstHalf(parities, this.m.R, false);
-
-        this.m.U();
-        this.m.U();
-
-        // this.m.R(index);
-        rotateFirstHalf(parities, this.m.R);
-
-        this.m.U();
-        this.m.U();
-
-        // this.m.R(index, false);
-        rotateFirstHalf(parities, this.m.R, false);
-
-        this.m.U();
-        this.m.U();
-
-        this.m.F();
-        this.m.F();
-
-        // this.m.R(index, false);
-        rotateFirstHalf(parities, this.m.R, false);
-        // this.m.R(index, false);
-        rotateFirstHalf(parities, this.m.R, false);
-
-        this.m.F();
-        this.m.F();
-      }
-    };
-
-    solveParities();
+    this.edges = [
+      this.UF,
+      this.UR,
+      this.UB,
+      this.UL,
+      this.DF,
+      this.DR,
+      this.DB,
+      this.DL,
+      this.RB,
+      this.BL,
+      this.LF,
+      this.FR,
+    ];
   }
 
   moveOppToCorrect = (index: number) => {
@@ -595,40 +577,6 @@ class SolveEdgesRubik extends RubikSolutionBase {
     this.m.B();
     this.m.L();
     this.m.L();
-
-    // this.m.R();
-    // this.m.U();
-    // this.m.R(0, false);
-    // this.m.F();
-    // this.m.R(0, false);
-    // this.m.F(0, false);
-    // this.m.R();
-  }
-
-  // moveOppToCorrectUpMid = (index: number) => {
-  //   const correctIndex = index + 1;
-  //   this.m.D(correctIndex);
-  //   this.m.B(0, false);
-  //   this.m.R(0, false);
-  //   this.m.U();
-  //   this.m.B();
-  //   this.m.R();
-  //   this.m.D(correctIndex, false);
-  // }
-
-
-  getEdgeHashFromFaces = (firstFace: number, secondFace: number) => colorHashes[firstFace] + colorHashes[secondFace];
-
-  getEdgeHash = (e: Edge) => this.getEdgeHashFromFaces(e.firstFace, e.secondFace);
-
-  getEdgeHashPosition = (e: Edge, index: number) => this.getColorHash(e.firstFace, e.side[index][0]) + this.getColorHash(e.secondFace, e.side[index][1]);
-
-  checkEdge = (index: number, hash: number, e: Edge): boolean => {
-    const edgeHash = this.getColorHash(e.firstFace, e.side[index][0]) + this.getColorHash(e.secondFace, e.side[index][1]);
-    if (edgeHash === hash) {
-      return true;
-    }
-    return false;
   }
 }
 

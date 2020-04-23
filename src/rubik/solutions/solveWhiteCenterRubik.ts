@@ -1,20 +1,16 @@
 /* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
-import { OperationAfterFound, FindReturn } from './d';
-import MoveActions from '../moveActions';
+import { FindReturn } from './d';
 import RubikModel from '../model';
-import { sides as s, colorHashes } from '../utils';
+import { sides as s } from '../utils';
 
 
 class SolveWhiteCenterRubik extends RubikSolutionBase {
-  private m: MoveActions;
-
   public constructor(rubik: RubikModel) {
     super(rubik);
 
     this.m = rubik.moves;
 
-    this.interface = new Array(6);
     this.interface[s.l] = [...this.rubik.stRotations[0]];
     this.interface[s.r] = [...this.rubik.opRotations[0]];
     this.interface[s.u] = [...this.rubik.opRotations[2]];
@@ -24,8 +20,6 @@ class SolveWhiteCenterRubik extends RubikSolutionBase {
 
     this.primaryColor = s.f;
   }
-
-  localFind = (row: number, col: number, side: number, operation: OperationAfterFound) => this.baseFind(row, col, side, operation);
 
     solveLeftBuild = (r: FindReturn): boolean => {
       for (let i = 0; i < r.rotations; i += 1) {
@@ -92,14 +86,14 @@ class SolveWhiteCenterRubik extends RubikSolutionBase {
       return false;
     }
 
-    solveLeft = (row, column) => this.localFind(row, column, s.l, this.solveLeftBuild);
+    solveLeft = (row, column) => this.baseFind(row, column, s.l, this.solveLeftBuild);
 
-    solveRight = (row, column) => this.localFind(row, column, s.r, this.solveRightBuild);
+    solveRight = (row, column) => this.baseFind(row, column, s.r, this.solveRightBuild);
 
-    solveBack = (row, column) => this.localFind(row, column, s.b, this.solveBackBuild);
+    solveBack = (row, column) => this.baseFind(row, column, s.b, this.solveBackBuild);
 
     solveFront = (row, column) => {
-      if (this.localFind(row, column, s.f, this.solveFrontBuild)) {
+      if (this.baseFind(row, column, s.f, this.solveFrontBuild)) {
         return this.solveRight(row, column);
       }
       return false;
@@ -113,7 +107,7 @@ class SolveWhiteCenterRubik extends RubikSolutionBase {
     }
 
     solveDown = (row, column) => {
-      if (this.localFind(row, column, s.d, this.solveDownBuild)) {
+      if (this.baseFind(row, column, s.d, this.solveDownBuild)) {
         return this.solveRight(row, column);
       }
       return false;

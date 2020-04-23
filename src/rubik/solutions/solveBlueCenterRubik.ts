@@ -1,22 +1,15 @@
 /* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
-import MoveActions from '../moveActions';
 import RubikModel from '../model';
-import { sides as s, colorHashes } from '../utils';
-import { OperationAfterFound, FindReturn } from './d';
+import { sides as s } from '../utils';
+import { FindReturn } from './d';
 
 class SolveBlueCenterRubik extends RubikSolutionBase {
-  private m: MoveActions;
-
-  // local sides
-  private ls;
-
   private moveHistory: Function[];
 
   public constructor(rubik: RubikModel) {
     super(rubik);
 
-    this.m = new MoveActions();
     this.m.L = rubik.moves.F;
     this.m.R = rubik.moves.B;
     this.m.F = rubik.moves.R;
@@ -33,7 +26,6 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
       d: s.d,
     };
 
-    this.interface = new Array(6);
     this.interface[s.l] = [...this.rubik.stRotations[2]];
     this.interface[s.r] = [...this.rubik.opRotations[0]];
     this.interface[s.u] = [...this.rubik.opRotations[3]];
@@ -45,10 +37,7 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
     this.moveHistory = [];
   }
 
-    localFind = (row: number, col: number, side: number, operation: OperationAfterFound) => this.baseFind(row, col, side, operation);
-
-    middle = Math.floor(this.sideLength / 2);
-    // which lines not to touch, which moves were on settled columns
+  // which lines not to touch, which moves were on settled columns
 
     // place everything on top
     // similar for back and bottom
@@ -138,12 +127,24 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
       if (futureCol < activeCol) {
         // console.log(`FUTURE POS: ${futurePos}`);
 
-        if (futureCol === this.middle) {
+        if (this.sideLength % 2 === 0) {
+          this.m.B();
           this.m.B();
         } else {
-          this.m.B();
-          this.m.B();
+          if (futureCol === this.middle) {
+            this.m.B();
+          } else {
+            this.m.B();
+            this.m.B();
+          }
         }
+
+        // if (futureCol === this.middle) {
+        //   this.m.B();
+        // } else {
+        //   this.m.B();
+        //   this.m.B();
+        // }
 
         this.m.L(futureCol);
         this.m.U();
@@ -153,12 +154,12 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
       return true;
     }
 
-    solveBack = (row, column) => this.localFind(row, column, this.ls.b, this.solveBackBuild);
+    solveBack = (row, column) => this.baseFind(row, column, this.ls.b, this.solveBackBuild);
 
-    solveDown = (row, column) => this.localFind(row, column, this.ls.d, this.solveDownBuild);
+    solveDown = (row, column) => this.baseFind(row, column, this.ls.d, this.solveDownBuild);
 
     solveFront = (row, column) => {
-      if (this.localFind(row, column, this.ls.f, this.solveFrontBuild)) {
+      if (this.baseFind(row, column, this.ls.f, this.solveFrontBuild)) {
         this.solveBack(row, column);
         for (let i = this.moveHistory.length - 1; i >= 0; i -= 1) {
           this.moveHistory[i]();
@@ -170,7 +171,7 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
     }
 
     solveUp = (row, column) => {
-      if (this.localFind(row, column, this.ls.u, this.solveUpBuild)) {
+      if (this.baseFind(row, column, this.ls.u, this.solveUpBuild)) {
         this.solveBack(row, column);
         return true;
       }
@@ -195,10 +196,8 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
     }
 
     solve = () => {
-      const lineLength = this.sideLength - 1;
-
-      for (let row = lineLength - 1; row >= 1; row -= 1) {
-        for (let col = 1; col < lineLength; col += 1) {
+      for (let row = this.lineLength - 1; row >= 1; row -= 1) {
+        for (let col = 1; col < this.lineLength; col += 1) {
           // console.log(row, col);
           this.solveCube(row, col);
           // for (let c = 1; c < col; c += 1) {
@@ -215,8 +214,8 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
         // console.log('COMPLETE');
       }
 
-      for (let c = 1; c < lineLength; c += 1) {
-        for (let r = 1; r < lineLength; r += 1) {
+      for (let c = 1; c < this.lineLength; c += 1) {
+        for (let r = 1; r < this.lineLength; r += 1) {
           if (!this.check(this.ls.f, this.getFaceDirection(r, c), this.ls.f)) {
             console.log('INCORRECT solution');
             return false;

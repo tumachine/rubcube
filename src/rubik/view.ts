@@ -3,7 +3,6 @@ import * as THREE from '../../node_modules/three/src/Three';
 import Cube from './cube';
 import RubikModel from './model';
 import Move from './move';
-import MoveActions from './moveActions';
 import { sides } from './utils';
 
 type AxisSetter = (angle: number) => THREE.Object3D;
@@ -41,12 +40,9 @@ class RubikView {
     this.cubes = this.createGraphicRubik();
     this.cubes.map((cube) => (cube ? this.rubik.add(cube.getCube()) : null));
 
-    // this.colorizeRubik();
-
     this.moveN = 0;
     this.currentMove = null;
 
-    // Are we in the middle of a transition?
     this.isMoving = false;
     this.moveDirection = null;
     this.rotationSpeed = 20.0;
@@ -54,15 +50,6 @@ class RubikView {
     this.pivot = new THREE.Object3D();
     this.activeGroup = [];
   }
-
-  // translateGeneratedMoves = () => {
-  //   for (let i = this.moveN; i < this.rubikModel.moveHistory.length; i += 1) {
-  //     this.rubikModel.moveHistory[i].rotate(true);
-  //   }
-  // }
-  // organize it so, moves are separated from generated to manual
-  // modes: generated and manual
-  // implement stop mechanism, with continue option
 
   startNextMove = () => {
     this.currentMove = this.rubikModel.moveHistory[this.moveN];
@@ -129,23 +116,10 @@ class RubikView {
 
 
   render = () => {
-    // States
-    // TODO: generalise to something like "activeState.tick()" - see comments
-    // on encapsulation above
     if (this.isMoving) {
       this.doMove();
     }
   }
-
-  // select cubes that are to be rotated
-  // need to give:
-  //     slice
-  //     hor, dep or ver
-  //     clockwose, anticlockwise
-  // setRotationCubes = (side, slice, clockwise) => {
-  //   this.activeGroup = [];
-  //   this.rubikModel.getCubesHor(slice).forEach((i) => this.activeGroup.push(this.cubes[i]));
-  // }
 
   createGraphicRubik = () => {
     const cubes = [];
@@ -174,17 +148,10 @@ class RubikView {
 
   placeTextOnRubik = () => {
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-    // this.interface[s.l] = [...this.rubik.stRotations[3]];
-    // this.interface[s.r] = [...this.rubik.opRotations[3]];
-    // this.interface[s.u] = [...this.rubik.opRotations[2]];
-    // this.interface[s.d] = [...this.rubik.stRotations[2]];
-    // this.interface[s.f] = [...this.rubik.stRotations[0]];
-    // this.interface[s.b] = [...this.rubik.stRotations[0]];
-
       // text left
-      this.cubes[this.rubikModel.matrixReference[sides.l][this.rubikModel.stRotations[0][cube]]].addText(cube.toString(), sides.l);
+      this.cubes[this.rubikModel.matrixReference[sides.l][this.rubikModel.stRotations[3][cube]]].addText(cube.toString(), sides.l);
       // text right
-      this.cubes[this.rubikModel.matrixReference[sides.r][this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), sides.r);
+      this.cubes[this.rubikModel.matrixReference[sides.r][this.rubikModel.opRotations[3][cube]]].addText(cube.toString(), sides.r);
       // text top
       this.cubes[this.rubikModel.matrixReference[sides.u][this.rubikModel.opRotations[2][cube]]].addText(cube.toString(), sides.u);
       // text bottom
@@ -197,40 +164,11 @@ class RubikView {
   }
 
   colorizeRubik = () => {
-    // const faceSides = {
-    //   left: 0,
-    //   right: 2,
-    //   top: 4,
-    //   bottom: 6,
-    //   front: 8,
-    //   back: 10,
-    // };
-
-    // console.log(this.cubes)
-    // maybe there is a simpler way of representing rubik graphically
-    // for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-    //   // color left
-    //   this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.l][cube]);
-    //   // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.l][cube]);
-    //   // color right
-    //   this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.r][cube]);
-    //   // this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.r][cube]);
-    //   // color top
-    //   this.cubes[this.rubikModel.matrixReference[sides.u][cube]].setColor(faceSides.top, this.rubikModel.matrix[sides.u][cube]);
-    //   // color bottom
-    //   this.cubes[this.rubikModel.matrixReference[sides.d][cube]].setColor(faceSides.bottom, this.rubikModel.matrix[sides.d][cube]);
-    //   // color front
-    //   this.cubes[this.rubikModel.matrixReference[sides.f][cube]].setColor(faceSides.front, this.rubikModel.matrix[sides.f][cube]);
-    //   // color back
-    //   this.cubes[this.rubikModel.matrixReference[sides.b][cube]].setColor(faceSides.back, this.rubikModel.matrix[sides.b][cube]);
-    // }
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
       // color left
       this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(sides.l, this.rubikModel.matrix[sides.l][cube]);
-      // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.l][cube]);
       // color right
       this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(sides.r, this.rubikModel.matrix[sides.r][cube]);
-      // this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.r][cube]);
       // color top
       this.cubes[this.rubikModel.matrixReference[sides.u][cube]].setColor(sides.u, this.rubikModel.matrix[sides.u][cube]);
       // color bottom

@@ -59,24 +59,6 @@ export default class Cube {
 
   cube: THREE.Object3D
 
-  // constructor(x: number, y: number, z: number) {
-  //   this.cube = new THREE.Object3D();
-
-  //   this.boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-  //   this.boxMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, vertexColors: true });
-  //   this.box = new THREE.Mesh(this.boxGeometry, this.boxMaterial);
-
-  //   this.cube.add(this.box);
-
-  //   this.cube.position.set(x, y, z);
-  // }
-
-  // setColor(faceSide: number, color: number) {
-  //   this.boxGeometry.faces[faceSide].color.setHex(colors[color]);
-
-  //   this.boxGeometry.faces[faceSide + 1].color.setHex(colors[color]);
-  // }
-
   constructor(x: number, y: number, z: number) {
     this.cube = new THREE.Object3D();
     this.cube.position.set(x, y, z);
@@ -85,11 +67,9 @@ export default class Cube {
   setColor(faceSide: number, color: number) {
     const material = new THREE.MeshBasicMaterial();
     material.color.set(colors[color]);
-    // material.side = THREE.DoubleSide;
 
     const mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(boxWidth, boxHeight),
-      // new THREE.PlaneGeometry(1, 1),
       material,
     );
 
@@ -111,7 +91,6 @@ export default class Cube {
 
     context.font = 'Bold 120px Arial';
     context.fillStyle = 'rgba(0,0,0,0.95)';
-    // context.fillStyle = 'rgba(255,255,255,0.95)';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
 

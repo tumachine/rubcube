@@ -1,21 +1,13 @@
-
 /* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
-import MoveActions from '../moveActions';
 import RubikModel from '../model';
-import { sides as s, colorHashes } from '../utils';
-import { OperationAfterFound, FindReturn } from './d';
+import { sides as s } from '../utils';
+import { FindReturn } from './d';
 
 class SolveGreenOrangeCenterRubik extends RubikSolutionBase {
-  private m: MoveActions;
-
-  // local sides
-  private ls;
-
   public constructor(rubik: RubikModel) {
     super(rubik);
 
-    this.m = new MoveActions();
     this.m.L = rubik.moves.B;
     this.m.R = rubik.moves.F;
     this.m.F = rubik.moves.L;
@@ -32,7 +24,6 @@ class SolveGreenOrangeCenterRubik extends RubikSolutionBase {
       d: s.d,
     };
 
-    this.interface = new Array(6);
     this.interface[s.l] = [...this.rubik.stRotations[0]];
     this.interface[s.r] = null;
     this.interface[s.u] = [...this.rubik.opRotations[1]];
@@ -41,14 +32,9 @@ class SolveGreenOrangeCenterRubik extends RubikSolutionBase {
     this.interface[s.b] = null;
 
     this.primaryColor = this.ls.f;
-    this.moveHistory = [];
   }
 
-    localFind = (row: number, col: number, side: number, operation: OperationAfterFound) => this.baseFind(row, col, side, operation);
-
-    middle = Math.floor(this.sideLength / 2);
     // which lines not to touch, which moves were on settled columns
-
     solveUpBuild = (r: FindReturn): boolean => {
       // console.log('BLUE CENTER: solving up');
       for (let i = 0; i < r.rotations; i += 1) {
@@ -58,7 +44,7 @@ class SolveGreenOrangeCenterRubik extends RubikSolutionBase {
     }
 
     solveFront = (row, column) => {
-      if (this.localFind(row, column, this.ls.u, this.solveUpBuild)) {
+      if (this.baseFind(row, column, this.ls.u, this.solveUpBuild)) {
         const currentPos = this.getFaceDirection(row, column);
         let futureCol = currentPos % this.sideLength;
         let futureRow = Math.floor(currentPos / this.sideLength);

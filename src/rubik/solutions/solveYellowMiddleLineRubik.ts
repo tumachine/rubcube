@@ -1,22 +1,15 @@
 
 /* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
-import MoveActions from '../moveActions';
 import RubikModel from '../model';
-import { sides as s, colorHashes } from '../utils';
-import { OperationAfterFound, FindReturn } from './d';
+import { sides as s } from '../utils';
+import { FindReturn } from './d';
 
 
 class SolveYellowMiddleLineRubik extends RubikSolutionBase {
-  private m: MoveActions;
-
-  private ls;
-
   public constructor(rubik: RubikModel) {
     super(rubik);
 
-    // this.m = rubik.moves;
-    this.m = new MoveActions();
     this.m.L = rubik.moves.R;
     this.m.R = rubik.moves.L;
     this.m.F = rubik.moves.B;
@@ -33,7 +26,6 @@ class SolveYellowMiddleLineRubik extends RubikSolutionBase {
       d: s.d,
     };
 
-    this.interface = new Array(6);
     this.interface[s.l] = [...this.rubik.stRotations[1]];
     this.interface[s.r] = [...this.rubik.opRotations[1]];
     this.interface[s.u] = [...this.rubik.opRotations[0]];
@@ -43,10 +35,6 @@ class SolveYellowMiddleLineRubik extends RubikSolutionBase {
 
     this.primaryColor = this.ls.f;
   }
-
-    localFind = (row: number, col: number, side: number, operation: OperationAfterFound) => this.baseFind(row, col, side, operation);
-
-    middle = Math.floor(this.sideLength / 2);
 
     solveLeftBuild = (r: FindReturn): boolean => {
       // console.log('YELLOW MIDDLE: solving left');
@@ -119,20 +107,20 @@ class SolveYellowMiddleLineRubik extends RubikSolutionBase {
     }
 
 
-    solveLeft = (row, column) => this.localFind(row, column, this.ls.l, this.solveLeftBuild);
+    solveLeft = (row, column) => this.baseFind(row, column, this.ls.l, this.solveLeftBuild);
 
     solveFront = (row, column) => {
-      if (this.localFind(row, column, this.ls.f, this.solveFrontBuild)) {
+      if (this.baseFind(row, column, this.ls.f, this.solveFrontBuild)) {
         return this.solveUp(row, column);
       }
       return false;
     }
 
-    solveRight = (row, column) => this.localFind(row, column, this.ls.r, this.solveRightBuild);
+    solveRight = (row, column) => this.baseFind(row, column, this.ls.r, this.solveRightBuild);
 
-    solveUp = (row, column) => this.localFind(row, column, this.ls.u, this.solveUpBuild);
+    solveUp = (row, column) => this.baseFind(row, column, this.ls.u, this.solveUpBuild);
 
-    solveDown = (row, column) => this.localFind(row, column, this.ls.d, this.solveDownBuild);
+    solveDown = (row, column) => this.baseFind(row, column, this.ls.d, this.solveDownBuild);
 
     solveOrder = [
       this.solveDown,

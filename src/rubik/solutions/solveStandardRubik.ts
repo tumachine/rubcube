@@ -2,12 +2,9 @@
 import RubikSolutionBase from './rubikSolutionBase';
 import MoveActions from '../moveActions';
 import RubikModel from '../model';
-import { sides as s } from '../utils';
-import { colorHashes } from '../utils';
+import { sides as s, colorHashes } from '../utils';
 
 class SolveStandardRubik extends RubikSolutionBase {
-  private m: MoveActions;
-
   public frontOrient: MoveActions[];
 
   public sideOrient: MoveActions[];
@@ -23,7 +20,6 @@ class SolveStandardRubik extends RubikSolutionBase {
 
     this.m = rubik.moves;
 
-    this.interface = new Array(6);
     this.interface[s.l] = [...this.rubik.stRotations[3]];
     this.interface[s.r] = [...this.rubik.opRotations[3]];
     this.interface[s.u] = [...this.rubik.opRotations[2]];

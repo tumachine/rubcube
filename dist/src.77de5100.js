@@ -83079,52 +83079,7 @@ var colors;
 })(colors = exports.colors || (exports.colors = {})); // hashes for correctly identifying color combinations on a cube
 
 
-exports.colorHashes = [1, 10, 100, 1000, 10000, 100000]; // function roundRect(ctx, x, y, w, h, r) {
-//   ctx.beginPath();
-//   ctx.moveTo(x + r, y);
-//   ctx.lineTo(x + w - r, y);
-//   ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-//   ctx.lineTo(x + w, y + h - r);
-//   ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-//   ctx.lineTo(x + r, y + h);
-//   ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-//   ctx.lineTo(x, y + r);
-//   ctx.quadraticCurveTo(x, y, x + r, y);
-//   ctx.closePath();
-//   ctx.fill();
-//   ctx.stroke(); }
-// export function makeTextSprite(message: string): THREE.Sprite {
-//   const fontface = 'Arial';
-//   const fontsize = 18;
-//   const borderThickness = 4;
-//   const borderColor = {
-//     r: 0, g: 0, b: 0, a: 1.0,
-//   };
-//   const backgroundColor = {
-//     r: 255, g: 255, b: 255, a: 1.0,
-//   };
-//   const textColor = {
-//     r: 0, g: 0, b: 0, a: 1.0,
-//   };
-//   const canvas = document.createElement('canvas');
-//   const context = canvas.getContext('2d');
-//   context.font = `Bold ${fontsize}px ${fontface}`;
-//   const metrics = context.measureText(message);
-//   const textWidth = metrics.width;
-//   context.fillStyle = `rgba(${backgroundColor.r},${backgroundColor.g},${backgroundColor.b},${backgroundColor.a})`;
-//   context.strokeStyle = `rgba(${borderColor.r},${borderColor.g},${borderColor.b},${borderColor.a})`;
-//   context.lineWidth = borderThickness;
-//   roundRect(context, borderThickness / 2, borderThickness / 2, (textWidth + borderThickness) * 1.1, fontsize * 1.4 + borderThickness, 8);
-//   context.fillStyle = `rgba(${textColor.r}, ${textColor.g}, ${textColor.b}, 1.0)`;
-//   context.fillText(message, borderThickness, fontsize + borderThickness);
-//   const texture = new THREE.Texture(canvas);
-//   texture.needsUpdate = true;
-//   // const spriteMaterial = new THREE.SpriteMaterial({ map: texture, useScreenCoordinates: false });
-//   const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
-//   const sprite = new THREE.Sprite(spriteMaterial);
-//   sprite.scale.set(0.5 * fontsize, 0.25 * fontsize, 0.75 * fontsize);
-//   return sprite;
-// }
+exports.colorHashes = [1, 10, 100, 1000, 10000, 100000];
 },{}],"rubik/cube.ts":[function(require,module,exports) {
 "use strict";
 
@@ -83219,18 +83174,6 @@ sidesOrientaion[utils_1.sides.d] = function (mesh, detach) {
 var Cube =
 /** @class */
 function () {
-  // constructor(x: number, y: number, z: number) {
-  //   this.cube = new THREE.Object3D();
-  //   this.boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-  //   this.boxMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, vertexColors: true });
-  //   this.box = new THREE.Mesh(this.boxGeometry, this.boxMaterial);
-  //   this.cube.add(this.box);
-  //   this.cube.position.set(x, y, z);
-  // }
-  // setColor(faceSide: number, color: number) {
-  //   this.boxGeometry.faces[faceSide].color.setHex(colors[color]);
-  //   this.boxGeometry.faces[faceSide + 1].color.setHex(colors[color]);
-  // }
   function Cube(x, y, z) {
     this.cube = new THREE.Object3D();
     this.cube.position.set(x, y, z);
@@ -83238,10 +83181,8 @@ function () {
 
   Cube.prototype.setColor = function (faceSide, color) {
     var material = new THREE.MeshBasicMaterial();
-    material.color.set(colors[color]); // material.side = THREE.DoubleSide;
-
-    var mesh = new THREE.Mesh(new THREE.PlaneGeometry(boxWidth, boxHeight), // new THREE.PlaneGeometry(1, 1),
-    material);
+    material.color.set(colors[color]);
+    var mesh = new THREE.Mesh(new THREE.PlaneGeometry(boxWidth, boxHeight), material);
     sidesOrientaion[faceSide](mesh, 0);
     this.cube.add(mesh);
   };
@@ -83256,8 +83197,7 @@ function () {
     canvas.width = 256;
     canvas.height = 256;
     context.font = 'Bold 120px Arial';
-    context.fillStyle = 'rgba(0,0,0,0.95)'; // context.fillStyle = 'rgba(255,255,255,0.95)';
-
+    context.fillStyle = 'rgba(0,0,0,0.95)';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.fillText(text, 128, 128);
@@ -83311,15 +83251,7 @@ var RubikView =
 /** @class */
 function () {
   function RubikView(rubikModel) {
-    var _this = this; // translateGeneratedMoves = () => {
-    //   for (let i = this.moveN; i < this.rubikModel.moveHistory.length; i += 1) {
-    //     this.rubikModel.moveHistory[i].rotate(true);
-    //   }
-    // }
-    // organize it so, moves are separated from generated to manual
-    // modes: generated and manual
-    // implement stop mechanism, with continue option
-
+    var _this = this;
 
     this.startNextMove = function () {
       _this.currentMove = _this.rubikModel.moveHistory[_this.moveN];
@@ -83390,22 +83322,10 @@ function () {
     };
 
     this.render = function () {
-      // States
-      // TODO: generalise to something like "activeState.tick()" - see comments
-      // on encapsulation above
       if (_this.isMoving) {
         _this.doMove();
       }
-    }; // select cubes that are to be rotated
-    // need to give:
-    //     slice
-    //     hor, dep or ver
-    //     clockwose, anticlockwise
-    // setRotationCubes = (side, slice, clockwise) => {
-    //   this.activeGroup = [];
-    //   this.rubikModel.getCubesHor(slice).forEach((i) => this.activeGroup.push(this.cubes[i]));
-    // }
-
+    };
 
     this.createGraphicRubik = function () {
       var cubes = []; // draw rubic
@@ -83436,17 +83356,11 @@ function () {
 
     this.placeTextOnRubik = function () {
       for (var cube = 0; cube < _this.rubikModel.totalColors; cube += 1) {
-        // this.interface[s.l] = [...this.rubik.stRotations[3]];
-        // this.interface[s.r] = [...this.rubik.opRotations[3]];
-        // this.interface[s.u] = [...this.rubik.opRotations[2]];
-        // this.interface[s.d] = [...this.rubik.stRotations[2]];
-        // this.interface[s.f] = [...this.rubik.stRotations[0]];
-        // this.interface[s.b] = [...this.rubik.stRotations[0]];
         // text left
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.l][_this.rubikModel.stRotations[0][cube]]].addText(cube.toString(), utils_1.sides.l); // text right
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.l][_this.rubikModel.stRotations[3][cube]]].addText(cube.toString(), utils_1.sides.l); // text right
 
 
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.r][_this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), utils_1.sides.r); // text top
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.r][_this.rubikModel.opRotations[3][cube]]].addText(cube.toString(), utils_1.sides.r); // text top
 
 
         _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.u][_this.rubikModel.opRotations[2][cube]]].addText(cube.toString(), utils_1.sides.u); // text bottom
@@ -83463,40 +83377,12 @@ function () {
     };
 
     this.colorizeRubik = function () {
-      // const faceSides = {
-      //   left: 0,
-      //   right: 2,
-      //   top: 4,
-      //   bottom: 6,
-      //   front: 8,
-      //   back: 10,
-      // };
-      // console.log(this.cubes)
-      // maybe there is a simpler way of representing rubik graphically
-      // for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-      //   // color left
-      //   this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.l][cube]);
-      //   // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.l][cube]);
-      //   // color right
-      //   this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.r][cube]);
-      //   // this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.r][cube]);
-      //   // color top
-      //   this.cubes[this.rubikModel.matrixReference[sides.u][cube]].setColor(faceSides.top, this.rubikModel.matrix[sides.u][cube]);
-      //   // color bottom
-      //   this.cubes[this.rubikModel.matrixReference[sides.d][cube]].setColor(faceSides.bottom, this.rubikModel.matrix[sides.d][cube]);
-      //   // color front
-      //   this.cubes[this.rubikModel.matrixReference[sides.f][cube]].setColor(faceSides.front, this.rubikModel.matrix[sides.f][cube]);
-      //   // color back
-      //   this.cubes[this.rubikModel.matrixReference[sides.b][cube]].setColor(faceSides.back, this.rubikModel.matrix[sides.b][cube]);
-      // }
       for (var cube = 0; cube < _this.rubikModel.totalColors; cube += 1) {
         // color left
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.l][cube]].setColor(utils_1.sides.l, _this.rubikModel.matrix[utils_1.sides.l][cube]); // this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(faceSides.left, this.rubikModel.matrix[sides.l][cube]);
-        // color right
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.l][cube]].setColor(utils_1.sides.l, _this.rubikModel.matrix[utils_1.sides.l][cube]); // color right
 
 
-        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.r][cube]].setColor(utils_1.sides.r, _this.rubikModel.matrix[utils_1.sides.r][cube]); // this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(faceSides.right, this.rubikModel.matrix[sides.r][cube]);
-        // color top
+        _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.r][cube]].setColor(utils_1.sides.r, _this.rubikModel.matrix[utils_1.sides.r][cube]); // color top
 
 
         _this.cubes[_this.rubikModel.matrixReference[utils_1.sides.u][cube]].setColor(utils_1.sides.u, _this.rubikModel.matrix[utils_1.sides.u][cube]); // color bottom
@@ -83517,11 +83403,9 @@ function () {
     this.cubes = this.createGraphicRubik();
     this.cubes.map(function (cube) {
       return cube ? _this.rubik.add(cube.getCube()) : null;
-    }); // this.colorizeRubik();
-
+    });
     this.moveN = 0;
-    this.currentMove = null; // Are we in the middle of a transition?
-
+    this.currentMove = null;
     this.isMoving = false;
     this.moveDirection = null;
     this.rotationSpeed = 20.0;
@@ -84068,31 +83952,17 @@ function () {
   };
 
   return RubikModel;
-}(); // slices = [
-//     [ // slice
-//         [], // face
-//         [], // face
-//         [], // face
-//         [], // face
-//     ],
-//     [ // slice
-//         [], // face
-//         [], // face
-//         [], // face
-//         [], // face
-//     ],
-//     [ // slice
-//         [], // face
-//         [], // face
-//         [], // face
-//         [], // face
-//     ],
-// ]
-
+}();
 
 exports.default = RubikModel;
 },{"./utils":"rubik/utils.ts","./face":"rubik/face.ts","./move":"rubik/move.ts","./moveActions":"rubik/moveActions.ts"}],"rubik/solutions/rubikSolutionBase.ts":[function(require,module,exports) {
 "use strict";
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -84100,6 +83970,8 @@ Object.defineProperty(exports, "__esModule", {
 /* eslint-disable max-len */
 
 var utils_1 = require("../utils");
+
+var moveActions_1 = __importDefault(require("../moveActions"));
 
 var RubikSolutionBase =
 /** @class */
@@ -84117,6 +83989,10 @@ function () {
 
     this.getColorHash = function (side, direction) {
       return utils_1.colorHashes[_this.getColor(side, direction)];
+    };
+
+    this.getHash = function (face) {
+      return utils_1.colorHashes[face];
     };
 
     this.getFaceDirection = function (row, col) {
@@ -84188,13 +84064,17 @@ function () {
     this.rubik = rubik;
     this.f = rubik.f;
     this.sideLength = rubik.sideLength;
+    this.middle = Math.floor(this.sideLength / 2);
+    this.lineLength = this.sideLength - 1;
+    this.m = new moveActions_1.default();
+    this.interface = new Array(6);
   }
 
   return RubikSolutionBase;
 }();
 
 exports.default = RubikSolutionBase;
-},{"../utils":"rubik/utils.ts"}],"rubik/solutions/solveStandardRubik.ts":[function(require,module,exports) {
+},{"../utils":"rubik/utils.ts","../moveActions":"rubik/moveActions.ts"}],"rubik/solutions/solveStandardRubik.ts":[function(require,module,exports) {
 "use strict";
 
 var __extends = this && this.__extends || function () {
@@ -84252,8 +84132,6 @@ var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
 
 var utils_1 = require("../utils");
 
-var utils_2 = require("../utils");
-
 var SolveStandardRubik =
 /** @class */
 function (_super) {
@@ -84304,9 +84182,9 @@ function (_super) {
 
 
       var desiredSum = 0;
-      desiredSum += utils_2.colorHashes[sc[0]];
-      desiredSum += utils_2.colorHashes[sc[1]];
-      desiredSum += utils_2.colorHashes[utils_1.sides.f]; // front
+      desiredSum += utils_1.colorHashes[sc[0]];
+      desiredSum += utils_1.colorHashes[sc[1]];
+      desiredSum += utils_1.colorHashes[utils_1.sides.f]; // front
 
       var sum = 0;
       var frontFaceSide = null;
@@ -84677,9 +84555,9 @@ function (_super) {
           var sc = _this.sideCases[i];
           var fc = _this.faceCornerCases[i];
           var desiredSum = 0;
-          desiredSum += utils_2.colorHashes[sc[0]];
-          desiredSum += utils_2.colorHashes[sc[1]];
-          desiredSum += utils_2.colorHashes[utils_1.sides.b];
+          desiredSum += utils_1.colorHashes[sc[0]];
+          desiredSum += utils_1.colorHashes[sc[1]];
+          desiredSum += utils_1.colorHashes[utils_1.sides.b];
           var sum = 0;
           sum += _this.getColorHash(sc[0], _this.f.ur);
           sum += _this.getColorHash(sc[1], _this.f.ul);
@@ -85024,7 +84902,6 @@ function (_super) {
     };
 
     _this.m = rubik.moves;
-    _this.interface = new Array(6);
     _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[3]);
     _this.interface[utils_1.sides.r] = __spreadArrays(_this.rubik.opRotations[3]);
     _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[2]);
@@ -85173,10 +85050,6 @@ function (_super) {
   function SolveWhiteCenterRubik(rubik) {
     var _this = _super.call(this, rubik) || this;
 
-    _this.localFind = function (row, col, side, operation) {
-      return _this.baseFind(row, col, side, operation);
-    };
-
     _this.solveLeftBuild = function (r) {
       for (var i = 0; i < r.rotations; i += 1) {
         _this.m.L(0, false);
@@ -85269,19 +85142,19 @@ function (_super) {
     };
 
     _this.solveLeft = function (row, column) {
-      return _this.localFind(row, column, utils_1.sides.l, _this.solveLeftBuild);
+      return _this.baseFind(row, column, utils_1.sides.l, _this.solveLeftBuild);
     };
 
     _this.solveRight = function (row, column) {
-      return _this.localFind(row, column, utils_1.sides.r, _this.solveRightBuild);
+      return _this.baseFind(row, column, utils_1.sides.r, _this.solveRightBuild);
     };
 
     _this.solveBack = function (row, column) {
-      return _this.localFind(row, column, utils_1.sides.b, _this.solveBackBuild);
+      return _this.baseFind(row, column, utils_1.sides.b, _this.solveBackBuild);
     };
 
     _this.solveFront = function (row, column) {
-      if (_this.localFind(row, column, utils_1.sides.f, _this.solveFrontBuild)) {
+      if (_this.baseFind(row, column, utils_1.sides.f, _this.solveFrontBuild)) {
         return _this.solveRight(row, column);
       }
 
@@ -85297,7 +85170,7 @@ function (_super) {
     };
 
     _this.solveDown = function (row, column) {
-      if (_this.localFind(row, column, utils_1.sides.d, _this.solveDownBuild)) {
+      if (_this.baseFind(row, column, utils_1.sides.d, _this.solveDownBuild)) {
         return _this.solveRight(row, column);
       }
 
@@ -85346,7 +85219,6 @@ function (_super) {
     };
 
     _this.m = rubik.moves;
-    _this.interface = new Array(6);
     _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[0]);
     _this.interface[utils_1.sides.r] = __spreadArrays(_this.rubik.opRotations[0]);
     _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[2]);
@@ -85417,8 +85289,6 @@ Object.defineProperty(exports, "__esModule", {
 
 var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
 
-var moveActions_1 = __importDefault(require("../moveActions"));
-
 var utils_1 = require("../utils");
 
 var SolveYellowCenterRubik =
@@ -85428,12 +85298,6 @@ function (_super) {
 
   function SolveYellowCenterRubik(rubik) {
     var _this = _super.call(this, rubik) || this;
-
-    _this.localFind = function (row, col, side, operation) {
-      return _this.baseFind(row, col, side, operation);
-    };
-
-    _this.middle = Math.floor(_this.sideLength / 2);
 
     _this.solveLeftBuild = function (r) {
       // console.log('YELLOW CENTER: solving left');
@@ -85517,7 +85381,7 @@ function (_super) {
     };
 
     _this.solveLeft = function (row, column) {
-      if (_this.localFind(row, column, _this.ls.l, _this.solveLeftBuild)) {
+      if (_this.baseFind(row, column, _this.ls.l, _this.solveLeftBuild)) {
         return _this.solveUp(row, column);
       }
 
@@ -85525,7 +85389,7 @@ function (_super) {
     };
 
     _this.solveFront = function (row, column) {
-      if (_this.localFind(row, column, _this.ls.f, _this.solveFrontBuild)) {
+      if (_this.baseFind(row, column, _this.ls.f, _this.solveFrontBuild)) {
         return _this.solveUp(row, column);
       }
 
@@ -85533,15 +85397,15 @@ function (_super) {
     };
 
     _this.solveRight = function (row, column) {
-      return _this.localFind(row, column, _this.ls.r, _this.solveRightBuild);
+      return _this.baseFind(row, column, _this.ls.r, _this.solveRightBuild);
     };
 
     _this.solveUp = function (row, column) {
-      return _this.localFind(row, column, _this.ls.u, _this.solveUpBuild);
+      return _this.baseFind(row, column, _this.ls.u, _this.solveUpBuild);
     };
 
     _this.solveDown = function (row, column) {
-      return _this.localFind(row, column, _this.ls.d, _this.solveDownBuild);
+      return _this.baseFind(row, column, _this.ls.d, _this.solveDownBuild);
     };
 
     _this.solveOrder = [_this.solveLeft, _this.solveFront, _this.solveUp, _this.solveRight, _this.solveDown];
@@ -85559,21 +85423,14 @@ function (_super) {
     _this.lineLength = _this.sideLength - 1;
 
     _this.solve = function () {
-      for (var row = 1; row < _this.lineLength; row += 1) {
-        if (row !== _this.middle) {
+      if (_this.sideLength % 2 === 0) {
+        for (var row = 1; row < _this.lineLength; row += 1) {
           for (var col = 1; col < _this.lineLength; col += 1) {
-            // console.log(row, col);
-            _this.solveCube(row, col); // for (let c = 1; c < col; c += 1) {
-            //   if (!this.check(this.ls.l, this.getFaceDirection(row, c), this.ls.f)) {
-            //     console.log('INCORRECT ROW');
-            //     return false;
-            //   }
-            // }
-
+            _this.solveCube(row, col);
           } // for top mid
 
 
-          if (row > _this.middle) {
+          if (row >= _this.middle) {
             _this.m.F();
 
             _this.m.F();
@@ -85599,17 +85456,60 @@ function (_super) {
 
             _this.m.F();
           }
-        } // console.log('passed row');
-        // for (let r = 1; r < row; r += 1) {
-        //   for (let c = 1; c < this.lineLength; c += 1) {
-        //     if (!this.check(this.ls.f, this.getFaceDirection(r, c), this.ls.f)) {
-        //         console.log('INCORRECT BUILD');
-        //         return false;
-        //       }
-        //     }
-        //   }
-        // }
+        }
+      } else {
+        for (var row = 1; row < _this.lineLength; row += 1) {
+          if (row !== _this.middle) {
+            for (var col = 1; col < _this.lineLength; col += 1) {
+              // console.log(row, col);
+              _this.solveCube(row, col); // for (let c = 1; c < col; c += 1) {
+              //   if (!this.check(this.ls.l, this.getFaceDirection(row, c), this.ls.f)) {
+              //     console.log('INCORRECT ROW');
+              //     return false;
+              //   }
+              // }
 
+            } // for top mid
+
+
+            if (row > _this.middle) {
+              _this.m.F();
+
+              _this.m.F();
+
+              _this.m.D(row);
+
+              _this.m.F();
+
+              _this.m.F();
+
+              _this.m.D(row, false);
+            } else if (row < _this.middle) {
+              // for bot mid
+              _this.m.D(row);
+
+              _this.m.F();
+
+              _this.m.F();
+
+              _this.m.D(row, false);
+
+              _this.m.F();
+
+              _this.m.F();
+            }
+          } // console.log('passed row');
+          // for (let r = 1; r < row; r += 1) {
+          //   for (let c = 1; c < this.lineLength; c += 1) {
+          //     if (!this.check(this.ls.f, this.getFaceDirection(r, c), this.ls.f)) {
+          //         console.log('INCORRECT BUILD');
+          //         return false;
+          //       }
+          //     }
+          //   }
+          // }
+
+        }
       }
 
       for (var c = 1; c < _this.lineLength; c += 1) {
@@ -85620,10 +85520,8 @@ function (_super) {
           }
         }
       }
-    }; // this.m = rubik.moves;
+    };
 
-
-    _this.m = new moveActions_1.default();
     _this.m.L = rubik.moves.R;
     _this.m.R = rubik.moves.L;
     _this.m.F = rubik.moves.B;
@@ -85638,7 +85536,6 @@ function (_super) {
       u: utils_1.sides.u,
       d: utils_1.sides.d
     };
-    _this.interface = new Array(6);
     _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[2]);
     _this.interface[utils_1.sides.r] = __spreadArrays(_this.rubik.opRotations[0]);
     _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[3]);
@@ -85653,7 +85550,7 @@ function (_super) {
 }(rubikSolutionBase_1.default);
 
 exports.default = SolveYellowCenterRubik;
-},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../moveActions":"rubik/moveActions.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveBlueCenterRubik.ts":[function(require,module,exports) {
+},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveBlueCenterRubik.ts":[function(require,module,exports) {
 "use strict";
 
 var __extends = this && this.__extends || function () {
@@ -85709,8 +85606,6 @@ Object.defineProperty(exports, "__esModule", {
 
 var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
 
-var moveActions_1 = __importDefault(require("../moveActions"));
-
 var utils_1 = require("../utils");
 
 var SolveBlueCenterRubik =
@@ -85719,16 +85614,11 @@ function (_super) {
   __extends(SolveBlueCenterRubik, _super);
 
   function SolveBlueCenterRubik(rubik) {
-    var _this = _super.call(this, rubik) || this;
-
-    _this.localFind = function (row, col, side, operation) {
-      return _this.baseFind(row, col, side, operation);
-    };
-
-    _this.middle = Math.floor(_this.sideLength / 2); // which lines not to touch, which moves were on settled columns
+    var _this = _super.call(this, rubik) || this; // which lines not to touch, which moves were on settled columns
     // place everything on top
     // similar for back and bottom
     // special cases for front and top
+
 
     _this.solveBackBuild = function (r) {
       // console.log('BLUE CENTER: solving back');
@@ -85833,13 +85723,25 @@ function (_super) {
 
       if (futureCol < activeCol) {
         // console.log(`FUTURE POS: ${futurePos}`);
-        if (futureCol === _this.middle) {
-          _this.m.B();
-        } else {
+        if (_this.sideLength % 2 === 0) {
           _this.m.B();
 
           _this.m.B();
-        }
+        } else {
+          if (futureCol === _this.middle) {
+            _this.m.B();
+          } else {
+            _this.m.B();
+
+            _this.m.B();
+          }
+        } // if (futureCol === this.middle) {
+        //   this.m.B();
+        // } else {
+        //   this.m.B();
+        //   this.m.B();
+        // }
+
 
         _this.m.L(futureCol);
 
@@ -85852,15 +85754,15 @@ function (_super) {
     };
 
     _this.solveBack = function (row, column) {
-      return _this.localFind(row, column, _this.ls.b, _this.solveBackBuild);
+      return _this.baseFind(row, column, _this.ls.b, _this.solveBackBuild);
     };
 
     _this.solveDown = function (row, column) {
-      return _this.localFind(row, column, _this.ls.d, _this.solveDownBuild);
+      return _this.baseFind(row, column, _this.ls.d, _this.solveDownBuild);
     };
 
     _this.solveFront = function (row, column) {
-      if (_this.localFind(row, column, _this.ls.f, _this.solveFrontBuild)) {
+      if (_this.baseFind(row, column, _this.ls.f, _this.solveFrontBuild)) {
         _this.solveBack(row, column);
 
         for (var i = _this.moveHistory.length - 1; i >= 0; i -= 1) {
@@ -85875,7 +85777,7 @@ function (_super) {
     };
 
     _this.solveUp = function (row, column) {
-      if (_this.localFind(row, column, _this.ls.u, _this.solveUpBuild)) {
+      if (_this.baseFind(row, column, _this.ls.u, _this.solveUpBuild)) {
         _this.solveBack(row, column);
 
         return true;
@@ -85897,10 +85799,8 @@ function (_super) {
     };
 
     _this.solve = function () {
-      var lineLength = _this.sideLength - 1;
-
-      for (var row = lineLength - 1; row >= 1; row -= 1) {
-        for (var col = 1; col < lineLength; col += 1) {
+      for (var row = _this.lineLength - 1; row >= 1; row -= 1) {
+        for (var col = 1; col < _this.lineLength; col += 1) {
           // console.log(row, col);
           _this.solveCube(row, col); // for (let c = 1; c < col; c += 1) {
           //   if (!this.check(this.ls.u, this.getFaceDirection(row, c), this.ls.f)) {
@@ -85919,8 +85819,8 @@ function (_super) {
 
       }
 
-      for (var c = 1; c < lineLength; c += 1) {
-        for (var r = 1; r < lineLength; r += 1) {
+      for (var c = 1; c < _this.lineLength; c += 1) {
+        for (var r = 1; r < _this.lineLength; r += 1) {
           if (!_this.check(_this.ls.f, _this.getFaceDirection(r, c), _this.ls.f)) {
             console.log('INCORRECT solution');
             return false;
@@ -85929,7 +85829,6 @@ function (_super) {
       }
     };
 
-    _this.m = new moveActions_1.default();
     _this.m.L = rubik.moves.F;
     _this.m.R = rubik.moves.B;
     _this.m.F = rubik.moves.R;
@@ -85944,7 +85843,6 @@ function (_super) {
       u: utils_1.sides.u,
       d: utils_1.sides.d
     };
-    _this.interface = new Array(6);
     _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[2]);
     _this.interface[utils_1.sides.r] = __spreadArrays(_this.rubik.opRotations[0]);
     _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[3]);
@@ -85960,7 +85858,7 @@ function (_super) {
 }(rubikSolutionBase_1.default);
 
 exports.default = SolveBlueCenterRubik;
-},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../moveActions":"rubik/moveActions.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveYellowMiddleLineRubik.ts":[function(require,module,exports) {
+},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveYellowMiddleLineRubik.ts":[function(require,module,exports) {
 "use strict";
 
 var __extends = this && this.__extends || function () {
@@ -86016,8 +85914,6 @@ Object.defineProperty(exports, "__esModule", {
 
 var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
 
-var moveActions_1 = __importDefault(require("../moveActions"));
-
 var utils_1 = require("../utils");
 
 var SolveYellowMiddleLineRubik =
@@ -86027,12 +85923,6 @@ function (_super) {
 
   function SolveYellowMiddleLineRubik(rubik) {
     var _this = _super.call(this, rubik) || this;
-
-    _this.localFind = function (row, col, side, operation) {
-      return _this.baseFind(row, col, side, operation);
-    };
-
-    _this.middle = Math.floor(_this.sideLength / 2);
 
     _this.solveLeftBuild = function (r) {
       // console.log('YELLOW MIDDLE: solving left');
@@ -86131,11 +86021,11 @@ function (_super) {
     };
 
     _this.solveLeft = function (row, column) {
-      return _this.localFind(row, column, _this.ls.l, _this.solveLeftBuild);
+      return _this.baseFind(row, column, _this.ls.l, _this.solveLeftBuild);
     };
 
     _this.solveFront = function (row, column) {
-      if (_this.localFind(row, column, _this.ls.f, _this.solveFrontBuild)) {
+      if (_this.baseFind(row, column, _this.ls.f, _this.solveFrontBuild)) {
         return _this.solveUp(row, column);
       }
 
@@ -86143,15 +86033,15 @@ function (_super) {
     };
 
     _this.solveRight = function (row, column) {
-      return _this.localFind(row, column, _this.ls.r, _this.solveRightBuild);
+      return _this.baseFind(row, column, _this.ls.r, _this.solveRightBuild);
     };
 
     _this.solveUp = function (row, column) {
-      return _this.localFind(row, column, _this.ls.u, _this.solveUpBuild);
+      return _this.baseFind(row, column, _this.ls.u, _this.solveUpBuild);
     };
 
     _this.solveDown = function (row, column) {
-      return _this.localFind(row, column, _this.ls.d, _this.solveDownBuild);
+      return _this.baseFind(row, column, _this.ls.d, _this.solveDownBuild);
     };
 
     _this.solveOrder = [_this.solveDown, _this.solveUp, _this.solveLeft, _this.solveFront, _this.solveRight];
@@ -86181,10 +86071,8 @@ function (_super) {
 
         }
       }
-    }; // this.m = rubik.moves;
+    };
 
-
-    _this.m = new moveActions_1.default();
     _this.m.L = rubik.moves.R;
     _this.m.R = rubik.moves.L;
     _this.m.F = rubik.moves.B;
@@ -86199,7 +86087,6 @@ function (_super) {
       u: utils_1.sides.u,
       d: utils_1.sides.d
     };
-    _this.interface = new Array(6);
     _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[1]);
     _this.interface[utils_1.sides.r] = __spreadArrays(_this.rubik.opRotations[1]);
     _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[0]);
@@ -86214,7 +86101,7 @@ function (_super) {
 }(rubikSolutionBase_1.default);
 
 exports.default = SolveYellowMiddleLineRubik;
-},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../moveActions":"rubik/moveActions.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveRedCenterRubik.ts":[function(require,module,exports) {
+},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveRedCenterRubik.ts":[function(require,module,exports) {
 "use strict";
 
 var __extends = this && this.__extends || function () {
@@ -86270,8 +86157,6 @@ Object.defineProperty(exports, "__esModule", {
 
 var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
 
-var moveActions_1 = __importDefault(require("../moveActions"));
-
 var utils_1 = require("../utils");
 
 var SolveRedCenterRubik =
@@ -86282,24 +86167,13 @@ function (_super) {
   function SolveRedCenterRubik(rubik) {
     var _this = _super.call(this, rubik) || this;
 
-    _this.localFind = function (row, col, side, operation) {
-      return _this.baseFind(row, col, side, operation);
-    };
-
-    _this.middle = Math.floor(_this.sideLength / 2);
-
     _this.solveUpBuild = function (r) {
       // console.log('RED CENTER: solving up');
       for (var i = 0; i < r.rotations; i += 1) {
         _this.m.U();
       }
 
-      _this.m.L(r.column); // if (r.row > this.middle && r.column > this.middle) {
-      //   this.m.F();
-      //   this.m.L(r.column, false);
-      //   this.m.F(0, false);
-      // } else {
-
+      _this.m.L(r.column);
 
       _this.m.F(0, false);
 
@@ -86324,13 +86198,25 @@ function (_super) {
       _this.m.L(r.currentCol, false); // rotate once or twice
 
 
-      if (r.column === _this.middle) {
-        _this.m.U();
-      } else {
+      if (_this.sideLength % 2 === 0) {
         _this.m.U();
 
         _this.m.U();
-      }
+      } else {
+        if (r.column === _this.middle) {
+          _this.m.U();
+        } else {
+          _this.m.U();
+
+          _this.m.U();
+        }
+      } // if (r.column === this.middle) {
+      //   this.m.U();
+      // } else {
+      //   this.m.U();
+      //   this.m.U();
+      // }
+
 
       _this.m.L(r.currentCol);
 
@@ -86353,21 +86239,31 @@ function (_super) {
 
       var futurePos = r.currentRow + (_this.sideLength - 1 - r.currentCol) * _this.sideLength;
       var futureCol = futurePos % _this.sideLength;
-      var futureRow = Math.floor(futurePos / _this.sideLength); // console.log(r.nextPos);
-      // console.log(futurePos);
-      // console.log(futureCol);
+      var futureRow = Math.floor(futurePos / _this.sideLength);
 
       _this.m.F(0, false);
 
       _this.m.L(futureCol, false);
 
-      if (futureCol === _this.middle) {
-        _this.m.U();
-      } else {
+      if (_this.sideLength % 2 === 0) {
         _this.m.U();
 
         _this.m.U();
-      }
+      } else {
+        if (futureCol === _this.middle) {
+          _this.m.U();
+        } else {
+          _this.m.U();
+
+          _this.m.U();
+        }
+      } // if (futureCol === this.middle) {
+      //   this.m.U();
+      // } else {
+      //   this.m.U();
+      //   this.m.U();
+      // }
+
 
       _this.m.L(futureCol);
 
@@ -86377,7 +86273,7 @@ function (_super) {
     };
 
     _this.solveDown = function (row, column) {
-      if (_this.localFind(row, column, _this.ls.d, _this.solveDownBuild)) {
+      if (_this.baseFind(row, column, _this.ls.d, _this.solveDownBuild)) {
         _this.solveUp(row, column);
 
         return true;
@@ -86387,7 +86283,7 @@ function (_super) {
     };
 
     _this.solveFront = function (row, column) {
-      if (_this.localFind(row, column, _this.ls.f, _this.solveFrontBuild)) {
+      if (_this.baseFind(row, column, _this.ls.f, _this.solveFrontBuild)) {
         _this.solveUp(row, column);
 
         return true;
@@ -86404,13 +86300,29 @@ function (_super) {
 
       _this.m.L(row);
 
-      if (row <= _this.middle) {
-        _this.m.U();
-      } else {
-        _this.m.U();
+      if (_this.sideLength % 2 === 0) {
+        if (row < _this.middle) {
+          _this.m.U();
+        } else {
+          _this.m.U();
 
-        _this.m.U();
-      }
+          _this.m.U();
+        }
+      } else {
+        if (row <= _this.middle) {
+          _this.m.U();
+        } else {
+          _this.m.U();
+
+          _this.m.U();
+        }
+      } // if (row <= this.middle) {
+      //   this.m.U();
+      // } else {
+      //   this.m.U();
+      //   this.m.U();
+      // }
+
 
       _this.m.L(row, false);
 
@@ -86420,7 +86332,7 @@ function (_super) {
     };
 
     _this.solveUp = function (row, column) {
-      return _this.localFind(row, column, _this.ls.u, _this.solveUpBuild);
+      return _this.baseFind(row, column, _this.ls.u, _this.solveUpBuild);
     };
 
     _this.solveOrder = [_this.solveFront, _this.solveUp, _this.solveDown, _this.solveBack];
@@ -86489,7 +86401,7 @@ function (_super) {
     };
 
     _this.solveDownFirst = function (row, column) {
-      if (_this.localFind(row, column, _this.ls.d, _this.solveDownFirstBuild)) {
+      if (_this.baseFind(row, column, _this.ls.d, _this.solveDownFirstBuild)) {
         _this.solveFrontFirst(row, column);
 
         return true;
@@ -86499,11 +86411,11 @@ function (_super) {
     };
 
     _this.solveFrontFirst = function (row, column) {
-      return _this.localFind(row, column, _this.ls.f, _this.solveFrontFirstBuild);
+      return _this.baseFind(row, column, _this.ls.f, _this.solveFrontFirstBuild);
     };
 
     _this.solveUpFirst = function (row, column) {
-      return _this.localFind(row, column, _this.ls.u, _this.solveUpFirstBuild);
+      return _this.baseFind(row, column, _this.ls.u, _this.solveUpFirstBuild);
     };
 
     _this.solveFirstOrder = [_this.solveDownFirst, _this.solveFrontFirst, _this.solveUpFirst];
@@ -86533,7 +86445,7 @@ function (_super) {
     };
 
     _this.solve = function () {
-      var lineLength = _this.sideLength - 1; // this.solveFirstCube(5);
+      // this.solveFirstCube(5);
       // if (!this.check(this.ls.f, this.getFaceDirection(5, 5), this.ls.d)) {
       //   console.log('INCORRECT AA');
       //   return false;
@@ -86548,15 +86460,14 @@ function (_super) {
       //   }
       //   this.m.L(col);
       // }
-
-      for (var row = 1; row < lineLength; row += 1) {
+      for (var row = 1; row < _this.lineLength; row += 1) {
         _this.solveFirstCube(row); // if (!this.check(this.ls.f, this.getFaceDirection(row, row), this.ls.d)) {
         //   console.log('INCORRECT opposite');
         //   return false;
         // }
 
 
-        for (var col = 1; col < lineLength; col += 1) {
+        for (var col = 1; col < _this.lineLength; col += 1) {
           // console.log(row, col);
           if (col !== row) {
             _this.solveCube(row, col);
@@ -86587,8 +86498,8 @@ function (_super) {
 
       }
 
-      for (var c = 1; c < lineLength; c += 1) {
-        for (var r = 1; r < lineLength; r += 1) {
+      for (var c = 1; c < _this.lineLength; c += 1) {
+        for (var r = 1; r < _this.lineLength; r += 1) {
           if (!_this.check(_this.ls.d, _this.getFaceDirection(r, c), _this.ls.d)) {
             console.log('INCORRECT solution');
             return false;
@@ -86597,7 +86508,6 @@ function (_super) {
       }
     };
 
-    _this.m = new moveActions_1.default();
     _this.m.L = rubik.moves.B;
     _this.m.R = rubik.moves.F;
     _this.m.F = rubik.moves.L;
@@ -86607,14 +86517,15 @@ function (_super) {
     _this.ls = {
       f: utils_1.sides.l,
       d: utils_1.sides.d,
-      u: utils_1.sides.u
+      u: utils_1.sides.u,
+      l: null,
+      r: null,
+      b: null
     };
-    _this.interface = new Array(6);
     _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.opRotations[2]);
     _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.stRotations[3]);
     _this.interface[utils_1.sides.d] = __spreadArrays(_this.rubik.opRotations[1]);
     _this.primaryColor = _this.ls.d;
-    _this.moveHistory = [];
     return _this;
   }
 
@@ -86622,7 +86533,7 @@ function (_super) {
 }(rubikSolutionBase_1.default);
 
 exports.default = SolveRedCenterRubik;
-},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../moveActions":"rubik/moveActions.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveGreenOrangeCenterRubik.ts":[function(require,module,exports) {
+},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveGreenOrangeCenterRubik.ts":[function(require,module,exports) {
 "use strict";
 
 var __extends = this && this.__extends || function () {
@@ -86678,8 +86589,6 @@ Object.defineProperty(exports, "__esModule", {
 
 var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
 
-var moveActions_1 = __importDefault(require("../moveActions"));
-
 var utils_1 = require("../utils");
 
 var SolveGreenOrangeCenterRubik =
@@ -86688,13 +86597,8 @@ function (_super) {
   __extends(SolveGreenOrangeCenterRubik, _super);
 
   function SolveGreenOrangeCenterRubik(rubik) {
-    var _this = _super.call(this, rubik) || this;
+    var _this = _super.call(this, rubik) || this; // which lines not to touch, which moves were on settled columns
 
-    _this.localFind = function (row, col, side, operation) {
-      return _this.baseFind(row, col, side, operation);
-    };
-
-    _this.middle = Math.floor(_this.sideLength / 2); // which lines not to touch, which moves were on settled columns
 
     _this.solveUpBuild = function (r) {
       // console.log('BLUE CENTER: solving up');
@@ -86706,7 +86610,7 @@ function (_super) {
     };
 
     _this.solveFront = function (row, column) {
-      if (_this.localFind(row, column, _this.ls.u, _this.solveUpBuild)) {
+      if (_this.baseFind(row, column, _this.ls.u, _this.solveUpBuild)) {
         var currentPos = _this.getFaceDirection(row, column);
 
         var futureCol = currentPos % _this.sideLength;
@@ -86796,7 +86700,6 @@ function (_super) {
       }
     };
 
-    _this.m = new moveActions_1.default();
     _this.m.L = rubik.moves.B;
     _this.m.R = rubik.moves.F;
     _this.m.F = rubik.moves.L;
@@ -86811,7 +86714,6 @@ function (_super) {
       u: utils_1.sides.u,
       d: utils_1.sides.d
     };
-    _this.interface = new Array(6);
     _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[0]);
     _this.interface[utils_1.sides.r] = null;
     _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[1]);
@@ -86819,7 +86721,6 @@ function (_super) {
     _this.interface[utils_1.sides.f] = null;
     _this.interface[utils_1.sides.b] = null;
     _this.primaryColor = _this.ls.f;
-    _this.moveHistory = [];
     return _this;
   }
 
@@ -86827,7 +86728,7 @@ function (_super) {
 }(rubikSolutionBase_1.default);
 
 exports.default = SolveGreenOrangeCenterRubik;
-},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../moveActions":"rubik/moveActions.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveEdgesRubik.ts":[function(require,module,exports) {
+},{"./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","../utils":"rubik/utils.ts"}],"rubik/solutions/solveEdgesRubik.ts":[function(require,module,exports) {
 "use strict";
 
 var __extends = this && this.__extends || function () {
@@ -86879,9 +86780,6 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-/* eslint-disable max-len */
-
-var moveActions_1 = __importDefault(require("../moveActions"));
 
 var utils_1 = require("../utils");
 
@@ -86894,6 +86792,560 @@ function (_super) {
 
   function SolveEdgesRubik(rubik) {
     var _this = _super.call(this, rubik) || this;
+
+    _this.correctEdges = [];
+
+    _this.solve = function () {
+      _this.solveEdges();
+
+      _this.solveParities();
+    };
+
+    _this.solveEdges = function () {
+      for (var i = 0; i < _this.edges.length; i += 1) {
+        _this.solveEdge(_this.edges[i].firstFace, _this.edges[i].secondFace);
+      }
+    };
+
+    _this.resetCorrectEdges = function () {
+      for (var i = 0; i < _this.correctEdges.length; i += 1) {
+        _this.correctEdges[i] = false;
+      }
+    };
+
+    _this.getNextIncorrectEdge = function () {
+      for (var i = 0; i < _this.correctEdges.length; i += 1) {
+        if (_this.correctEdges[i] === false) {
+          return i;
+        }
+      }
+
+      return -1;
+    }; // checkEdgeSides = (index: number, edgeOpposite: Edge = this.LF, edgeCorrect: Edge = this.FR): boolean => {
+    //   const correctFirst = this.getColorHash(edgeCorrect.firstFace, edgeCorrect.side[this.middle][0]);
+    //   const correctSecond = this.getColorHash(edgeCorrect.secondFace, edgeCorrect.side[this.middle][1]);
+    //   const oppositeFirst = this.getColorHash(edgeOpposite.firstFace, edgeOpposite.side[index][0]);
+    //   const oppositeSecond = this.getColorHash(edgeOpposite.secondFace, edgeOpposite.side[index][1]);
+    //   return (correctFirst === oppositeFirst) && (correctSecond === oppositeSecond);
+    // };
+
+
+    _this.checkEdgeSides = function (index, edgeOpposite, edgeCorrect) {
+      if (edgeOpposite === void 0) {
+        edgeOpposite = _this.LF;
+      }
+
+      if (edgeCorrect === void 0) {
+        edgeCorrect = _this.FR;
+      }
+
+      var correctFirst = _this.getColorHash(edgeCorrect.firstFace, edgeCorrect.side[_this.currentMiddle][0]);
+
+      var correctSecond = _this.getColorHash(edgeCorrect.secondFace, edgeCorrect.side[_this.currentMiddle][1]);
+
+      var oppositeFirst = _this.getColorHash(edgeOpposite.firstFace, edgeOpposite.side[index][0]);
+
+      var oppositeSecond = _this.getColorHash(edgeOpposite.secondFace, edgeOpposite.side[index][1]);
+
+      return correctFirst === oppositeFirst && correctSecond === oppositeSecond;
+    };
+
+    _this.solveEdgeIndex = function (correctHash, index, e) {
+      var oppositeIndex = Math.abs(_this.sideLength - 3 - index);
+
+      var hashOnIndex = _this.getEdgeHashPosition(e, index);
+
+      var hashOnOppositeIndex = _this.getEdgeHashPosition(e, oppositeIndex);
+
+      if (hashOnIndex === correctHash) {
+        e.rotateOpposite();
+
+        if (_this.checkEdgeSides(index)) {
+          _this.moveOppToCorrect(index);
+
+          _this.correctEdges[index] = true;
+        } else {
+          _this.flipWholeEdge();
+
+          _this.moveOppToCorrect(oppositeIndex);
+
+          _this.correctEdges[oppositeIndex] = true;
+        }
+
+        return true;
+      }
+
+      if (hashOnOppositeIndex === correctHash) {
+        e.rotateOpposite();
+
+        if (_this.checkEdgeSides(oppositeIndex)) {
+          _this.moveOppToCorrect(oppositeIndex);
+
+          _this.correctEdges[oppositeIndex] = true;
+        } else {
+          _this.flipWholeEdge();
+
+          _this.moveOppToCorrect(index);
+
+          _this.correctEdges[index] = true;
+        }
+
+        return true;
+      }
+
+      return false;
+    };
+
+    _this.solveMiddleEven = function (correctHash) {
+      for (var edge = 0; edge < _this.edges.length; edge += 1) {
+        var hashOnMiddle = _this.getEdgeHashPosition(_this.edges[edge], _this.middle);
+
+        var hashOnSecondMiddle = _this.getEdgeHashPosition(_this.edges[edge], _this.secondMiddle);
+
+        if (hashOnMiddle === correctHash) {
+          _this.edges[edge].rotateCorrect();
+
+          _this.correctEdges[_this.middle] = true;
+          _this.currentMiddle = _this.middle;
+          break;
+        } else if (hashOnSecondMiddle === correctHash) {
+          _this.edges[edge].rotateCorrect();
+
+          _this.correctEdges[_this.secondMiddle] = true;
+          _this.currentMiddle = _this.secondMiddle;
+          break;
+        }
+      }
+    };
+
+    _this.solveMiddleOdd = function (correctHash) {
+      for (var edge = 0; edge < _this.edges.length; edge += 1) {
+        var hashOnMiddle = _this.getEdgeHashPosition(_this.edges[edge], _this.middle);
+
+        if (hashOnMiddle === correctHash) {
+          _this.edges[edge].rotateCorrect();
+
+          _this.correctEdges[_this.middle] = true;
+          break;
+        }
+      }
+
+      _this.correctEdges[_this.middle] = true;
+    };
+
+    _this.solveEdge = function (firstFace, secondFace) {
+      console.log('solve edge');
+
+      var correctHash = _this.getEdgeHashFromFaces(firstFace, secondFace);
+
+      _this.resetCorrectEdges();
+
+      if (_this.sideLength % 2 === 0) {
+        _this.solveMiddleEven(correctHash);
+      } else {
+        _this.solveMiddleOdd(correctHash);
+      }
+
+      for (var i = 0; i < _this.sideLength - 2 + (_this.sideLength - 2); i += 1) {
+        var nextEdge = _this.getNextIncorrectEdge();
+
+        if (nextEdge === -1) {
+          break;
+        }
+
+        var hashOnBaseIndex = _this.getEdgeHashPosition(_this.FR, nextEdge);
+
+        if (correctHash === hashOnBaseIndex) {
+          _this.correctEdges[nextEdge] = true;
+        } else {
+          for (var edge = 0; edge < _this.edges.length; edge += 1) {
+            if (_this.solveEdgeIndex(correctHash, nextEdge, _this.edges[edge])) {
+              break;
+            }
+          }
+        }
+      }
+    };
+
+    _this.getNextParity = function () {
+      var parityIndexes = [];
+
+      for (var i = 0; i < _this.edges.length; i += 1) {
+        var found = false;
+
+        for (var e = 0; e < _this.sideLength - 2; e += 1) {
+          if (!_this.checkEdgeSides(e, _this.edges[i], _this.edges[i])) {
+            found = true;
+            parityIndexes.push(e);
+          }
+        }
+
+        if (found) {
+          return {
+            edge: _this.edges[i],
+            parities: parityIndexes
+          };
+        }
+      }
+
+      return {
+        edge: null,
+        parities: null
+      };
+    };
+
+    _this.rotateFirstHalf = function (parityIndexes, move, clockwise) {
+      if (clockwise === void 0) {
+        clockwise = true;
+      }
+
+      for (var i = 0; i < parityIndexes.length / 2; i += 1) {
+        move(parityIndexes[i] + 1, clockwise);
+      }
+    };
+
+    _this.solveParities = function () {
+      for (var i = 0; i < 8; i += 1) {
+        var _a = _this.getNextParity(),
+            edge = _a.edge,
+            parities = _a.parities;
+
+        if (edge === null) {
+          break;
+        }
+
+        console.log("Parity: " + (i + 1));
+        edge.rotateCorrect();
+
+        _this.m.F(0, false);
+
+        _this.rotateFirstHalf(parities, _this.m.R, false);
+
+        _this.m.U();
+
+        _this.m.U();
+
+        _this.rotateFirstHalf(parities, _this.m.L);
+
+        _this.m.F();
+
+        _this.m.F();
+
+        _this.rotateFirstHalf(parities, _this.m.L, false);
+
+        _this.m.F();
+
+        _this.m.F();
+
+        _this.rotateFirstHalf(parities, _this.m.R, false);
+
+        _this.rotateFirstHalf(parities, _this.m.R, false);
+
+        _this.m.U();
+
+        _this.m.U();
+
+        _this.rotateFirstHalf(parities, _this.m.R);
+
+        _this.m.U();
+
+        _this.m.U();
+
+        _this.rotateFirstHalf(parities, _this.m.R, false);
+
+        _this.m.U();
+
+        _this.m.U();
+
+        _this.m.F();
+
+        _this.m.F();
+
+        _this.rotateFirstHalf(parities, _this.m.R, false);
+
+        _this.rotateFirstHalf(parities, _this.m.R, false);
+
+        _this.m.F();
+
+        _this.m.F();
+      }
+    };
+
+    _this.getEdgeHashFromFaces = function (firstFace, secondFace) {
+      return utils_1.colorHashes[firstFace] + utils_1.colorHashes[secondFace];
+    };
+
+    _this.getEdgeHash = function (e) {
+      return _this.getEdgeHashFromFaces(e.firstFace, e.secondFace);
+    };
+
+    _this.getEdgeHashPosition = function (e, index) {
+      return _this.getColorHash(e.firstFace, e.side[index][0]) + _this.getColorHash(e.secondFace, e.side[index][1]);
+    };
+
+    _this.checkEdge = function (index, hash, e) {
+      var edgeHash = _this.getColorHash(e.firstFace, e.side[index][0]) + _this.getColorHash(e.secondFace, e.side[index][1]);
+
+      if (edgeHash === hash) {
+        return true;
+      }
+
+      return false;
+    };
+
+    _this.generateEdges = function () {
+      var down = [];
+      var left = [];
+      var right = [];
+      var up = [];
+
+      for (var i = 1; i < _this.sideLength - 1; i += 1) {
+        down.push(i);
+      }
+
+      for (var i = _this.sideLength; i < _this.sideLength * _this.sideLength - _this.sideLength; i += _this.sideLength) {
+        left.push(i);
+      }
+
+      for (var i = _this.sideLength * 2 - 1; i < _this.sideLength * _this.sideLength - _this.sideLength; i += _this.sideLength) {
+        right.push(i);
+      }
+
+      for (var i = _this.sideLength * (_this.sideLength - 1) + 1; i < _this.sideLength * _this.sideLength - 1; i += 1) {
+        up.push(i);
+      }
+
+      var lineLength = _this.sideLength - 2; // in out colors
+
+      var leftRight = [];
+
+      for (var i = 0; i < lineLength; i += 1) {
+        leftRight.push([right[i], left[i]]);
+      }
+
+      var upFront = [];
+      var upRight = [];
+      var upBack = [];
+      var upLeft = [];
+      var downFront = [];
+      var downRight = [];
+      var downBack = [];
+      var downLeft = [];
+
+      for (var i = 0; i < lineLength; i += 1) {
+        upFront.push([up[lineLength - i - 1], down[lineLength - i - 1]]);
+        upRight.push([up[lineLength - i - 1], right[lineLength - i - 1]]);
+        upBack.push([up[lineLength - i - 1], up[i]]);
+        upLeft.push([up[lineLength - i - 1], left[i]]);
+        downFront.push([down[i], down[lineLength - i - 1]]);
+        downRight.push([down[i], left[i]]);
+        downBack.push([down[i], up[i]]);
+        downLeft.push([down[i], right[lineLength - i - 1]]);
+      }
+
+      _this.UF = {
+        side: upFront,
+        firstFace: utils_1.sides.f,
+        secondFace: utils_1.sides.u,
+        rotateOpposite: function rotateOpposite() {
+          _this.m.U();
+
+          _this.m.L();
+        },
+        rotateCorrect: function rotateCorrect() {
+          _this.m.F();
+        }
+      };
+      _this.UR = {
+        side: upRight,
+        firstFace: utils_1.sides.r,
+        secondFace: utils_1.sides.u,
+        rotateOpposite: function rotateOpposite() {
+          _this.m.U();
+
+          _this.m.U();
+
+          _this.m.L();
+        },
+        rotateCorrect: function rotateCorrect() {
+          _this.m.U(0, false);
+
+          _this.m.B(0, false);
+
+          _this.m.R();
+
+          _this.m.R();
+        }
+      };
+      _this.UB = {
+        side: upBack,
+        firstFace: utils_1.sides.b,
+        secondFace: utils_1.sides.u,
+        rotateOpposite: function rotateOpposite() {
+          _this.m.U(0, false);
+
+          _this.m.L();
+        },
+        rotateCorrect: function rotateCorrect() {
+          _this.m.B(0, false);
+
+          _this.m.R();
+
+          _this.m.R();
+        }
+      };
+      _this.UL = {
+        side: upLeft,
+        firstFace: utils_1.sides.l,
+        secondFace: utils_1.sides.u,
+        rotateOpposite: function rotateOpposite() {
+          _this.m.L();
+        },
+        rotateCorrect: function rotateCorrect() {
+          _this.m.L(0, false);
+
+          _this.m.B(0, false);
+
+          _this.m.U();
+
+          _this.m.R(0, false);
+        }
+      };
+      _this.DF = {
+        side: downFront,
+        firstFace: utils_1.sides.f,
+        secondFace: utils_1.sides.d,
+        rotateOpposite: function rotateOpposite() {
+          _this.m.D(0, false);
+
+          _this.m.L(0, false);
+        },
+        rotateCorrect: function rotateCorrect() {
+          _this.m.F(0, false);
+        }
+      };
+      _this.DL = {
+        side: downLeft,
+        firstFace: utils_1.sides.l,
+        secondFace: utils_1.sides.d,
+        rotateOpposite: function rotateOpposite() {
+          _this.m.L(0, false);
+        },
+        rotateCorrect: function rotateCorrect() {
+          _this.m.D(0, false);
+
+          _this.m.B();
+
+          _this.m.R();
+
+          _this.m.R();
+        }
+      };
+      _this.DB = {
+        side: downBack,
+        firstFace: utils_1.sides.b,
+        secondFace: utils_1.sides.d,
+        rotateOpposite: function rotateOpposite() {
+          _this.m.D();
+
+          _this.m.L(0, false);
+        },
+        rotateCorrect: function rotateCorrect() {
+          _this.m.B();
+
+          _this.m.R();
+
+          _this.m.R();
+        }
+      };
+      _this.DR = {
+        side: downRight,
+        firstFace: utils_1.sides.r,
+        secondFace: utils_1.sides.d,
+        rotateOpposite: function rotateOpposite() {
+          _this.m.D();
+
+          _this.m.D();
+
+          _this.m.L(0, false);
+        },
+        rotateCorrect: function rotateCorrect() {
+          _this.m.D();
+
+          _this.m.B();
+
+          _this.m.R();
+
+          _this.m.R();
+        }
+      };
+      _this.FR = {
+        side: leftRight,
+        firstFace: utils_1.sides.f,
+        secondFace: utils_1.sides.r,
+        rotateOpposite: function rotateOpposite() {// do nothing
+        },
+        rotateCorrect: function rotateCorrect() {// do nothing
+        }
+      };
+      _this.RB = {
+        side: leftRight,
+        firstFace: utils_1.sides.r,
+        secondFace: utils_1.sides.b,
+        rotateOpposite: function rotateOpposite() {
+          _this.m.B();
+
+          _this.m.B();
+
+          _this.m.L();
+
+          _this.m.L();
+        },
+        rotateCorrect: function rotateCorrect() {
+          _this.m.B();
+
+          _this.m.U();
+
+          _this.m.R(0, false);
+        }
+      };
+      _this.BL = {
+        side: leftRight,
+        firstFace: utils_1.sides.b,
+        secondFace: utils_1.sides.l,
+        rotateOpposite: function rotateOpposite() {
+          _this.m.B(0, false);
+
+          _this.m.U(0, false);
+
+          _this.m.L();
+        },
+        rotateCorrect: function rotateCorrect() {
+          _this.m.B();
+
+          _this.m.B();
+
+          _this.m.R();
+
+          _this.m.R();
+        }
+      };
+      _this.LF = {
+        side: leftRight,
+        firstFace: utils_1.sides.l,
+        secondFace: utils_1.sides.f,
+        rotateOpposite: function rotateOpposite() {// do nothing
+        },
+        rotateCorrect: function rotateCorrect() {
+          _this.m.L(0, false);
+
+          _this.m.U(0, false);
+
+          _this.m.F();
+        }
+      };
+      _this.edges = [_this.UF, _this.UR, _this.UB, _this.UL, _this.DF, _this.DR, _this.DB, _this.DL, _this.RB, _this.BL, _this.LF, _this.FR];
+    };
 
     _this.moveOppToCorrect = function (index) {
       var correctIndex = index + 1;
@@ -86930,653 +87382,31 @@ function (_super) {
 
       _this.m.L();
 
-      _this.m.L(); // this.m.R();
-      // this.m.U();
-      // this.m.R(0, false);
-      // this.m.F();
-      // this.m.R(0, false);
-      // this.m.F(0, false);
-      // this.m.R();
-
-    }; // moveOppToCorrectUpMid = (index: number) => {
-    //   const correctIndex = index + 1;
-    //   this.m.D(correctIndex);
-    //   this.m.B(0, false);
-    //   this.m.R(0, false);
-    //   this.m.U();
-    //   this.m.B();
-    //   this.m.R();
-    //   this.m.D(correctIndex, false);
-    // }
-
-
-    _this.getEdgeHashFromFaces = function (firstFace, secondFace) {
-      return utils_1.colorHashes[firstFace] + utils_1.colorHashes[secondFace];
+      _this.m.L();
     };
 
-    _this.getEdgeHash = function (e) {
-      return _this.getEdgeHashFromFaces(e.firstFace, e.secondFace);
-    };
-
-    _this.getEdgeHashPosition = function (e, index) {
-      return _this.getColorHash(e.firstFace, e.side[index][0]) + _this.getColorHash(e.secondFace, e.side[index][1]);
-    };
-
-    _this.checkEdge = function (index, hash, e) {
-      var edgeHash = _this.getColorHash(e.firstFace, e.side[index][0]) + _this.getColorHash(e.secondFace, e.side[index][1]);
-
-      if (edgeHash === hash) {
-        return true;
-      }
-
-      return false;
-    };
-
-    _this.m = new moveActions_1.default();
     _this.m.L = rubik.moves.L;
     _this.m.R = rubik.moves.R;
     _this.m.F = rubik.moves.F;
     _this.m.B = rubik.moves.B;
     _this.m.U = rubik.moves.U;
     _this.m.D = rubik.moves.D;
-    _this.interface = new Array(6);
     _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[0]);
     _this.interface[utils_1.sides.r] = __spreadArrays(_this.rubik.opRotations[0]);
     _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[2]);
     _this.interface[utils_1.sides.d] = __spreadArrays(_this.rubik.stRotations[2]);
     _this.interface[utils_1.sides.f] = __spreadArrays(_this.rubik.stRotations[0]);
-    _this.interface[utils_1.sides.b] = __spreadArrays(_this.rubik.opRotations[0]); // create arrays which would represent edges of a face
-
-    var down = [];
-    var left = [];
-    var right = [];
-    var up = [];
-
-    for (var i = 1; i < _this.sideLength - 1; i += 1) {
-      down.push(i);
-    }
-
-    for (var i = _this.sideLength; i < _this.sideLength * _this.sideLength - _this.sideLength; i += _this.sideLength) {
-      left.push(i);
-    }
-
-    for (var i = _this.sideLength * 2 - 1; i < _this.sideLength * _this.sideLength - _this.sideLength; i += _this.sideLength) {
-      right.push(i);
-    }
-
-    for (var i = _this.sideLength * (_this.sideLength - 1) + 1; i < _this.sideLength * _this.sideLength - 1; i += 1) {
-      up.push(i);
-    }
-
-    var lineLength = _this.sideLength - 2; // in out colors
-
-    var leftRight = [];
-
-    for (var i = 0; i < lineLength; i += 1) {
-      leftRight.push([right[i], left[i]]);
-    } // console.log('Left Right:');
-    // console.log(leftRight);
-
-
-    var upFront = [];
-    var upRight = [];
-    var upBack = [];
-    var upLeft = [];
-    var downFront = [];
-    var downRight = [];
-    var downBack = [];
-    var downLeft = [];
-
-    for (var i = 0; i < lineLength; i += 1) {
-      upFront.push([up[lineLength - i - 1], down[lineLength - i - 1]]);
-      upRight.push([up[lineLength - i - 1], right[lineLength - i - 1]]);
-      upBack.push([up[lineLength - i - 1], up[i]]);
-      upLeft.push([up[lineLength - i - 1], left[i]]);
-      downFront.push([down[i], down[lineLength - i - 1]]);
-      downRight.push([down[i], left[i]]);
-      downBack.push([down[i], up[i]]);
-      downLeft.push([down[i], right[lineLength - i - 1]]);
-    } // console.log('Up Front:');
-    // console.log(upFront);
-    // console.log('Up Right:');
-    // console.log(upRight);
-    // console.log('Up Back:');
-    // console.log(upBack);
-    // console.log('Up Left:');
-    // console.log(upLeft);
-    // console.log('Down Front:');
-    // console.log(downFront);
-    // console.log('Down Right:');
-    // console.log(downRight);
-    // console.log('Down Back:');
-    // console.log(downBack);
-    // console.log('Down Left:');
-    // console.log(downLeft);
-
-
-    var UF = {
-      side: upFront,
-      firstFace: utils_1.sides.f,
-      secondFace: utils_1.sides.u,
-      rotateOpposite: function rotateOpposite() {
-        _this.m.U();
-
-        _this.m.L();
-      },
-      rotateCorrect: function rotateCorrect() {
-        // this.m.U(0, false);
-        // this.m.R(0, false);
-        _this.m.F();
-      }
-    };
-    var UR = {
-      side: upRight,
-      firstFace: utils_1.sides.r,
-      secondFace: utils_1.sides.u,
-      rotateOpposite: function rotateOpposite() {
-        _this.m.U();
-
-        _this.m.U();
-
-        _this.m.L();
-      },
-      rotateCorrect: function rotateCorrect() {
-        // this.m.R(0, false);
-        _this.m.U(0, false);
-
-        _this.m.B(0, false);
-
-        _this.m.R();
-
-        _this.m.R();
-      }
-    };
-    var UB = {
-      side: upBack,
-      firstFace: utils_1.sides.b,
-      secondFace: utils_1.sides.u,
-      rotateOpposite: function rotateOpposite() {
-        _this.m.U(0, false);
-
-        _this.m.L();
-      },
-      rotateCorrect: function rotateCorrect() {
-        // this.m.U();
-        // this.m.R(0, false);
-        _this.m.B(0, false);
-
-        _this.m.R();
-
-        _this.m.R();
-      }
-    };
-    var UL = {
-      side: upLeft,
-      firstFace: utils_1.sides.l,
-      secondFace: utils_1.sides.u,
-      rotateOpposite: function rotateOpposite() {
-        _this.m.L();
-      },
-      rotateCorrect: function rotateCorrect() {
-        // this.m.U();
-        // this.m.U();
-        // this.m.R(0, false);
-        _this.m.L(0, false);
-
-        _this.m.B(0, false);
-
-        _this.m.U();
-
-        _this.m.R(0, false);
-      }
-    };
-    var DF = {
-      side: downFront,
-      firstFace: utils_1.sides.f,
-      secondFace: utils_1.sides.d,
-      rotateOpposite: function rotateOpposite() {
-        _this.m.D(0, false);
-
-        _this.m.L(0, false);
-      },
-      rotateCorrect: function rotateCorrect() {
-        // this.m.D();
-        // this.m.R();
-        _this.m.F(0, false);
-      }
-    };
-    var DL = {
-      side: downLeft,
-      firstFace: utils_1.sides.l,
-      secondFace: utils_1.sides.d,
-      rotateOpposite: function rotateOpposite() {
-        _this.m.L(0, false);
-      },
-      rotateCorrect: function rotateCorrect() {
-        // this.m.D();
-        // this.m.D();
-        // this.m.R();
-        _this.m.D(0, false);
-
-        _this.m.B();
-
-        _this.m.R();
-
-        _this.m.R();
-      }
-    };
-    var DB = {
-      side: downBack,
-      firstFace: utils_1.sides.b,
-      secondFace: utils_1.sides.d,
-      rotateOpposite: function rotateOpposite() {
-        _this.m.D();
-
-        _this.m.L(0, false);
-      },
-      rotateCorrect: function rotateCorrect() {
-        // this.m.D(0, false);
-        // this.m.R();
-        _this.m.B();
-
-        _this.m.R();
-
-        _this.m.R();
-      }
-    };
-    var DR = {
-      side: downRight,
-      firstFace: utils_1.sides.r,
-      secondFace: utils_1.sides.d,
-      rotateOpposite: function rotateOpposite() {
-        _this.m.D();
-
-        _this.m.D();
-
-        _this.m.L(0, false);
-      },
-      rotateCorrect: function rotateCorrect() {
-        // this.m.R();
-        _this.m.D();
-
-        _this.m.B();
-
-        _this.m.R();
-
-        _this.m.R();
-      }
-    };
-    var FR = {
-      side: leftRight,
-      firstFace: utils_1.sides.f,
-      secondFace: utils_1.sides.r,
-      rotateOpposite: function rotateOpposite() {// this.m.R();
-        // this.m.U(0, false);
-        // this.m.B();
-        // this.m.L();
-        // this.m.L();
-        // do nothing
-      },
-      rotateCorrect: function rotateCorrect() {// do nothing
-      }
-    };
-    var RB = {
-      side: leftRight,
-      firstFace: utils_1.sides.r,
-      secondFace: utils_1.sides.b,
-      rotateOpposite: function rotateOpposite() {
-        _this.m.B();
-
-        _this.m.B();
-
-        _this.m.L();
-
-        _this.m.L();
-      },
-      rotateCorrect: function rotateCorrect() {
-        // this.m.R();
-        // this.m.R();
-        _this.m.B();
-
-        _this.m.U();
-
-        _this.m.R(0, false);
-      }
-    };
-    var BL = {
-      side: leftRight,
-      firstFace: utils_1.sides.b,
-      secondFace: utils_1.sides.l,
-      rotateOpposite: function rotateOpposite() {
-        _this.m.B(0, false);
-
-        _this.m.U(0, false);
-
-        _this.m.L();
-      },
-      rotateCorrect: function rotateCorrect() {
-        _this.m.B();
-
-        _this.m.B();
-
-        _this.m.R();
-
-        _this.m.R();
-      }
-    };
-    var LF = {
-      side: leftRight,
-      firstFace: utils_1.sides.l,
-      secondFace: utils_1.sides.f,
-      rotateOpposite: function rotateOpposite() {// do nothing
-      },
-      rotateCorrect: function rotateCorrect() {
-        // this.m.F();
-        // this.m.F();
-        _this.m.L(0, false);
-
-        _this.m.U(0, false);
-
-        _this.m.F();
-      }
-    }; // this.m.D(, false);
-    // first solve first case
-    // we want to find front-up edge
-
-    var hash = _this.getEdgeHash(UF);
-
-    var middle = Math.floor(_this.sideLength / 2 - 1); // removed front right
-
-    var edges = [UF, UR, UB, UL, DF, DR, DB, DL, RB, BL, LF, FR];
-    var correctEdges = [];
+    _this.interface[utils_1.sides.b] = __spreadArrays(_this.rubik.opRotations[0]);
+    _this.middle = Math.floor(_this.sideLength / 2 - 1);
+    _this.secondMiddle = _this.middle - 1;
+    _this.currentMiddle = _this.middle;
 
     for (var i = 0; i < _this.sideLength - 2; i += 1) {
-      correctEdges.push(false);
+      _this.correctEdges.push(false);
     }
 
-    var resetCorrectEdges = function resetCorrectEdges() {
-      for (var i = 0; i < correctEdges.length; i += 1) {
-        correctEdges[i] = false;
-      }
-    };
+    _this.generateEdges();
 
-    var getNextIncorrectEdge = function getNextIncorrectEdge() {
-      for (var i = 0; i < correctEdges.length; i += 1) {
-        if (correctEdges[i] === false) {
-          return i;
-        }
-      }
-
-      return -1;
-    };
-
-    var checkEdgeSides = function checkEdgeSides(index, edgeOpposite, edgeCorrect) {
-      if (edgeOpposite === void 0) {
-        edgeOpposite = LF;
-      }
-
-      if (edgeCorrect === void 0) {
-        edgeCorrect = FR;
-      }
-
-      var correctFirst = _this.getColorHash(edgeCorrect.firstFace, edgeCorrect.side[middle][0]);
-
-      var correctSecond = _this.getColorHash(edgeCorrect.secondFace, edgeCorrect.side[middle][1]);
-
-      var oppositeFirst = _this.getColorHash(edgeOpposite.firstFace, edgeOpposite.side[index][0]);
-
-      var oppositeSecond = _this.getColorHash(edgeOpposite.secondFace, edgeOpposite.side[index][1]);
-
-      return correctFirst === oppositeFirst && correctSecond === oppositeSecond;
-    };
-
-    var solveEdgeIndex = function solveEdgeIndex(correctHash, index, e) {
-      var oppositeIndex = Math.abs(_this.sideLength - 3 - index); // console.log(index);
-      // console.log(oppositeIndex);
-
-      var hashOnIndex = _this.getEdgeHashPosition(e, index);
-
-      var hashOnOppositeIndex = _this.getEdgeHashPosition(e, oppositeIndex);
-
-      if (hashOnIndex === correctHash) {
-        e.rotateOpposite();
-
-        if (checkEdgeSides(index)) {
-          _this.moveOppToCorrect(index);
-
-          correctEdges[index] = true;
-        } else {
-          _this.flipWholeEdge();
-
-          _this.moveOppToCorrect(oppositeIndex);
-
-          correctEdges[oppositeIndex] = true;
-        }
-
-        return true;
-      }
-
-      if (hashOnOppositeIndex === correctHash) {
-        e.rotateOpposite();
-
-        if (checkEdgeSides(oppositeIndex)) {
-          _this.moveOppToCorrect(oppositeIndex);
-
-          correctEdges[oppositeIndex] = true;
-        } else {
-          _this.flipWholeEdge();
-
-          _this.moveOppToCorrect(index);
-
-          correctEdges[index] = true;
-        }
-
-        return true;
-      }
-
-      return false;
-    };
-
-    var solveMiddle = function solveMiddle(correctHash) {
-      for (var edge = 0; edge < edges.length; edge += 1) {
-        var hashOnMiddle = _this.getEdgeHashPosition(edges[edge], middle);
-
-        if (hashOnMiddle === correctHash) {
-          edges[edge].rotateCorrect();
-          break;
-        }
-      }
-
-      correctEdges[middle] = true;
-    };
-
-    var solveEdge = function solveEdge(firstFace, secondFace) {
-      var correctHash = _this.getEdgeHashFromFaces(firstFace, secondFace);
-
-      resetCorrectEdges();
-      solveMiddle(correctHash);
-
-      for (var i = 0; i < _this.sideLength - 2 + (_this.sideLength - 2); i += 1) {
-        var nextEdge = getNextIncorrectEdge();
-
-        if (nextEdge === -1) {
-          break;
-        } // console.log(nextEdge);
-
-
-        var hashOnBaseIndex = _this.getEdgeHashPosition(FR, nextEdge);
-
-        if (correctHash === hashOnBaseIndex) {
-          correctEdges[nextEdge] = true; // if (checkEdgeSides(nextEdge, FR)) {
-          //   correctEdges[nextEdge] = true;
-          // } else {
-          //   this.moveOppToCorrect(nextEdge);
-          // }
-        } else {
-          for (var edge = 0; edge < edges.length; edge += 1) {
-            if (solveEdgeIndex(correctHash, nextEdge, edges[edge])) {
-              // if (this.getEdgeHashPosition(FR, nextEdge) !== correctHash) {
-              //   console.log('INCORRECT');
-              // }
-              console.log("Solved: " + i);
-              break;
-            }
-          }
-        }
-      }
-    };
-
-    var solveEdges = function solveEdges() {
-      for (var i = 0; i < edges.length; i += 1) {
-        solveEdge(edges[i].firstFace, edges[i].secondFace);
-      }
-    }; // solveEdge(s.f, s.l);
-
-
-    solveEdges(); // const parities: Edge[] = [];
-    // const foundParitiesIndexes: number[][] = [];
-    // const findParities = () => {
-    //   for (let i = 0; i < edges.length; i += 1) {
-    //     let found = false;
-    //     const foundParities: number[] = [];
-    //     for (let e = 0; e < this.sideLength - 2; e += 1) {
-    //       if (!checkEdgeSides(e, edges[i], edges[i])) {
-    //         found = true;
-    //         foundParities.push(e);
-    //       }
-    //     }
-    //     if (found) {
-    //       parities.push(edges[i]);
-    //       foundParitiesIndexes.push(foundParities);
-    //     }
-    //   }
-    // };
-
-    var getNextParity = function getNextParity() {
-      var parityIndexes = [];
-
-      for (var i = 0; i < edges.length; i += 1) {
-        var found = false;
-
-        for (var e = 0; e < _this.sideLength - 2; e += 1) {
-          if (!checkEdgeSides(e, edges[i], edges[i])) {
-            found = true;
-            parityIndexes.push(e);
-          }
-        }
-
-        if (found) {
-          return {
-            edge: edges[i],
-            parities: parityIndexes
-          };
-        }
-      }
-
-      return {
-        edge: null,
-        parities: null
-      };
-    }; // findParities();
-    // console.log(parities);
-    // console.log(foundParitiesIndexes);
-
-
-    var rotateFirstHalf = function rotateFirstHalf(parityIndexes, move, clockwise) {
-      if (clockwise === void 0) {
-        clockwise = true;
-      }
-
-      for (var i = 0; i < parityIndexes.length / 2; i += 1) {
-        console.log(parityIndexes[i] + 1);
-        move(parityIndexes[i] + 1, clockwise);
-      }
-    }; // const { edge, parities } = getNextParity();
-    // if (edge !== null) {
-    //   edge.rotateCorrect();
-    //   this.m.F(0, false);
-    // }
-
-
-    var solveParities = function solveParities() {
-      // move them front up
-      for (var i = 0; i < 8; i += 1) {
-        var _a = getNextParity(),
-            edge = _a.edge,
-            parities = _a.parities;
-
-        if (edge === null) {
-          break;
-        }
-
-        console.log("Parity: " + (i + 1));
-        edge.rotateCorrect();
-
-        _this.m.F(0, false); // move other parities to left or right
-        // all first half
-        // this.m.R(index, false);
-
-
-        rotateFirstHalf(parities, _this.m.R, false);
-
-        _this.m.U();
-
-        _this.m.U(); // all
-        // this.m.L(index);
-
-
-        rotateFirstHalf(parities, _this.m.L);
-
-        _this.m.F();
-
-        _this.m.F(); // this.m.L(index, false);
-
-
-        rotateFirstHalf(parities, _this.m.L, false);
-
-        _this.m.F();
-
-        _this.m.F(); // this.m.R(index, false);
-
-
-        rotateFirstHalf(parities, _this.m.R, false); // this.m.R(index, false);
-
-        rotateFirstHalf(parities, _this.m.R, false);
-
-        _this.m.U();
-
-        _this.m.U(); // this.m.R(index);
-
-
-        rotateFirstHalf(parities, _this.m.R);
-
-        _this.m.U();
-
-        _this.m.U(); // this.m.R(index, false);
-
-
-        rotateFirstHalf(parities, _this.m.R, false);
-
-        _this.m.U();
-
-        _this.m.U();
-
-        _this.m.F();
-
-        _this.m.F(); // this.m.R(index, false);
-
-
-        rotateFirstHalf(parities, _this.m.R, false); // this.m.R(index, false);
-
-        rotateFirstHalf(parities, _this.m.R, false);
-
-        _this.m.F();
-
-        _this.m.F();
-      }
-    };
-
-    solveParities();
     return _this;
   }
 
@@ -87584,7 +87414,373 @@ function (_super) {
 }(rubikSolutionBase_1.default);
 
 exports.default = SolveEdgesRubik;
-},{"../moveActions":"rubik/moveActions.ts","../utils":"rubik/utils.ts","./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts"}],"index.ts":[function(require,module,exports) {
+},{"../utils":"rubik/utils.ts","./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts"}],"rubik/solutions/solveEvenRubikParities.ts":[function(require,module,exports) {
+"use strict";
+
+var __extends = this && this.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (b.hasOwnProperty(p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var __spreadArrays = this && this.__spreadArrays || function () {
+  for (var s = 0, i = 0, il = arguments.length; i < il; i++) {
+    s += arguments[i].length;
+  }
+
+  for (var r = Array(s), k = 0, i = 0; i < il; i++) {
+    for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++) {
+      r[k] = a[j];
+    }
+  }
+
+  return r;
+};
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var utils_1 = require("../utils");
+
+var rubikSolutionBase_1 = __importDefault(require("./rubikSolutionBase"));
+
+var solveStandardRubik_1 = __importDefault(require("./solveStandardRubik"));
+
+var SolveEvenRubikParities =
+/** @class */
+function (_super) {
+  __extends(SolveEvenRubikParities, _super);
+
+  function SolveEvenRubikParities(rubik) {
+    var _this = _super.call(this, rubik) || this;
+
+    _this.solve = function () {
+      // const edge = this.findFlippedEdge();
+      // console.log(edge);
+      // if (edge !== null) {
+      //   console.log('Found flipped edge');
+      //   console.log(edge.color);
+      //   this.solveFlippedEdge(edge.moves);
+      //   console.log(edge.upMiddle);
+      //   edge.flipMoveReturn();
+      //   this.solveStandardRubik();
+      // }
+      // const edge = this.findSwappedPieces();
+      // console.log(edge);
+      // if (edge !== null) {
+      //   console.log('Found swapped pieces');
+      //   console.log(edge.color);
+      //   this.solveRotatedPieces(edge.moves);
+      //   console.log(edge.upMiddle);
+      //   this.solveStandardRubik();
+      // }
+      for (var i = 0; i < 5; i += 1) {
+        console.log(i);
+
+        var edge = _this.findFlippedEdge();
+
+        if (edge !== null) {
+          console.log('Found flipped edge');
+
+          _this.solveFlippedEdge(edge.moves);
+
+          edge.flipMoveReturn();
+
+          _this.solveStandardRubik();
+        }
+
+        edge = _this.findSwappedPieces();
+
+        if (edge !== null) {
+          console.log('Found swapped pieces');
+
+          _this.solveRotatedPieces(edge.moves);
+
+          _this.solveStandardRubik();
+        }
+
+        if (edge === null) {
+          break;
+        }
+      }
+    };
+
+    _this.checkCorrect = function () {
+      var start = (_this.sideLength - 1) * _this.sideLength;
+      var end = _this.sideLength * _this.sideLength;
+
+      for (var i = 0; i < _this.sides.length; i += 1) {
+        for (var dir = start; dir < end; dir += 1) {
+          if (!_this.check(_this.sides[i].color, dir, _this.sides[i].color)) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    };
+
+    _this.solveStandardRubik = function () {
+      _this.solveStandard.solveSwapYellowEdges();
+
+      _this.solveStandard.solvePositionYellowCorners();
+
+      _this.solveStandard.solveOrientLastLayerCorners();
+    };
+
+    _this.findFlippedEdge = function () {
+      for (var i = 0; i < _this.sides.length; i += 1) {
+        var side = _this.sides[i]; // if (this.check(side.color, this.f.u, s.b) && this.check(s.b, side.upMiddle, side.color)) {
+
+        if (_this.check(side.color, _this.f.u, utils_1.sides.b)) {
+          return side;
+        }
+      }
+
+      return null;
+    };
+
+    _this.findSwappedPieces = function () {
+      for (var i = 0; i < _this.sides.length; i += 1) {
+        var side = _this.sides[i];
+
+        if (!_this.check(side.color, _this.f.u, side.color) || !_this.check(side.color, _this.f.ur, side.color)) {
+          return side;
+        }
+      }
+
+      return null;
+    };
+
+    _this.rotateHalf = function (move, clockwise) {
+      if (clockwise === void 0) {
+        clockwise = true;
+      }
+
+      for (var i = 0; i < _this.middle; i += 1) {
+        move(i, clockwise);
+      }
+    };
+
+    _this.rotateAll = function (move, clockwise) {
+      if (clockwise === void 0) {
+        clockwise = true;
+      }
+
+      for (var i = 0; i < _this.sideLength; i += 1) {
+        move(i, clockwise);
+      }
+    }; // flipped edge: OLL Parity 3Rw U2 x 3Rw U2 3Rw U2 3Rw' U2 3Lw U2 3Rw' U2 3Rw U2 3Rw' U2 3Rw'
+
+
+    _this.solveFlippedEdge = function (m) {
+      _this.rotateHalf(m.R);
+
+      m.U();
+      m.U();
+
+      _this.rotateHalf(m.R);
+
+      m.F();
+      m.F();
+
+      _this.rotateHalf(m.R);
+
+      m.F();
+      m.F();
+
+      _this.rotateHalf(m.R, false);
+
+      m.F();
+      m.F();
+
+      _this.rotateHalf(m.L);
+
+      m.F();
+      m.F();
+
+      _this.rotateHalf(m.R, false);
+
+      m.F();
+      m.F();
+
+      _this.rotateHalf(m.R);
+
+      m.F();
+      m.F();
+
+      _this.rotateHalf(m.R, false);
+
+      m.F();
+      m.F();
+
+      _this.rotateHalf(m.R, false);
+    }; // swapped pieces: PLL Parity 3Rw2 F2 U2 3Rw2 R2 U2 F2 3Rw2
+
+
+    _this.solveRotatedPieces = function (m) {
+      _this.rotateHalf(m.R);
+
+      _this.rotateHalf(m.R);
+
+      m.F();
+      m.F();
+      m.U();
+      m.U();
+
+      _this.rotateHalf(m.R);
+
+      _this.rotateHalf(m.R);
+
+      m.R();
+      m.R();
+      m.U();
+      m.U();
+      m.F();
+      m.F();
+
+      _this.rotateHalf(m.R);
+
+      _this.rotateHalf(m.R);
+    };
+
+    _this.m.L = rubik.moves.L;
+    _this.m.R = rubik.moves.R;
+    _this.m.F = rubik.moves.F;
+    _this.m.B = rubik.moves.B;
+    _this.m.U = rubik.moves.U;
+    _this.m.D = rubik.moves.D;
+    _this.interface[utils_1.sides.l] = __spreadArrays(_this.rubik.stRotations[3]);
+    _this.interface[utils_1.sides.r] = __spreadArrays(_this.rubik.opRotations[3]);
+    _this.interface[utils_1.sides.u] = __spreadArrays(_this.rubik.opRotations[2]);
+    _this.interface[utils_1.sides.d] = __spreadArrays(_this.rubik.stRotations[2]);
+    _this.interface[utils_1.sides.f] = __spreadArrays(_this.rubik.stRotations[0]);
+    _this.interface[utils_1.sides.b] = __spreadArrays(_this.rubik.opRotations[0]);
+    var leftMoves = {
+      U: _this.m.B,
+      D: _this.m.F,
+      L: _this.m.D,
+      R: _this.m.U,
+      F: _this.m.L,
+      B: _this.m.R
+    };
+    var rightMoves = {
+      U: _this.m.B,
+      D: _this.m.F,
+      L: _this.m.U,
+      R: _this.m.D,
+      F: _this.m.R,
+      B: _this.m.L
+    };
+    var upMoves = {
+      U: _this.m.B,
+      D: _this.m.F,
+      L: _this.m.L,
+      R: _this.m.R,
+      F: _this.m.U,
+      B: _this.m.D
+    };
+    var downMoves = {
+      U: _this.m.B,
+      D: _this.m.F,
+      L: _this.m.R,
+      R: _this.m.L,
+      F: _this.m.D,
+      B: _this.m.U
+    }; // 0 rotate all m.F(); l
+    // 1 rotate all m.F(false); r
+    // 2 rotate all m.L(false); u
+    // 3 rotate all m.L(); d
+
+    var left = {
+      color: utils_1.sides.l,
+      moves: leftMoves,
+      upLeft: _this.f.dr,
+      upRight: _this.f.ur,
+      upMiddle: _this.f.r,
+      flipMoveReturn: function flipMoveReturn() {
+        return _this.rotateAll(_this.m.U);
+      }
+    };
+    var right = {
+      color: utils_1.sides.r,
+      moves: rightMoves,
+      upLeft: _this.f.ul,
+      upRight: _this.f.dl,
+      upMiddle: _this.f.l,
+      flipMoveReturn: function flipMoveReturn() {
+        return _this.rotateAll(_this.m.U, false);
+      }
+    };
+    var up = {
+      color: utils_1.sides.u,
+      moves: upMoves,
+      upLeft: _this.f.ur,
+      upRight: _this.f.ul,
+      upMiddle: _this.f.u,
+      flipMoveReturn: function flipMoveReturn() {
+        return _this.rotateAll(_this.m.R);
+      }
+    };
+    var down = {
+      color: utils_1.sides.d,
+      moves: downMoves,
+      upLeft: _this.f.dl,
+      upRight: _this.f.dr,
+      upMiddle: _this.f.d,
+      flipMoveReturn: function flipMoveReturn() {
+        return _this.rotateAll(_this.m.L);
+      }
+    };
+    _this.sides = [left, right, up, down]; // parities
+    // flipped edge: OLL Parity 3Rw U2 x 3Rw U2 3Rw U2 3Rw' U2 3Lw U2 3Rw' U2 3Rw U2 3Rw' U2 3Rw'
+    // swapped pieces: PLL Parity 3Rw2 F2 U2 3Rw2 R2 U2 F2 3Rw2
+    // we need to get only 4 edges
+    // and 4 corners
+    // find a parity
+    // move to a position
+    // apply an algorithm
+    // solve yellow
+    // this.solveSwapYellowEdges();
+    // this.solvePositionYellowCorners();
+    // this.solveOrientLastLayerCorners();
+
+    _this.solveStandard = new solveStandardRubik_1.default(_this.rubik);
+    return _this;
+  }
+
+  return SolveEvenRubikParities;
+}(rubikSolutionBase_1.default);
+
+exports.default = SolveEvenRubikParities;
+},{"../utils":"rubik/utils.ts","./rubikSolutionBase":"rubik/solutions/rubikSolutionBase.ts","./solveStandardRubik":"rubik/solutions/solveStandardRubik.ts"}],"index.ts":[function(require,module,exports) {
 "use strict";
 
 var __importStar = this && this.__importStar || function (mod) {
@@ -87631,6 +87827,8 @@ var solveRedCenterRubik_1 = __importDefault(require("./rubik/solutions/solveRedC
 var solveGreenOrangeCenterRubik_1 = __importDefault(require("./rubik/solutions/solveGreenOrangeCenterRubik"));
 
 var solveEdgesRubik_1 = __importDefault(require("./rubik/solutions/solveEdgesRubik"));
+
+var solveEvenRubikParities_1 = __importDefault(require("./rubik/solutions/solveEvenRubikParities"));
 
 function createLight() {
   var color = 0xFFFFFF;
@@ -87745,8 +87943,12 @@ function () {
     } else {
       var solveWhiteCenterRubik = new solveWhiteCenterRubik_1.default(this.rubikView.rubikModel);
       solveWhiteCenterRubik.solve();
-      var solveYellowMiddleLineRubik = new solveYellowMiddleLineRubik_1.default(this.rubikView.rubikModel);
-      solveYellowMiddleLineRubik.solve();
+
+      if (this.rubikView.rubikModel.sideLength % 2 !== 0) {
+        var solveYellowMiddleLineRubik = new solveYellowMiddleLineRubik_1.default(this.rubikView.rubikModel);
+        solveYellowMiddleLineRubik.solve();
+      }
+
       var solveYellowCenterRubik = new solveYellowCenterRubik_1.default(this.rubikView.rubikModel);
       solveYellowCenterRubik.solve();
       var solveBlueCenterRubik = new solveBlueCenterRubik_1.default(this.rubikView.rubikModel);
@@ -87756,8 +87958,14 @@ function () {
       var solveGreenOrangeCenterRubik = new solveGreenOrangeCenterRubik_1.default(this.rubikView.rubikModel);
       solveGreenOrangeCenterRubik.solve();
       var solveEdgesRubik = new solveEdgesRubik_1.default(this.rubikView.rubikModel);
+      solveEdgesRubik.solve();
       var solveStandardRubik = new solveStandardRubik_1.default(this.rubikView.rubikModel);
       solveStandardRubik.solve();
+
+      if (this.rubikView.rubikModel.sideLength % 2 === 0) {
+        var solveEvenRubikParities = new solveEvenRubikParities_1.default(this.rubikView.rubikModel);
+        solveEvenRubikParities.solve();
+      }
     }
 
     if (animate) {
@@ -87770,7 +87978,7 @@ function () {
   };
 
   MainScene.prototype.test = function () {
-    var length = 25;
+    var length = 4;
     var rubikModel = new model_1.default(length);
     this.camera.position.set(length * 1.5, length * 1.2, length * 2);
     this.camera.far = length * 4;
@@ -87781,12 +87989,16 @@ function () {
     this.rubikView.rubik.name = 'rubik';
     this.scene.add(this.rubikView.rubik); // // this.rubikView.placeTextOnRubik();
 
-    this.rubikView.rubikModel.generateRandomMoves(500, true); // this.rubikView.rubikModel.solveBigCube();
+    this.rubikView.rubikModel.generateRandomMoves(50, true); // this.rubikView.rubikModel.solveBigCube();
 
     var solveWhiteCenterRubik = new solveWhiteCenterRubik_1.default(this.rubikView.rubikModel);
     solveWhiteCenterRubik.solve();
-    var solveYellowMiddleLineRubik = new solveYellowMiddleLineRubik_1.default(this.rubikView.rubikModel);
-    solveYellowMiddleLineRubik.solve();
+
+    if (this.rubikView.rubikModel.sideLength % 2 !== 0) {
+      var solveYellowMiddleLineRubik = new solveYellowMiddleLineRubik_1.default(this.rubikView.rubikModel);
+      solveYellowMiddleLineRubik.solve();
+    }
+
     var solveYellowCenterRubik = new solveYellowCenterRubik_1.default(this.rubikView.rubikModel);
     solveYellowCenterRubik.solve();
     var solveBlueCenterRubik = new solveBlueCenterRubik_1.default(this.rubikView.rubikModel);
@@ -87796,6 +88008,11 @@ function () {
     var solveGreenOrangeCenterRubik = new solveGreenOrangeCenterRubik_1.default(this.rubikView.rubikModel);
     solveGreenOrangeCenterRubik.solve();
     var solveEdgesRubik = new solveEdgesRubik_1.default(this.rubikView.rubikModel);
+    solveEdgesRubik.solve();
+    var solveStandardRubik = new solveStandardRubik_1.default(this.rubikView.rubikModel);
+    solveStandardRubik.solve();
+    var solveEvenRubikParities = new solveEvenRubikParities_1.default(this.rubikView.rubikModel);
+    solveEvenRubikParities.solve();
     this.rubikView.colorizeRubik(); // this.rubikView.placeTextOnRubik();
   };
 
@@ -87806,41 +88023,39 @@ var main = new MainScene();
 var size = 3;
 
 window.onload = function () {
-  // main.test();
-  var sizeUp = document.getElementById('sizeUp');
-  var sizeDown = document.getElementById('sizeDown');
-  var scramble = document.getElementById('scramble');
-  var solve = document.getElementById('solve');
+  var t0 = performance.now();
+  main.test();
+  var t1 = performance.now();
+  console.log('Took', (t1 - t0).toFixed(4), 'milliseconds to generate'); // const sizeUp = document.getElementById('sizeUp');
+  // const sizeDown = document.getElementById('sizeDown');
+  // const scramble = document.getElementById('scramble');
+  // const solve = document.getElementById('solve');
+  // sizeUp.onclick = () => {
+  //   size += 1;
+  //   main.createRubik(size);
+  // };
+  // sizeDown.onclick = () => {
+  //   if (size > 3) {
+  //     console.log(size);
+  //     size -= 1;
+  //     main.createRubik(size);
+  //   }
+  // };
+  // scramble.onclick = () => {
+  //   main.scrambleRubik(70);
+  // };
+  // solve.onclick = () => {
+  //   main.solveRubik(true);
+  // };
+  // main.createRubik(3);
 
-  sizeUp.onclick = function () {
-    size += 2;
-    main.createRubik(size);
-  };
-
-  sizeDown.onclick = function () {
-    if (size > 3) {
-      console.log(size);
-      size -= 2;
-      main.createRubik(size);
-    }
-  };
-
-  scramble.onclick = function () {
-    main.scrambleRubik(70);
-  };
-
-  solve.onclick = function () {
-    main.solveRubik(true);
-  };
-
-  main.createRubik(3);
   main.render();
 }; // function init() {
 //   main.createRubik(3);
 //   main.render();
 // }
 // init();
-},{"../node_modules/three/src/Three":"../node_modules/three/src/Three.js","../node_modules/three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","./rubik/view":"rubik/view.ts","./rubik/model":"rubik/model.ts","./rubik/solutions/solveStandardRubik":"rubik/solutions/solveStandardRubik.ts","./rubik/solutions/solveWhiteCenterRubik":"rubik/solutions/solveWhiteCenterRubik.ts","./rubik/solutions/solveYellowCenterRubik":"rubik/solutions/solveYellowCenterRubik.ts","./rubik/solutions/solveBlueCenterRubik":"rubik/solutions/solveBlueCenterRubik.ts","./rubik/solutions/solveYellowMiddleLineRubik":"rubik/solutions/solveYellowMiddleLineRubik.ts","./rubik/solutions/solveRedCenterRubik":"rubik/solutions/solveRedCenterRubik.ts","./rubik/solutions/solveGreenOrangeCenterRubik":"rubik/solutions/solveGreenOrangeCenterRubik.ts","./rubik/solutions/solveEdgesRubik":"rubik/solutions/solveEdgesRubik.ts"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"../node_modules/three/src/Three":"../node_modules/three/src/Three.js","../node_modules/three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","./rubik/view":"rubik/view.ts","./rubik/model":"rubik/model.ts","./rubik/solutions/solveStandardRubik":"rubik/solutions/solveStandardRubik.ts","./rubik/solutions/solveWhiteCenterRubik":"rubik/solutions/solveWhiteCenterRubik.ts","./rubik/solutions/solveYellowCenterRubik":"rubik/solutions/solveYellowCenterRubik.ts","./rubik/solutions/solveBlueCenterRubik":"rubik/solutions/solveBlueCenterRubik.ts","./rubik/solutions/solveYellowMiddleLineRubik":"rubik/solutions/solveYellowMiddleLineRubik.ts","./rubik/solutions/solveRedCenterRubik":"rubik/solutions/solveRedCenterRubik.ts","./rubik/solutions/solveGreenOrangeCenterRubik":"rubik/solutions/solveGreenOrangeCenterRubik.ts","./rubik/solutions/solveEdgesRubik":"rubik/solutions/solveEdgesRubik.ts","./rubik/solutions/solveEvenRubikParities":"rubik/solutions/solveEvenRubikParities.ts"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -87868,7 +88083,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52391" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50989" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

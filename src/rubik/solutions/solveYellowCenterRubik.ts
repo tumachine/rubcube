@@ -1,21 +1,14 @@
 /* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
-import MoveActions from '../moveActions';
 import RubikModel from '../model';
-import { sides as s, colorHashes } from '../utils';
-import { OperationAfterFound, FindReturn } from './d';
+import { sides as s } from '../utils';
+import { FindReturn } from './d';
 
 
 class SolveYellowCenterRubik extends RubikSolutionBase {
-  private m: MoveActions;
-
-  private ls;
-
   public constructor(rubik: RubikModel) {
     super(rubik);
 
-    // this.m = rubik.moves;
-    this.m = new MoveActions();
     this.m.L = rubik.moves.R;
     this.m.R = rubik.moves.L;
     this.m.F = rubik.moves.B;
@@ -32,7 +25,6 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
       d: s.d,
     };
 
-    this.interface = new Array(6);
     this.interface[s.l] = [...this.rubik.stRotations[2]];
     this.interface[s.r] = [...this.rubik.opRotations[0]];
     this.interface[s.u] = [...this.rubik.opRotations[3]];
@@ -42,10 +34,6 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
 
     this.primaryColor = this.ls.f;
   }
-
-    localFind = (row: number, col: number, side: number, operation: OperationAfterFound) => this.baseFind(row, col, side, operation);
-
-    middle = Math.floor(this.sideLength / 2);
 
     solveLeftBuild = (r: FindReturn): boolean => {
       // console.log('YELLOW CENTER: solving left');
@@ -114,24 +102,24 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
     }
 
     solveLeft = (row, column) => {
-      if (this.localFind(row, column, this.ls.l, this.solveLeftBuild)) {
+      if (this.baseFind(row, column, this.ls.l, this.solveLeftBuild)) {
         return this.solveUp(row, column);
       }
       return false;
     }
 
     solveFront = (row, column) => {
-      if (this.localFind(row, column, this.ls.f, this.solveFrontBuild)) {
+      if (this.baseFind(row, column, this.ls.f, this.solveFrontBuild)) {
         return this.solveUp(row, column);
       }
       return false;
     }
 
-    solveRight = (row, column) => this.localFind(row, column, this.ls.r, this.solveRightBuild);
+    solveRight = (row, column) => this.baseFind(row, column, this.ls.r, this.solveRightBuild);
 
-    solveUp = (row, column) => this.localFind(row, column, this.ls.u, this.solveUpBuild);
+    solveUp = (row, column) => this.baseFind(row, column, this.ls.u, this.solveUpBuild);
 
-    solveDown = (row, column) => this.localFind(row, column, this.ls.d, this.solveDownBuild);
+    solveDown = (row, column) => this.baseFind(row, column, this.ls.d, this.solveDownBuild);
 
     solveOrder = [
       this.solveLeft,
@@ -155,20 +143,13 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
     lineLength = this.sideLength - 1;
 
     solve = () => {
-      for (let row = 1; row < this.lineLength; row += 1) {
-        if (row !== this.middle) {
+      if (this.sideLength % 2 === 0) {
+        for (let row = 1; row < this.lineLength; row += 1) {
           for (let col = 1; col < this.lineLength; col += 1) {
-            // console.log(row, col);
             this.solveCube(row, col);
-            // for (let c = 1; c < col; c += 1) {
-            //   if (!this.check(this.ls.l, this.getFaceDirection(row, c), this.ls.f)) {
-            //     console.log('INCORRECT ROW');
-            //     return false;
-            //   }
-            // }
           }
           // for top mid
-          if (row > this.middle) {
+          if (row >= this.middle) {
             this.m.F();
             this.m.F();
             this.m.D(row);
@@ -185,16 +166,48 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
             this.m.F();
           }
         }
-        // console.log('passed row');
-        // for (let r = 1; r < row; r += 1) {
-        //   for (let c = 1; c < this.lineLength; c += 1) {
-        //     if (!this.check(this.ls.f, this.getFaceDirection(r, c), this.ls.f)) {
-        //         console.log('INCORRECT BUILD');
-        //         return false;
-        //       }
-        //     }
-        //   }
-        // }
+      } else {
+        for (let row = 1; row < this.lineLength; row += 1) {
+          if (row !== this.middle) {
+            for (let col = 1; col < this.lineLength; col += 1) {
+              // console.log(row, col);
+              this.solveCube(row, col);
+              // for (let c = 1; c < col; c += 1) {
+              //   if (!this.check(this.ls.l, this.getFaceDirection(row, c), this.ls.f)) {
+              //     console.log('INCORRECT ROW');
+              //     return false;
+              //   }
+              // }
+            }
+            // for top mid
+            if (row > this.middle) {
+              this.m.F();
+              this.m.F();
+              this.m.D(row);
+              this.m.F();
+              this.m.F();
+              this.m.D(row, false);
+            } else if (row < this.middle) {
+            // for bot mid
+              this.m.D(row);
+              this.m.F();
+              this.m.F();
+              this.m.D(row, false);
+              this.m.F();
+              this.m.F();
+            }
+          }
+          // console.log('passed row');
+          // for (let r = 1; r < row; r += 1) {
+          //   for (let c = 1; c < this.lineLength; c += 1) {
+          //     if (!this.check(this.ls.f, this.getFaceDirection(r, c), this.ls.f)) {
+          //         console.log('INCORRECT BUILD');
+          //         return false;
+          //       }
+          //     }
+          //   }
+          // }
+        }
       }
 
       for (let c = 1; c < this.lineLength; c += 1) {

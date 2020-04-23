@@ -1,9 +1,18 @@
 /* eslint-disable max-len */
-import { colorHashes } from '../utils';
+import { colorHashes, sides } from '../utils';
 import RubikModel from '../model';
 import Face from '../face';
 import MoveActions from '../moveActions';
-import { OperationAfterFound, FindReturn, HighestPos } from './d';
+import { OperationAfterFound, HighestPos } from './d';
+
+interface LocalSides {
+  l: number,
+  r: number,
+  f: number,
+  b: number,
+  u: number,
+  d: number,
+}
 
 class RubikSolutionBase {
     public rubik: RubikModel;
@@ -17,10 +26,28 @@ class RubikSolutionBase {
     // side
     public primaryColor: number;
 
+    public middle: number;
+
+    public lineLength;
+
+    public ls: LocalSides;
+
+    public m: MoveActions;
+
     public constructor(rubik: RubikModel) {
       this.rubik = rubik;
+
       this.f = rubik.f;
+
       this.sideLength = rubik.sideLength;
+
+      this.middle = Math.floor(this.sideLength / 2);
+
+      this.lineLength = this.sideLength - 1;
+
+      this.m = new MoveActions();
+
+      this.interface = new Array(6);
     }
 
     public check = (side: number, face: number, color: number): boolean => this.getColor(side, face) === color;
@@ -28,6 +55,8 @@ class RubikSolutionBase {
     public getColor = (side: number, direction: number): number => this.rubik.matrix[side][this.interface[side][direction]];
 
     public getColorHash = (side: number, direction: number): number => colorHashes[this.getColor(side, direction)];
+
+    public getHash = (face: number): number => colorHashes[face];
 
     public getFaceDirection = (row, col) => col + row * this.rubik.sideLength;
 
