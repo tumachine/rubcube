@@ -5,15 +5,14 @@ import { FindReturn } from './d';
 import RubikModel from '../model';
 
 class SolveRedCenterRubik extends RubikSolutionBase {
-  public constructor(rubik: RubikModel) {
-    super(rubik);
-
-    this.m.L = rubik.moves.B;
-    this.m.R = rubik.moves.F;
-    this.m.F = rubik.moves.L;
-    this.m.B = rubik.moves.R;
-    this.m.U = rubik.moves.U;
-    this.m.D = rubik.moves.D;
+  public constructor(r: RubikModel) {
+    super(r);
+    this.m.L = this.r.m.B;
+    this.m.R = this.r.m.F;
+    this.m.F = this.r.m.L;
+    this.m.B = this.r.m.R;
+    this.m.U = this.r.m.U;
+    this.m.D = this.r.m.D;
 
     this.ls = {
       f: s.l,
@@ -24,9 +23,9 @@ class SolveRedCenterRubik extends RubikSolutionBase {
       b: null,
     };
 
-    this.interface[s.l] = [...this.rubik.opRotations[2]];
-    this.interface[s.u] = [...this.rubik.stRotations[3]];
-    this.interface[s.d] = [...this.rubik.opRotations[1]];
+    this.interface[s.l] = [...this.r.opRotations[2]];
+    this.interface[s.u] = [...this.r.stRotations[3]];
+    this.interface[s.d] = [...this.r.opRotations[1]];
 
     this.primaryColor = this.ls.d;
   }

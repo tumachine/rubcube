@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 import * as THREE from '../../node_modules/three/src/Three';
 import { sides } from './utils';
+import { Vector3, Euler } from '../../node_modules/three/src/Three';
 // import { makeTextSprite } from './utils';
 // import * as THREE from 'three';
 
@@ -59,24 +60,59 @@ export default class Cube {
 
   cube: THREE.Object3D
 
+  meshes: THREE.Mesh[]
+
+  originalPosition: THREE.Vector3
+
+  originalRotation: THREE.Euler
+
   constructor(x: number, y: number, z: number) {
     this.cube = new THREE.Object3D();
     this.cube.position.set(x, y, z);
+    this.originalPosition = new Vector3(x, y, z);
+    this.originalRotation = new Euler(this.cube.rotation.x, this.cube.rotation.y, this.cube.rotation.z);
+
+    this.meshes = new Array(6);
   }
 
-  setColor(faceSide: number, color: number) {
+  createMeshes(faceSide: number) {
     const material = new THREE.MeshBasicMaterial();
-    material.color.set(colors[color]);
 
     const mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(boxWidth, boxHeight),
+      new THREE.PlaneBufferGeometry(boxWidth, boxHeight),
       material,
     );
 
     sidesOrientaion[faceSide](mesh, 0);
 
+    this.meshes[faceSide] = mesh;
     this.cube.add(mesh);
   }
+
+  resetPosition = () => {
+    this.cube.position.set(this.originalPosition.x, this.originalPosition.y, this.originalPosition.z);
+    this.cube.rotation.set(this.originalRotation.x, this.originalRotation.y, this.originalRotation.z);
+  }
+
+  setColor(faceSide: number, color: number) {
+    const mesh = this.meshes[faceSide];
+    (mesh.material as THREE.MeshBasicMaterial).color.set(colors[color]);
+  }
+
+  // setColor(faceSide: number, color: number) {
+  //   const material = new THREE.MeshBasicMaterial();
+  //   material.color.set(colors[color]);
+
+  //   const mesh = new THREE.Mesh(
+  //     new THREE.PlaneBufferGeometry(boxWidth, boxHeight),
+  //     // new THREE.PlaneGeometry(boxWidth, boxHeight),
+  //     material,
+  //   );
+
+  //   sidesOrientaion[faceSide](mesh, 0);
+
+  //   this.cube.add(mesh);
+  // }
 
   getCube() {
     return this.cube;

@@ -1,21 +1,21 @@
 /* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
-import RubikModel from '../model';
 import { sides as s } from '../utils';
 import { FindReturn } from './d';
+import RubikModel from '../model';
 
 class SolveBlueCenterRubik extends RubikSolutionBase {
   private moveHistory: Function[];
 
-  public constructor(rubik: RubikModel) {
-    super(rubik);
+  public constructor(r: RubikModel) {
+    super(r);
 
-    this.m.L = rubik.moves.F;
-    this.m.R = rubik.moves.B;
-    this.m.F = rubik.moves.R;
-    this.m.B = rubik.moves.L;
-    this.m.U = rubik.moves.U;
-    this.m.D = rubik.moves.D;
+    this.m.L = this.r.m.F;
+    this.m.R = this.r.m.B;
+    this.m.F = this.r.m.R;
+    this.m.B = this.r.m.L;
+    this.m.U = this.r.m.U;
+    this.m.D = this.r.m.D;
 
     this.ls = {
       l: s.f,
@@ -26,10 +26,10 @@ class SolveBlueCenterRubik extends RubikSolutionBase {
       d: s.d,
     };
 
-    this.interface[s.l] = [...this.rubik.stRotations[2]];
-    this.interface[s.r] = [...this.rubik.opRotations[0]];
-    this.interface[s.u] = [...this.rubik.opRotations[3]];
-    this.interface[s.d] = [...this.rubik.stRotations[1]];
+    this.interface[s.l] = [...this.r.stRotations[2]];
+    this.interface[s.r] = [...this.r.opRotations[0]];
+    this.interface[s.u] = [...this.r.opRotations[3]];
+    this.interface[s.d] = [...this.r.stRotations[1]];
     this.interface[s.f] = null;
     this.interface[s.b] = null;
 

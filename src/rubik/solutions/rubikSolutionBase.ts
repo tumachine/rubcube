@@ -1,9 +1,10 @@
 /* eslint-disable max-len */
 import { colorHashes, sides } from '../utils';
-import RubikModel from '../model';
+import RubikOperations from '../operations';
 import Face from '../face';
 import MoveActions from '../moveActions';
 import { OperationAfterFound, HighestPos } from './d';
+import RubikModel from '../model';
 
 interface LocalSides {
   l: number,
@@ -15,52 +16,46 @@ interface LocalSides {
 }
 
 class RubikSolutionBase {
-    public rubik: RubikModel;
+    public interface: number[][]
 
-    public interface: number[][];
+    public sideLength: number
 
-    public f: Face;
+    public primaryColor: number
 
-    public sideLength: number;
+    public middle: number
 
-    // side
-    public primaryColor: number;
+    public lineLength: number
 
-    public middle: number;
+    public ls: LocalSides
 
-    public lineLength;
+    public m: MoveActions
 
-    public ls: LocalSides;
+    public r: RubikModel
 
-    public m: MoveActions;
+    // public constructor(rubik: RubikOperations) {
+    public constructor(rubikModel: RubikModel) {
+      this.r = rubikModel;
 
-    public constructor(rubik: RubikModel) {
-      this.rubik = rubik;
-
-      this.f = rubik.f;
-
-      this.sideLength = rubik.sideLength;
+      this.sideLength = this.r.sideLength;
 
       this.middle = Math.floor(this.sideLength / 2);
 
       this.lineLength = this.sideLength - 1;
 
-      this.m = new MoveActions();
-
       this.interface = new Array(6);
+
+      this.m = new MoveActions();
     }
 
-    public check = (side: number, face: number, color: number): boolean => this.getColor(side, face) === color;
+    public check = (side: number, face: number, color: number): boolean => this.r.getColorFromInterface(side, face, this.interface) === color;
 
-    public getColor = (side: number, direction: number): number => this.rubik.matrix[side][this.interface[side][direction]];
-
-    public getColorHash = (side: number, direction: number): number => colorHashes[this.getColor(side, direction)];
+    public getColorHash = (side: number, direction: number): number => colorHashes[this.r.getColorFromInterface(side, direction, this.interface)];
 
     public getHash = (face: number): number => colorHashes[face];
 
-    public getFaceDirection = (row, col) => col + row * this.rubik.sideLength;
+    public getFaceDirection = (row, col) => col + row * this.sideLength;
 
-    public getLineCubeColor = (line, num) => this.rubik.sideLength * (num + 1) + 1 + line;
+    public getLineCubeColor = (line, num) => this.sideLength * (num + 1) + 1 + line;
 
     public findHighestPos = (row: number, column: number, side: number): HighestPos => {
       let nextPos = this.getFaceDirection(row, column);

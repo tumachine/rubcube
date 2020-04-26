@@ -15,6 +15,7 @@ export enum sides {
   b = 5,
 }
 
+export const sidesArr = [sides.l, sides.r, sides.u, sides.d, sides.f, sides.b];
 
 export enum colors {
   green = 0,

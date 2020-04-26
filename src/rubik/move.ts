@@ -1,4 +1,6 @@
 /* eslint-disable max-len */
+type Matrix = Array<Array<number>>;
+
 class Move {
   public side: string
 
@@ -19,6 +21,10 @@ class Move {
     this.axis = axis;
     this.rotation = rotation;
     this.cubeGetter = cubeGetter;
+  }
+
+  static getOpposite(m: Move): Move {
+    return new Move(m.side, m.slice, !m.clockwise, m.axis, m.rotation, m.cubeGetter);
   }
 
   public rotate(realMatrix: boolean) {

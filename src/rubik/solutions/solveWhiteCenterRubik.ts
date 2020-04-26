@@ -1,22 +1,21 @@
 /* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
 import { FindReturn } from './d';
-import RubikModel from '../model';
 import { sides as s } from '../utils';
+import RubikModel from '../model';
 
 
 class SolveWhiteCenterRubik extends RubikSolutionBase {
-  public constructor(rubik: RubikModel) {
-    super(rubik);
+  public constructor(r: RubikModel) {
+    super(r);
+    this.m = this.r.m;
 
-    this.m = rubik.moves;
-
-    this.interface[s.l] = [...this.rubik.stRotations[0]];
-    this.interface[s.r] = [...this.rubik.opRotations[0]];
-    this.interface[s.u] = [...this.rubik.opRotations[2]];
-    this.interface[s.d] = [...this.rubik.stRotations[2]];
-    this.interface[s.f] = [...this.rubik.stRotations[0]];
-    this.interface[s.b] = [...this.rubik.opRotations[0]];
+    this.interface[s.l] = [...this.r.stRotations[0]];
+    this.interface[s.r] = [...this.r.opRotations[0]];
+    this.interface[s.u] = [...this.r.opRotations[2]];
+    this.interface[s.d] = [...this.r.stRotations[2]];
+    this.interface[s.f] = [...this.r.stRotations[0]];
+    this.interface[s.b] = [...this.r.opRotations[0]];
 
     this.primaryColor = s.f;
   }

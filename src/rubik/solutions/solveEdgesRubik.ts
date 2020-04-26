@@ -1,8 +1,12 @@
 /* eslint-disable max-len */
-import RubikModel from '../model';
+import RubikOperations from '../operations';
 import { sides as s, colorHashes } from '../utils';
 import { FindReturn } from './d';
 import RubikSolutionBase from './rubikSolutionBase';
+import MoveActions from '../moveActions';
+import RubikState from '../state';
+import RubikStructures from '../structures';
+import RubikModel from '../model';
 
 interface RotateFunc {
   (): void;
@@ -54,22 +58,22 @@ class SolveEdgesRubik extends RubikSolutionBase {
 
   public secondMiddle: number;
 
-  public constructor(rubik: RubikModel) {
-    super(rubik);
+  public constructor(r: RubikModel) {
+    super(r);
 
-    this.m.L = rubik.moves.L;
-    this.m.R = rubik.moves.R;
-    this.m.F = rubik.moves.F;
-    this.m.B = rubik.moves.B;
-    this.m.U = rubik.moves.U;
-    this.m.D = rubik.moves.D;
+    this.m.L = this.r.m.L;
+    this.m.R = this.r.m.R;
+    this.m.F = this.r.m.F;
+    this.m.B = this.r.m.B;
+    this.m.U = this.r.m.U;
+    this.m.D = this.r.m.D;
 
-    this.interface[s.l] = [...this.rubik.stRotations[0]];
-    this.interface[s.r] = [...this.rubik.opRotations[0]];
-    this.interface[s.u] = [...this.rubik.opRotations[2]];
-    this.interface[s.d] = [...this.rubik.stRotations[2]];
-    this.interface[s.f] = [...this.rubik.stRotations[0]];
-    this.interface[s.b] = [...this.rubik.opRotations[0]];
+    this.interface[s.l] = [...this.r.stRotations[0]];
+    this.interface[s.r] = [...this.r.opRotations[0]];
+    this.interface[s.u] = [...this.r.opRotations[2]];
+    this.interface[s.d] = [...this.r.stRotations[2]];
+    this.interface[s.f] = [...this.r.stRotations[0]];
+    this.interface[s.b] = [...this.r.opRotations[0]];
 
     this.middle = Math.floor(this.sideLength / 2 - 1);
     this.secondMiddle = this.middle - 1;

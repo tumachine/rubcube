@@ -2,7 +2,8 @@
 import * as THREE from '../node_modules/three/src/Three';
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls';
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import RubikManager from './rubik/rubikManager';
+import { RenderInterface, ChangeSceneInterface } from './d';
+import RubikManager from './rubik/manager';
 
 function createLight() {
   const color = 0xFFFFFF;
@@ -34,7 +35,7 @@ class MainScene {
 
   scene: THREE.Scene
 
-  rubikManager: RubikManager;
+  renderObjects: RenderInterface[]
 
   constructor() {
     this.light = createLight();
@@ -53,12 +54,40 @@ class MainScene {
     this.scene = new THREE.Scene();
 
     this.scene.add(this.light);
+
+    this.renderObjects = [];
   }
 
-  addRubik(rubikManager: RubikManager) {
-    this.rubikManager = rubikManager;
-    this.rubikManager.addToScene(this.scene);
-    this.rubikManager.adjustCameraToRubik(this.camera);
+  // make it so, addition of an element would always push an array
+  // modification of an element, only allowed if names are the same
+  addRenderer(renderObj: RenderInterface, indexOn: number = null) {
+    if (indexOn !== null) {
+      // update value
+      if (this.renderObjects.length < indexOn + 1) {
+        for (let i = 0; i < indexOn + 1; i += 1) {
+          this.renderObjects.push(null);
+          if (this.renderObjects.length === indexOn + 1) {
+            break;
+          }
+        }
+        this.renderObjects[indexOn] = renderObj;
+      } else if (this.renderObjects[indexOn].name === renderObj.name) {
+        this.renderObjects[indexOn] = renderObj;
+      } else {
+        console.log('Incorrect addition of a render object');
+      }
+    } else {
+      this.renderObjects.push(renderObj);
+    }
+    console.log(this.renderObjects);
+  }
+
+  addToScene(renderObj: ChangeSceneInterface) {
+    renderObj.addToScene(this.scene);
+  }
+
+  changeCamera(renderObj: ChangeSceneInterface) {
+    renderObj.changeCamera(this.camera);
   }
 
   resizeRendererToDisplaySize = () => {
@@ -78,8 +107,10 @@ class MainScene {
       this.camera.updateProjectionMatrix();
     }
 
-    if (this.rubikManager !== null) {
-      this.rubikManager.render();
+    for (let i = 0; i < this.renderObjects.length; i += 1) {
+      if (this.renderObjects[i] !== null) {
+        this.renderObjects[i].render();
+      }
     }
 
     this.controls.update();
@@ -89,63 +120,46 @@ class MainScene {
   }
 }
 
-const test = true;
+
+// objects render order
 
 window.onload = () => {
-  let size = 3;
-  let rubikManager = new RubikManager(size);
-
   const main = new MainScene();
-
-  if (test) {
-    rubikManager = new RubikManager(20);
-    rubikManager.scramble(400);
-
-    const t0 = performance.now();
-    rubikManager.solve();
-    const t1 = performance.now();
-    console.log('Took', (t1 - t0).toFixed(4), 'milliseconds to solve');
-
-    rubikManager.colorize();
-  } else {
-    rubikManager = new RubikManager(size);
-    rubikManager.colorize();
-  }
-
-  main.addRubik(rubikManager);
-
+  const rubikManager = new RubikManager(main);
 
   const sizeUp = document.getElementById('sizeUp');
   const sizeDown = document.getElementById('sizeDown');
   const scramble = document.getElementById('scramble');
   const solve = document.getElementById('solve');
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  const historyButtons = document.getElementById('buttonHistory');
 
   sizeUp.onclick = () => {
-    size += 1;
-    rubikManager = new RubikManager(size);
-    main.addRubik(rubikManager);
-    rubikManager.colorize();
+    rubikManager.sizeUp();
   };
 
   sizeDown.onclick = () => {
-    if (size > 3) {
-      console.log(size);
-      size -= 1;
-      rubikManager = new RubikManager(size);
-      main.addRubik(rubikManager);
-      rubikManager.colorize();
-    }
+    rubikManager.sizeDown();
   };
 
   scramble.onclick = () => {
-    rubikManager.scramble(70);
-    rubikManager.animate();
+    rubikManager.scramble();
+    rubikManager.addButtons(historyButtons);
   };
 
   solve.onclick = () => {
     rubikManager.solve();
-    rubikManager.animate();
   };
+
+  prev.onclick = () => {
+    rubikManager.prev();
+  };
+
+  next.onclick = () => {
+    rubikManager.next();
+  };
+
 
   main.render();
 };

@@ -1,64 +1,67 @@
-/* eslint-disable no-param-reassign */
 /* eslint-disable max-len */
+/* eslint-disable no-param-reassign */
 import { sides as s } from './utils';
 import Face from './face';
-import Move from './move';
 import MoveActions from './moveActions';
+import Move from './move';
 
 type Matrix = Array<Array<number>>;
 type Slices = Array<Array<Array<number>>>;
 
 class RubikModel {
-  private posHor: Array<Array<Array<number>>>
-
-  private posVer: Array<Array<Array<number>>>
-
-  private posDep: Array<Array<Array<number>>>
-
-  private posDepRev: Array<Array<Array<number>>>
-
-  private posClockwise: Array<number>
-
-  private posCounter: Array<number>
-
   public sideLength: number
 
   public totalColors: number
 
-  public matrix: Array<Array<number>>
+  private sequenceHor: number[] = [s.f, s.l, s.b, s.r, s.f]
 
-  public matrixReference: Array<Array<number>>
+  private sequenceVer: number[] = [s.u, s.b, s.d, s.f, s.u]
 
-  public f: Face
+  private sequenceDep: number[] = [s.l, s.u, s.r, s.d, s.l]
 
-  private sequenceHor: Array<number> = [s.f, s.l, s.b, s.r, s.f];
+  private sequenceHorRev: number[] = [s.r, s.b, s.l, s.f, s.r]
 
-  private sequenceVer: Array<number> = [s.u, s.b, s.d, s.f, s.u];
+  private sequenceVerRev: number[] = [s.f, s.d, s.b, s.u, s.f]
 
-  private sequenceDep: Array<number> = [s.l, s.u, s.r, s.d, s.l];
+  private sequenceDepRev: number[] = [s.d, s.r, s.u, s.l, s.d]
 
-  private sequenceHorRev: Array<number> = [s.r, s.b, s.l, s.f, s.r];
+  private posCounter: number[]
 
-  private sequenceVerRev: Array<number> = [s.f, s.d, s.b, s.u, s.f];
+  private posClockwise: number[]
 
-  private sequenceDepRev: Array<number> = [s.d, s.r, s.u, s.l, s.d];
+  private posHor: Slices
 
-  public moveHistory: Array<Move>
+  private posVer: Slices
 
-  public moves: MoveActions
+  private posDep: Slices
 
-  public stRotations: Array<Array<number>>
+  private posDepRev: Slices
 
-  public opRotations: Array<Array<number>>
+  private f: Face
 
+  public m: MoveActions
+
+  private matrix: Matrix
+
+  private matrixReference: Matrix
+
+  public stRotations: number[][]
+
+  public opRotations: number[][]
+
+  public moveHistory: Move[]
+
+  private matrixHistory: Matrix[]
+
+  private currentHistoryIndex: number
+
+  private currentMoves: Move[]
+
+  public interface: number[][]
 
   public constructor(sideLength: number) {
     this.sideLength = sideLength;
     this.totalColors = sideLength * sideLength;
-    this.matrix = this.createMatrix();
-
-
-    this.matrixReference = this.createMatrixReference(sideLength * sideLength * sideLength);
 
     this.generatePositions();
 
@@ -66,113 +69,145 @@ class RubikModel {
 
     this.f = new Face(sideLength);
 
+    this.m = new MoveActions();
 
-    this.moveHistory = [];
+    this.m.L = (slice = 0, clockwise = true) => this.moveOperation(new Move('L', 0 + slice, !clockwise, 'x', this.rotateVer, this.getCubesVer));
+    this.m.R = (slice = 0, clockwise = true) => this.moveOperation(new Move('R', this.sideLength - 1 - slice, clockwise, 'x', this.rotateVer, this.getCubesVer));
+    this.m.U = (slice = 0, clockwise = true) => this.moveOperation(new Move('U', this.sideLength - 1 - slice, clockwise, 'y', this.rotateHor, this.getCubesHor));
+    this.m.D = (slice = 0, clockwise = true) => this.moveOperation(new Move('D', 0 + slice, !clockwise, 'y', this.rotateHor, this.getCubesHor));
+    this.m.F = (slice = 0, clockwise = true) => this.moveOperation(new Move('F', this.sideLength - 1 - slice, clockwise, 'z', this.rotateDep, this.getCubesDep));
+    this.m.B = (slice = 0, clockwise = true) => this.moveOperation(new Move('B', 0 + slice, !clockwise, 'z', this.rotateDep, this.getCubesDep));
 
-    this.moves = new MoveActions();
-    this.moves.L = (slice = 0, clockwise = true) => this.regMove(new Move('L', 0 + slice, !clockwise, 'x', this.rotateVer, this.getCubesVer));
-    this.moves.R = (slice = 0, clockwise = true) => this.regMove(new Move('R', this.sideLength - 1 - slice, clockwise, 'x', this.rotateVer, this.getCubesVer));
-    this.moves.U = (slice = 0, clockwise = true) => this.regMove(new Move('U', this.sideLength - 1 - slice, clockwise, 'y', this.rotateHor, this.getCubesHor));
-    this.moves.D = (slice = 0, clockwise = true) => this.regMove(new Move('D', 0 + slice, !clockwise, 'y', this.rotateHor, this.getCubesHor));
-    this.moves.F = (slice = 0, clockwise = true) => this.regMove(new Move('F', this.sideLength - 1 - slice, clockwise, 'z', this.rotateDep, this.getCubesDep));
-    this.moves.B = (slice = 0, clockwise = true) => this.regMove(new Move('B', 0 + slice, !clockwise, 'z', this.rotateDep, this.getCubesDep));
+    this.reset();
+
+    this.interface = [
+      this.stRotations[0],
+      this.stRotations[0],
+      this.stRotations[0],
+      this.stRotations[0],
+      this.stRotations[0],
+      this.stRotations[0],
+    ];
   }
 
+  public reset = () => {
+    this.matrix = this.createMatrix();
+    this.matrixReference = this.createMatrixReference();
+    this.currentHistoryIndex = -1;
 
-  public generateRandomMoves = (num: number, randomSlices = false) => {
+    this.moveHistory = [];
+    this.matrixHistory = [];
+    this.currentMoves = [];
+  }
+
+  public update = (matrix: Matrix) => {
+    this.matrix = matrix;
+    this.matrixReference = this.createMatrixReference();
+  }
+
+  // option to push to matrix history or not
+  private moveOperation = (move: Move) => {
+    // this.matrixHistory.push([...this.matrix]);
+    this.matrixHistory.push(this.deepCopyMatrix(this.matrix));
+    this.moveHistory.push(move);
+
+    move.rotate(true);
+    this.currentMoves.push(move);
+    this.currentHistoryIndex += 1;
+  }
+
+  public moveBackward = () => {
+    if (this.currentHistoryIndex !== -1) {
+      const currentMove = this.moveHistory[this.currentHistoryIndex];
+      const oppositeMove = Move.getOpposite(currentMove);
+      this.currentMoves.push(oppositeMove);
+      this.currentHistoryIndex -= 1;
+      console.log(this.currentHistoryIndex);
+    }
+  }
+
+  public moveForward = () => {
+    if (this.currentHistoryIndex + 1 < this.moveHistory.length) {
+      this.currentHistoryIndex += 1;
+      const currentMove = this.moveHistory[this.currentHistoryIndex];
+      currentMove.rotate(true);
+      this.currentMoves.push(currentMove);
+    }
+  }
+
+  public getNextMove = (): Move => this.currentMoves.shift();
+
+  public jumpToHistoryIndex = (historyIndex: number) => {
+    this.update(this.matrixHistory[historyIndex]);
+    console.log(this.matrixHistory);
+    this.currentHistoryIndex = historyIndex - 1;
+  }
+
+  private deepCopyMatrix = (matrix: Matrix) => {
+    const newMatrix: Matrix = [];
+    for (let i = 0; i < matrix.length; i += 1) {
+      newMatrix.push([]);
+      for (let j = 0; j < matrix[i].length; j += 1) {
+        newMatrix[i].push(matrix[i][j]);
+      }
+    }
+    return newMatrix;
+  }
+
+  public getColor = (side: number, direction: number): number => this.matrix[side][direction];
+
+  public getColorFromInterface = (side: number, direction: number, inter: number[][]): number => this.matrix[side][inter[side][direction]];
+
+  public getCube = (side: number, direction: number): number => this.matrixReference[side][direction];
+
+  // public getCubeFromInterface = (side: number, direction: number, inter: number[]): number => this.matrixReference[side][inter[direction]];
+
+  public getCubeFromInterface = (side: number, direction: number, inter: number[][]): number => this.matrixReference[side][inter[side][direction]];
+
+  public scramble = (moves: number) => {
+    if (this.sideLength > 3) {
+      this.doRandomMoves(moves, true);
+    } else {
+      this.doRandomMoves(moves);
+    }
+  }
+
+  private doRandomMoves = (num: number, randomSlices = false) => {
     function randomInt(min: number, max: number) {
       return Math.floor(Math.random() * (max - min + 1) + min);
     }
 
-    const funcs = [
-      this.moves.D,
-      this.moves.U,
-      this.moves.F,
-      this.moves.B,
-      this.moves.L,
-      this.moves.R,
+    const moves: MoveInterface[] = [
+      this.m.D,
+      this.m.U,
+      this.m.F,
+      this.m.B,
+      this.m.L,
+      this.m.R,
     ];
+
     if (randomSlices === true) {
       for (let i = 0; i < num; i += 1) {
         const clockwise = randomInt(0, 1) === 0;
         // random moves should not move center slices
         const slice = randomInt(0, Math.floor(this.sideLength / 2) - 1);
-        funcs[randomInt(0, funcs.length - 1)](slice, clockwise);
+        moves[randomInt(0, moves.length - 1)](slice, clockwise);
       }
     } else {
       for (let i = 0; i < num; i += 1) {
         const clockwise = randomInt(0, 1) === 0;
-        funcs[randomInt(0, funcs.length - 1)](0, clockwise);
+        moves[randomInt(0, moves.length - 1)](0, clockwise);
       }
     }
     console.log('Generated random moves');
     // console.log(this.moveHistory);
   }
 
-  regMove = (m: Move) => {
-    this.moveHistory.push(m);
-    m.rotate(true);
-  }
-
-  private rotateVer = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
-    this.rotate(this.posVer, clockwise ? this.sequenceVerRev : this.sequenceVer, slice, realMatrix);
-    this.rotateFaceReal(slice, s.l, s.r, clockwise ? this.posCounter : this.posClockwise, realMatrix);
-  }
-
-  private rotateHor = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
-    this.rotate(this.posHor, clockwise ? this.sequenceHorRev : this.sequenceHor, slice, realMatrix);
-    this.rotateFaceReal(slice, s.d, s.u, clockwise ? this.posCounter : this.posClockwise, realMatrix);
-  }
-
-  private rotateDep = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
-    this.rotate(clockwise ? this.posDepRev : this.posDep, clockwise ? this.sequenceDepRev : this.sequenceDep, slice, realMatrix);
-    this.rotateFaceReal(slice, s.b, s.f, clockwise ? this.posClockwise : this.posCounter, realMatrix);
-  }
-
-  private createRotations = () => {
-    // there are four different positions of standard when rotated
-    const standard = [];
-    for (let i = 0; i < this.totalColors; i += 1) {
-      standard.push(i);
-    }
-
-    const opposite = [];
-    for (let i = this.sideLength - 1; i < this.totalColors; i += this.sideLength) {
-      for (let j = 0; j < this.sideLength; j += 1) {
-        opposite.push(i - j);
-      }
-    }
-
-    this.stRotations = [
-      standard,
-      [],
-      [],
-      [],
-    ];
-
-    this.opRotations = [
-      opposite,
-      [],
-      [],
-      [],
-    ];
-
-    // this way is more efficient, than generating arrays by hand
-    // for each position, we can create custom interface
-    for (let i = 0; i < 3; i += 1) {
-      for (let j = 0; j < this.totalColors; j += 1) {
-        this.stRotations[i + 1].push(this.stRotations[i][this.posCounter[j]]);
-        this.opRotations[i + 1].push(this.opRotations[i][this.posClockwise[j]]);
-      }
-    }
-  }
-
-  private getCubesHor = (slice: number): number[] => this.getCubes(this.posHor, this.sequenceHor, slice, s.d, s.u);
-
-  private getCubesVer = (slice: number): number[] => this.getCubes(this.posVer, this.sequenceVer, slice, s.l, s.r);
-
-  private getCubesDep = (slice: number): number[] => this.getCubes(this.posDep, this.sequenceDep, slice, s.b, s.f);
-
+  //   private register = (m: Move) => {
+  //     this.history.push(m);
+  //     // should separate rotations
+  //     // m.rotate(true);
+  //   }
   private createMatrix = (): Matrix => {
     const totalColors: number = this.sideLength * this.sideLength;
     const matrixRubic = [];
@@ -188,7 +223,8 @@ class RubikModel {
     return matrixRubic;
   }
 
-  private createMatrixReference = (cubes: number): Matrix => {
+  private createMatrixReference = (): Matrix => {
+    const cubes = this.sideLength * this.sideLength * this.sideLength;
     const matrixRubic: number[][] = [
       [],
       [],
@@ -232,7 +268,28 @@ class RubikModel {
     return matrixRubic;
   }
 
-  public getCubes = (slices: Slices, sequence: Array<number>, slice: number, bottom: number, top: number): Array<number> => {
+  private rotateVer = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
+    this.rotate(this.posVer, clockwise ? this.sequenceVerRev : this.sequenceVer, slice, realMatrix);
+    this.rotateFaceReal(slice, s.l, s.r, clockwise ? this.posCounter : this.posClockwise, realMatrix);
+  }
+
+  private rotateHor = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
+    this.rotate(this.posHor, clockwise ? this.sequenceHorRev : this.sequenceHor, slice, realMatrix);
+    this.rotateFaceReal(slice, s.d, s.u, clockwise ? this.posCounter : this.posClockwise, realMatrix);
+  }
+
+  private rotateDep = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
+    this.rotate(clockwise ? this.posDepRev : this.posDep, clockwise ? this.sequenceDepRev : this.sequenceDep, slice, realMatrix);
+    this.rotateFaceReal(slice, s.b, s.f, clockwise ? this.posClockwise : this.posCounter, realMatrix);
+  }
+
+  private getCubesHor = (slice: number): number[] => this.getCubes(this.posHor, this.sequenceHor, slice, s.d, s.u);
+
+  private getCubesVer = (slice: number): number[] => this.getCubes(this.posVer, this.sequenceVer, slice, s.l, s.r);
+
+  private getCubesDep = (slice: number): number[] => this.getCubes(this.posDep, this.sequenceDep, slice, s.b, s.f);
+
+  private getCubes = (slices: Slices, sequence: Array<number>, slice: number, bottom: number, top: number): number[] => {
     if (slice === 0) {
       return this.matrixReference[bottom];
     }
@@ -254,26 +311,41 @@ class RubikModel {
     return cubes;
   }
 
-  private rotate = (slices: Slices, sequence: Array<number>, slice: number, realMatrix: boolean) => {
-    const matrix = realMatrix ? this.matrix : this.matrixReference;
-    const layer = slices[slice];
-    let first = layer[0];
-    // save values of first face
-    const firstFace = layer[0].map((i) => matrix[sequence[0]][i]);
-
-    // probably most efficient way
-    for (let face = 0; face < layer.length - 1; face += 1) {
-      const second = layer[face + 1];
-      for (let i = 0; i < layer[face].length; i += 1) {
-        matrix[sequence[face]][first[i]] = matrix[sequence[face + 1]][second[i]];
-      }
-      first = second;
+  private createRotations = () => {
+    // there are four different positions of standard when rotated
+    const standard = [];
+    for (let i = 0; i < this.totalColors; i += 1) {
+      standard.push(i);
     }
 
-    const lastFace = sequence[sequence.length - 2];
-    for (let i = 0; i < layer[0].length; i += 1) {
-      // matrix[lastFace][layer[lastFace][i]] = firstFace[i];
-      matrix[lastFace][layer[3][i]] = firstFace[i];
+    const opposite = [];
+    for (let i = this.sideLength - 1; i < this.totalColors; i += this.sideLength) {
+      for (let j = 0; j < this.sideLength; j += 1) {
+        opposite.push(i - j);
+      }
+    }
+
+    this.stRotations = [
+      standard,
+      [],
+      [],
+      [],
+    ];
+
+    this.opRotations = [
+      opposite,
+      [],
+      [],
+      [],
+    ];
+
+    // this way is more efficient, than generating arrays by hand
+    // for each position, we can create custom interface
+    for (let i = 0; i < 3; i += 1) {
+      for (let j = 0; j < this.totalColors; j += 1) {
+        this.stRotations[i + 1].push(this.stRotations[i][this.posCounter[j]]);
+        this.opRotations[i + 1].push(this.opRotations[i][this.posClockwise[j]]);
+      }
     }
   }
 
@@ -291,24 +363,6 @@ class RubikModel {
       slices.push(slice);
     }
     return slices;
-  }
-
-  private rotateFaceReal = (slice: number, bottom: number, top: number, clockwiseArr: Array<number>, realMatrix: boolean) => {
-    const matrix = realMatrix ? this.matrix : this.matrixReference;
-    if (slice === 0) {
-      this.rotateFace(bottom, clockwiseArr, matrix);
-    } else if (slice === this.sideLength - 1) {
-      this.rotateFace(top, clockwiseArr, matrix);
-    }
-  }
-
-  // keep matrix and reference separated
-  // ref update is unnesesary unless you have a rubik model
-  private rotateFace = (face: number, positionFace: Array<number>, matrix: Matrix) => {
-    const faceCopy = [...matrix[face]];
-    for (let i = 0; i < this.totalColors; i += 1) {
-      matrix[face][i] = faceCopy[positionFace[i]];
-    }
   }
 
   private generatePositions = () => {
@@ -361,6 +415,47 @@ class RubikModel {
         this.posClockwise.push((this.sideLength - i - 1) + j * this.sideLength);
         this.posCounter.push(i + (this.sideLength - 1 - j) * this.sideLength);
       }
+    }
+  }
+
+  private rotate = (slices: Slices, sequence: Array<number>, slice: number, realMatrix: boolean = true) => {
+    const matrix = realMatrix ? this.matrix : this.matrixReference;
+    const layer = slices[slice];
+    let first = layer[0];
+    // save values of first face
+    const firstFace = layer[0].map((i) => matrix[sequence[0]][i]);
+
+    // probably most efficient way
+    for (let face = 0; face < layer.length - 1; face += 1) {
+      const second = layer[face + 1];
+      for (let i = 0; i < layer[face].length; i += 1) {
+        matrix[sequence[face]][first[i]] = matrix[sequence[face + 1]][second[i]];
+      }
+      first = second;
+    }
+
+    const lastFace = sequence[sequence.length - 2];
+    for (let i = 0; i < layer[0].length; i += 1) {
+      // matrix[lastFace][layer[lastFace][i]] = firstFace[i];
+      matrix[lastFace][layer[3][i]] = firstFace[i];
+    }
+  }
+
+  private rotateFaceReal = (slice: number, bottom: number, top: number, clockwiseArr: Array<number>, realMatrix: boolean = true) => {
+    if (slice === 0) {
+      this.rotateFace(bottom, clockwiseArr, realMatrix);
+    } else if (slice === this.sideLength - 1) {
+      this.rotateFace(top, clockwiseArr, realMatrix);
+    }
+  }
+
+  // keep matrix and reference separated
+  // ref update is unnesesary unless you have a rubik model
+  private rotateFace = (face: number, positionFace: Array<number>, realMatrix: boolean = true) => {
+    const matrix = realMatrix ? this.matrix : this.matrixReference;
+    const faceCopy = [...matrix[face]];
+    for (let i = 0; i < this.totalColors; i += 1) {
+      matrix[face][i] = faceCopy[positionFace[i]];
     }
   }
 }
