@@ -2,49 +2,81 @@
 import * as THREE from '../../node_modules/three/src/Three';
 import Cube from './cube';
 import Move from './move';
-import { sides, sidesArr } from './utils';
+import { sides, sidesArr, createMesh, sidesOrientaion, sidesStr, sidesMap, planeOrientation } from './utils';
 import RubikModel from './model';
 import { RenderInterface, ChangeSceneInterface } from '../d';
+import { Vector2, Vector3, MathUtils } from '../../node_modules/three/src/Three';
+import { MoveInterface } from './moveActions';
+import { pathToFileURL } from 'url';
 
 type AxisSetter = (angle: number) => THREE.Object3D;
 
 class RubikView implements RenderInterface, ChangeSceneInterface {
-  public rubikModel: RubikModel
+  private rubikModel: RubikModel
 
   public rubik: THREE.Object3D
 
-  public cubes: Array<Cube>
+  private cubes: Array<Cube>
 
-  public moveN: number
+  private currentMove: Move
 
-  public currentMove: Move
+  private isMoving: boolean
 
-  public isMoving: boolean
+  private moveDirection: number
 
-  public moveDirection: number
+  private rotationSpeed: number
 
-  public rotationSpeed: number
+  private pivot: THREE.Object3D
 
-  public pivot: THREE.Object3D
+  private activeGroup: THREE.Object3D[]
 
-  public activeGroup: THREE.Object3D[]
+  public drawCube: boolean = true
 
-  public focusedAxisValue: number;
+  public drawOuterCube: boolean = false
 
-  public focusedAxisMethod: AxisSetter;
+  public drawText: boolean = false
 
   public name: string
+
+  public raycastMeshes: THREE.Mesh[]
+
+  // public baseMeshes: THREE.Mesh[]
+
+  public selectedFace: number
+
+  public selectedCube: number
+
+  public selectedOrientation: planeOrientation
+
+  private mouseAxis: string
+
+  public mouseLargest: string
+
+  private mouseClockwise: number
+
+  private completingMouseMove: boolean = false
+
+  private targetRotation: number
+
+  private mouseMove: MoveInterface
+
+  private mouseSlice: number
+
+  private mouseMoveRotation: boolean
 
   constructor(rubikModel: RubikModel) {
     this.name = 'rubik';
     this.rubikModel = rubikModel;
 
     this.rubik = new THREE.Object3D();
+    // pay attention to it
 
     this.cubes = this.createGraphicRubik();
     this.cubes.map((cube) => (cube ? this.rubik.add(cube.getCube()) : null));
 
-    this.moveN = 0;
+    this.createRaycastMeshes();
+    this.raycastMeshes.forEach((cube) => this.rubik.add(cube));
+
     this.currentMove = null;
 
     this.isMoving = false;
@@ -55,7 +87,344 @@ class RubikView implements RenderInterface, ChangeSceneInterface {
     this.activeGroup = [];
   }
 
+  public calculateCubeOnFace = (side: string, point: THREE.Vector3) => {
+    const vector = this.get2DVector(sidesMap[side], point);
+    // console.log(vector.x, vector.y);
+    const cubeNum = vector.y * this.rubikModel.sideLength + vector.x;
+    this.selectedCube = cubeNum;
+    this.selectedFace = sidesMap[side];
+    console.log(`${side}: ${cubeNum}`);
+    // this.cubes[this.rubikModel.getCube(sidesArr[sidesMap[side]], cubeNum)].setColor(sidesMap[side], 2);
+    // this.cubes[this.rubikModel.getCubeFromInterface(sidesArr[sidesMap[side]], cubeNum, this.rubikModel.interface)].setColor(sidesMap[side], 2);
+    // we need to know slice
+  }
+
+  private get2DVector = (side: number, point: THREE.Vector3): THREE.Vector2 => {
+    const length = this.rubikModel.sideLength / 2;
+    const x = Math.floor(point.x + length);
+    const y = Math.floor(point.y + length);
+    const z = Math.floor(point.z + length);
+
+    let vector: THREE.Vector2;
+
+    if (side === sides.l || side === sides.r) {
+      vector = new THREE.Vector2(z, y);
+      this.selectedOrientation = planeOrientation.ZY;
+    } else if (side === sides.u || side === sides.d) {
+      vector = new THREE.Vector2(x, z);
+      this.selectedOrientation = planeOrientation.XZ;
+    } else if (side === sides.f || side === sides.b) {
+      vector = new THREE.Vector2(x, y);
+      this.selectedOrientation = planeOrientation.XY;
+    }
+    return vector;
+  }
+
+  private createRaycastMeshes = () => {
+    this.raycastMeshes = [];
+    let limit = Math.floor(this.rubikModel.sideLength / 2);
+    if (this.rubikModel.sideLength % 2 === 0) {
+      limit = this.rubikModel.sideLength / 2 - 0.5;
+    }
+
+    const percentBigger = 1;
+    limit = (limit / 100) * percentBigger + limit;
+
+    const length = this.rubikModel.sideLength;
+
+    for (let i = 0; i < sidesArr.length; i += 1) {
+      const mesh = createMesh(length, length);
+      // (mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00);
+      sidesOrientaion[i](mesh, limit, 0);
+      mesh.name = sidesStr[i];
+      mesh.visible = false;
+      this.raycastMeshes.push(mesh);
+    }
+  }
+
+  stopRotation() {
+    const rotation = Math.PI / 2;
+    const halfRotation = rotation / 2;
+    const radians = this.pivot.rotation[this.mouseAxis];
+
+    if (radians > 0) {
+      if (radians % rotation > halfRotation) {
+        this.targetRotation = (Math.floor(radians / rotation) + 1) * rotation;
+      } else {
+        this.targetRotation = Math.floor(radians / rotation) * rotation;
+      }
+    } else if (radians < 0) {
+      if (radians % rotation < -halfRotation) {
+        this.targetRotation = Math.floor(radians / rotation) * rotation;
+      } else {
+        this.targetRotation = (Math.floor(radians / rotation) + 1) * rotation;
+      }
+    }
+
+    this.completingMouseMove = true;
+  }
+
+  doMouseMove() {
+    // console.log('doing mouse move');
+    // console.log(this.targetRotation);
+    // console.log(this.pivot.rotation[this.mouseAxis]);
+    // if (this.pivot.rotation[this.mouseAxis] > this.targetRotation) {
+    //   this.pivot.rotation[this.mouseAxis] += (this.mouseClockwise * 0.03);
+    // } else if (this.pivot.rotation[this.mouseAxis] < this.targetRotation) {
+    //   this.pivot.rotation[this.mouseAxis] += (this.mouseClockwise * 0.03 * -1);
+    // }
+
+    // const completion = Math.abs(this.pivot.rotation[this.mouseAxis] - this.targetRotation);
+    // const degrees = MathUtils.degToRad(5);
+    // if (completion <= degrees) {
+    //   this.pivot.rotation[this.mouseAxis] = this.targetRotation;
+    //   this.moveMouseComplete();
+    // }
+
+    const rotation = Math.PI / 2;
+    const halfRotation = rotation / 2;
+
+    console.log('Mouse move');
+    if (this.pivot.rotation[this.mouseAxis] > 0) {
+      if (this.pivot.rotation[this.mouseAxis] % rotation < halfRotation) {
+        this.pivot.rotation[this.mouseAxis] -= (1 * 0.03);
+      } else {
+        this.pivot.rotation[this.mouseAxis] += (1 * 0.03);
+      }
+    } else {
+      if (this.pivot.rotation[this.mouseAxis] % rotation < -halfRotation) {
+        this.pivot.rotation[this.mouseAxis] -= (1 * 0.03);
+      } else {
+        this.pivot.rotation[this.mouseAxis] += (1 * 0.03);
+      }
+    }
+
+    const completion = Math.abs((this.pivot.rotation[this.mouseAxis] % (Math.PI * 2)) - this.targetRotation);
+    const degrees = MathUtils.degToRad(5);
+    if (completion <= degrees) {
+      this.pivot.rotation[this.mouseAxis] = this.targetRotation;
+      this.moveMouseComplete(this.pivot.rotation[this.mouseAxis] / rotation);
+    }
+  }
+
+  moveMouseComplete(rotations: number) {
+    this.completingMouseMove = false;
+
+    this.pivot.updateMatrixWorld();
+    this.rubik.remove(this.pivot);
+
+    this.activeGroup.forEach((cube) => {
+      cube.updateMatrixWorld();
+
+      this.rubik.attach(cube);
+    });
+
+    let rotation: boolean;
+
+    if (this.selectedFace === sides.l) {
+      if (this.mouseLargest === 'y') {
+        rotation = rotations > 0;
+      } else if (this.mouseLargest === 'z') {
+        rotation = rotations > 0;
+      }
+    } else if (this.selectedFace === sides.r) {
+      // D B
+      if (this.mouseLargest === 'y') {
+        rotation = rotations > 0;
+      } else if (this.mouseLargest === 'z') {
+        rotation = rotations > 0;
+      }
+    } else if (this.selectedFace === sides.u) {
+      // B L
+      if (this.mouseLargest === 'x') {
+        rotation = rotations < 0;
+      } else if (this.mouseLargest === 'z') {
+        rotation = rotations > 0;
+      }
+    } else if (this.selectedFace === sides.d) {
+      // B L
+      if (this.mouseLargest === 'x') {
+        rotation = rotations > 0;
+      } else if (this.mouseLargest === 'z') {
+        rotation = rotations > 0;
+      }
+    } else if (this.selectedFace === sides.f) {
+      // L D
+      if (this.mouseLargest === 'x') {
+        rotation = rotations > 0;
+      } else if (this.mouseLargest === 'y') {
+        rotation = rotations > 0;
+      }
+    } else if (this.selectedFace === sides.b) {
+      // L D
+      if (this.mouseLargest === 'x') {
+        rotation = rotations > 0;
+      } else if (this.mouseLargest === 'y') {
+        rotation = rotations > 0;
+      }
+    }
+    // update matrix reference
+
+    for (let i = 0; i < Math.abs(rotations); i += 1) {
+      this.mouseMove(this.mouseSlice, rotation);
+    }
+    // this.mouseMove(this.mouseSlice, rotation);
+
+    this.activeGroup = [];
+  }
+
+  rotate(rotation: Vector3) {
+    this.pivot.rotation[this.mouseAxis] += rotation[this.mouseLargest] * 0.4 * this.mouseClockwise;
+  }
+
+  getLargestValue = (vec: THREE.Vector3) => {
+    const absX = Math.abs(vec.x);
+    const absY = Math.abs(vec.y);
+    const absZ = Math.abs(vec.z);
+    if (absX > absY && absX > absZ) {
+      return 'x';
+    }
+
+    if (absY > absX && absY > absZ) {
+      return 'y';
+    }
+
+    return 'z';
+  }
+
+  rotateWithMouse(direction: THREE.Vector3) {
+    const col = this.selectedCube % this.rubikModel.sideLength;
+    const row = Math.floor(this.selectedCube / this.rubikModel.sideLength);
+
+    // determine what kind of move is to be performed
+    const largest = this.getLargestValue(direction);
+
+    let move: MoveInterface = null;
+    let rotation: boolean;
+    let cubes: number[];
+    let slice: number;
+    let axis: string;
+    let mRotation: boolean;
+    if (this.selectedFace === sides.l) {
+      if (largest === 'y') {
+        rotation = direction.y < 0;
+        move = this.rubikModel.mu.B;
+        cubes = this.rubikModel.getCubesDep(col);
+        slice = col;
+        axis = 'z';
+        mRotation = true;
+      } else if (largest === 'z') {
+        rotation = direction.z > 0;
+        move = this.rubikModel.mu.D;
+        cubes = this.rubikModel.getCubesHor(row);
+        slice = row;
+        axis = 'y';
+      }
+    } else if (this.selectedFace === sides.r) {
+      // D B
+      if (largest === 'y') {
+        rotation = direction.y > 0;
+        move = this.rubikModel.mu.B;
+        cubes = this.rubikModel.getCubesDep(col);
+        slice = col;
+        axis = 'z';
+      } else if (largest === 'z') {
+        rotation = direction.z < 0;
+        move = this.rubikModel.mu.D;
+        cubes = this.rubikModel.getCubesHor(row);
+        slice = row;
+        axis = 'y';
+        mRotation = true;
+      }
+    } else if (this.selectedFace === sides.u) {
+      // B L
+      if (largest === 'x') {
+        rotation = direction.x < 0;
+        move = this.rubikModel.mu.B;
+        cubes = this.rubikModel.getCubesDep(row);
+        slice = row;
+        axis = 'z';
+        mRotation = true;
+      } else if (largest === 'z') {
+        rotation = direction.z > 0;
+        move = this.rubikModel.mu.L;
+        cubes = this.rubikModel.getCubesVer(col);
+        slice = col;
+        axis = 'x';
+      }
+    } else if (this.selectedFace === sides.d) {
+      // B L
+      if (largest === 'x') {
+        rotation = direction.x > 0;
+        move = this.rubikModel.mu.B;
+        cubes = this.rubikModel.getCubesDep(row);
+        slice = row;
+        axis = 'z';
+      } else if (largest === 'z') {
+        rotation = direction.z < 0;
+        move = this.rubikModel.mu.L;
+        cubes = this.rubikModel.getCubesVer(col);
+        slice = col;
+        axis = 'x';
+        mRotation = true;
+      }
+    } else if (this.selectedFace === sides.f) {
+      // L D
+      if (largest === 'x') {
+        rotation = direction.x > 0;
+        move = this.rubikModel.mu.D;
+        cubes = this.rubikModel.getCubesHor(row);
+        slice = row;
+        axis = 'y';
+      } else if (largest === 'y') {
+        rotation = direction.y < 0;
+        move = this.rubikModel.mu.L;
+        cubes = this.rubikModel.getCubesVer(col);
+        slice = col;
+        axis = 'x';
+        mRotation = true;
+      }
+    } else if (this.selectedFace === sides.b) {
+      // L D
+      if (largest === 'x') {
+        rotation = direction.x < 0;
+        move = this.rubikModel.mu.D;
+        cubes = this.rubikModel.getCubesHor(row);
+        slice = row;
+        axis = 'y';
+        mRotation = true;
+      } else if (largest === 'y') {
+        rotation = direction.y > 0;
+        move = this.rubikModel.mu.L;
+        cubes = this.rubikModel.getCubesVer(col);
+        slice = col;
+        axis = 'x';
+      }
+    }
+    console.log(largest, rotation, this.selectedFace);
+    this.mouseAxis = axis;
+    this.mouseLargest = largest;
+    this.mouseClockwise = mRotation ? -1 : 1;
+    this.mouseMove = move;
+    this.mouseSlice = slice;
+    this.mouseMoveRotation = rotation;
+
+    cubes.forEach((i: number) => this.activeGroup.push(this.cubes[i].cube));
+
+    this.pivot.rotation.set(0, 0, 0);
+    this.pivot.updateMatrixWorld();
+    this.rubik.add(this.pivot);
+
+    this.activeGroup.forEach((e) => {
+      this.pivot.attach(e);
+    });
+  }
+
   public startNextMove = () => {
+    if (this.isMoving) {
+      console.log('Already moving');
+      return;
+    }
     this.currentMove = this.rubikModel.getNextMove();
 
     if (this.currentMove) {
@@ -113,7 +482,6 @@ class RubikView implements RenderInterface, ChangeSceneInterface {
 
     this.activeGroup = [];
     this.moveDirection = undefined;
-    this.moveN += 1;
 
     this.startNextMove();
   }
@@ -122,6 +490,10 @@ class RubikView implements RenderInterface, ChangeSceneInterface {
   render = () => {
     if (this.isMoving) {
       this.doMove();
+    }
+
+    if (this.completingMouseMove) {
+      this.doMouseMove();
     }
   }
 
@@ -151,46 +523,22 @@ class RubikView implements RenderInterface, ChangeSceneInterface {
   }
 
   placeTextOnRubik = (inter: number[][]) => {
-    // const inter = [
-    //   this.rubikModel.stRotations[3],
-    //   this.rubikModel.opRotations[3],
-    //   this.rubikModel.opRotations[2],
-    //   this.rubikModel.stRotations[2],
-    //   this.rubikModel.stRotations[0],
-    //   this.rubikModel.opRotations[0],
-    // ];
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
       for (let s = 0; s < sidesArr.length; s += 1) {
-        // this.cubes[this.rubikModel.getCubeFromInterface(sidesArr[s], cube, inter)].addText(cube.toString(), sidesArr[s]);
-        this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].addText(cube.toString(), sidesArr[s]);
+        this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setText(sidesArr[s], cube.toString());
       }
     }
-
-    // for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-    // text left
-    // this.cubes[this.rubikModel.matrixReference[sides.l][this.rubikModel.stRotations[3][cube]]].addText(cube.toString(), sides.l);
-    // this.cubes[this.rubikModel.getCubeFromInterface(sides.l, cube, inter)].addText(cube.toString(), sides.l);
-    // // text right
-    // this.cubes[this.rubikModel.matrixReference[sides.r][this.rubikModel.opRotations[3][cube]]].addText(cube.toString(), sides.r);
-    // // text top
-    // this.cubes[this.rubikModel.matrixReference[sides.u][this.rubikModel.opRotations[2][cube]]].addText(cube.toString(), sides.u);
-    // // text bottom
-    // this.cubes[this.rubikModel.matrixReference[sides.d][this.rubikModel.stRotations[2][cube]]].addText(cube.toString(), sides.d);
-    // // text front
-    // this.cubes[this.rubikModel.matrixReference[sides.f][this.rubikModel.stRotations[0][cube]]].addText(cube.toString(), sides.f);
-    // // text back
-    // this.cubes[this.rubikModel.matrixReference[sides.b][this.rubikModel.opRotations[0][cube]]].addText(cube.toString(), sides.b);
-    // }
   }
 
   createMeshes = () => {
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
       for (let s = 0; s < sidesArr.length; s += 1) {
         this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createMeshes(sidesArr[s]);
-        // cubes.push(this.matrixReference[sequence[face]][layer[face][i]]);
-        // this.cubes[this.rubikModel.getCubeFromInterface(sidesArr[s], cube, this.rubikModel.interface)].createMeshes(sidesArr[s]);
+        // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createOuterMeshes(sidesArr[s], this.rubikModel.sideLength);
+        this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createTextMeshes(sidesArr[s]);
       }
     }
+    // this.baseMeshes = this.getAllMeshes();
   }
 
   resetCubePositions = () => {
@@ -205,23 +553,9 @@ class RubikView implements RenderInterface, ChangeSceneInterface {
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
       for (let s = 0; s < sidesArr.length; s += 1) {
         this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube));
-        // this.cubes[this.rubikModel.getCubeFromInterface(sidesArr[s], cube, this.rubikModel.interface)].setColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube));
+        // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setOuterColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube));
       }
     }
-    // for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-    //   // color left
-    //   this.cubes[this.rubikModel.matrixReference[sides.l][cube]].setColor(sides.l, this.rubikModel.matrix[sides.l][cube]);
-    //   // color right
-    //   this.cubes[this.rubikModel.matrixReference[sides.r][cube]].setColor(sides.r, this.rubikModel.matrix[sides.r][cube]);
-    //   // color top
-    //   this.cubes[this.rubikModel.matrixReference[sides.u][cube]].setColor(sides.u, this.rubikModel.matrix[sides.u][cube]);
-    //   // color bottom
-    //   this.cubes[this.rubikModel.matrixReference[sides.d][cube]].setColor(sides.d, this.rubikModel.matrix[sides.d][cube]);
-    //   // color front
-    //   this.cubes[this.rubikModel.matrixReference[sides.f][cube]].setColor(sides.f, this.rubikModel.matrix[sides.f][cube]);
-    //   // color back
-    //   this.cubes[this.rubikModel.matrixReference[sides.b][cube]].setColor(sides.b, this.rubikModel.matrix[sides.b][cube]);
-    // }
   }
 
   changeCamera(camera: THREE.PerspectiveCamera) {

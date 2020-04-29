@@ -4,6 +4,8 @@ import { OrbitControls } from '../node_modules/three/examples/jsm/controls/Orbit
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RenderInterface, ChangeSceneInterface } from './d';
 import RubikManager from './rubik/manager';
+import { MathUtils, Vector3, Vector2 } from '../node_modules/three/src/Three';
+import { planeOrientation } from './rubik/utils';
 
 function createLight() {
   const color = 0xFFFFFF;
@@ -37,6 +39,24 @@ class MainScene {
 
   renderObjects: RenderInterface[]
 
+  raycaster: THREE.Raycaster
+
+  mouse: THREE.Vector3
+
+  mouseIsDown: boolean;
+
+  positionOnMouseDown: THREE.Vector3
+
+  positionOnMouseUp: THREE.Vector3
+
+  clickedOnFace: boolean
+
+  distanceTrigger: number = 0.2
+
+  lastMousePosition: Vector3
+
+  rotating: boolean
+
   constructor() {
     this.light = createLight();
     this.canvas = document.querySelector('#c');
@@ -56,6 +76,123 @@ class MainScene {
     this.scene.add(this.light);
 
     this.renderObjects = [];
+
+    this.raycaster = new THREE.Raycaster();
+    this.mouse = new THREE.Vector3();
+    document.addEventListener('mousedown', this.onDocumentMouseDown.bind(this), false);
+
+    document.addEventListener('mouseup', this.onDocumentMouseUp.bind(this), false);
+
+    document.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
+
+    this.clickedOnFace = false;
+  }
+
+  updateMousePosition = (event: MouseEvent) => {
+    const rect = this.canvas.getBoundingClientRect();
+    this.mouse.x = (event.clientX / rect.width) * 2 - 1;
+    this.mouse.y = -(event.clientY / rect.height) * 2 + 1;
+  }
+
+  // if (side === sides.l || side === sides.r) {
+  //   vector = new THREE.Vector2(z, y);
+  // } else if (side === sides.u || side === sides.d) {
+  //   vector = new THREE.Vector2(x, z);
+  // } else if (side === sides.f || side === sides.b) {
+  //   vector = new THREE.Vector2(x, y);
+  // }
+
+  getMousePosition = (mouse: Vector3, plane: planeOrientation = planeOrientation.XY): THREE.Vector3 => {
+    const vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
+    vector.unproject(this.camera);
+    const dir = vector.sub(this.camera.position).normalize();
+    const distance = -this.camera.position[plane] / dir[plane];
+    const pos = this.camera.position.clone().add(dir.multiplyScalar(distance));
+    return pos;
+  }
+
+
+  onDocumentMouseMove(event: MouseEvent) {
+    this.updateMousePosition(event);
+    if (this.mouseIsDown) {
+      const mousePosition = this.mouse.clone();
+
+      let mPosDown = this.getMousePosition(this.positionOnMouseDown);
+      let mPos = this.getMousePosition(mousePosition);
+
+      if (this.rotating) {
+      //   this.clickedOnFace = false;
+
+        const orientation = this.renderObjects[0].selectedOrientation;
+        const mPosLast = this.getMousePosition(this.lastMousePosition, orientation);
+        mPos = this.getMousePosition(mousePosition, orientation);
+        // const dir = mPos.sub(mPosLast).normalize();
+        const dir = mPos.sub(mPosLast);
+
+        const { mouseLargest } = this.renderObjects[0];
+        this.renderObjects[0].rotate(dir);
+
+        this.lastMousePosition = this.mouse.clone();
+
+      } else if (this.clickedOnFace) {
+        const distance = mPos.sub(mPosDown).distanceTo(new Vector3(0, 0, 0));
+        if (distance >= this.distanceTrigger) {
+          console.log('TRIGGER');
+
+          const orientation = this.renderObjects[0].selectedOrientation;
+          mPosDown = this.getMousePosition(this.positionOnMouseDown, orientation);
+          mPos = this.getMousePosition(mousePosition, orientation);
+          const dir = mPos.sub(mPosDown);
+          this.renderObjects[0].rotateWithMouse(dir);
+
+          this.clickedOnFace = false;
+
+          this.lastMousePosition = this.mouse.clone();
+          this.rotating = true;
+        }
+      }
+    }
+  }
+
+  onDocumentMouseUp(event: MouseEvent) {
+    console.log('detect mouse up');
+    event.preventDefault();
+    this.mouseIsDown = false;
+
+    if (this.rotating) {
+      this.renderObjects[0].stopRotation();
+      this.rotating = false;
+    }
+
+    this.updateMousePosition(event);
+
+    this.controls.enabled = true;
+  }
+
+  onDocumentMouseDown(event: MouseEvent) {
+    event.preventDefault();
+
+    this.mouseIsDown = true;
+
+    this.updateMousePosition(event);
+
+    this.positionOnMouseDown = this.mouse.clone();
+
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+
+    const intersects = this.raycaster.intersectObjects(this.renderObjects[0].raycastMeshes);
+    if (intersects.length > 0) {
+      this.clickedOnFace = true;
+      this.controls.enabled = false;
+      const intersection = intersects[0];
+      const obj = intersection.object as THREE.Mesh;
+      const { point } = intersection;
+      this.renderObjects[0].calculateCubeOnFace(obj.name, point);
+
+
+      // console.log(`Clicked: ${name}`);
+      // console.log(`Point: ${intersects[0].point.x} ${intersects[0].point.y} ${intersects[0].point.z}`);
+    }
   }
 
   // make it so, addition of an element would always push an array
@@ -125,15 +262,24 @@ class MainScene {
 
 window.onload = () => {
   const main = new MainScene();
-  const rubikManager = new RubikManager(main);
 
-  const sizeUp = document.getElementById('sizeUp');
-  const sizeDown = document.getElementById('sizeDown');
-  const scramble = document.getElementById('scramble');
-  const solve = document.getElementById('solve');
-  const prev = document.getElementById('prev');
-  const next = document.getElementById('next');
-  const historyButtons = document.getElementById('buttonHistory');
+  const historyButtons = document.getElementById('buttonHistory') as HTMLDivElement;
+  const moves = document.getElementById('moves') as HTMLDivElement;
+  const rotation = document.getElementById('rotation') as HTMLDivElement;
+
+  const rubikManager = new RubikManager(main, historyButtons, moves, rotation);
+
+  const sizeUp = document.getElementById('sizeUp') as HTMLButtonElement;
+  const sizeDown = document.getElementById('sizeDown') as HTMLButtonElement;
+  const scramble = document.getElementById('scramble') as HTMLButtonElement;
+  const solve = document.getElementById('solve') as HTMLButtonElement;
+  const prev = document.getElementById('prev') as HTMLButtonElement;
+  const next = document.getElementById('next') as HTMLButtonElement;
+  const rotate = document.getElementById('rotate') as HTMLButtonElement;
+
+  rotate.onclick = () => {
+    rubikManager.rotateCurrentOrientation();
+  };
 
   sizeUp.onclick = () => {
     rubikManager.sizeUp();
@@ -145,7 +291,6 @@ window.onload = () => {
 
   scramble.onclick = () => {
     rubikManager.scramble();
-    rubikManager.addButtons(historyButtons);
   };
 
   solve.onclick = () => {

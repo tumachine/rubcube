@@ -2,7 +2,7 @@
 /* eslint-disable no-param-reassign */
 import { sides as s } from './utils';
 import Face from './face';
-import MoveActions from './moveActions';
+import { MoveActions, MoveInterface } from './moveActions';
 import Move from './move';
 
 type Matrix = Array<Array<number>>;
@@ -53,11 +53,16 @@ class RubikModel {
 
   private matrixHistory: Matrix[]
 
-  private currentHistoryIndex: number
+  public currentHistoryIndex: number
 
   private currentMoves: Move[]
 
   public interface: number[][]
+
+  public moveRotations: MoveInterface[][][]
+
+  // user mouse moves
+  public mu: MoveActions
 
   public constructor(sideLength: number) {
     this.sideLength = sideLength;
@@ -88,41 +93,63 @@ class RubikModel {
       this.stRotations[0],
       this.stRotations[0],
     ];
+
+    this.generateMoveRotations();
+    this.generateUserMoves();
+  }
+
+  generateUserMoves = () => {
+    const userMoveOperation = (move: Move) => {
+      move.rotate(true);
+      move.rotate(false);
+
+      this.matrixHistory.push(this.deepCopyMatrix(this.matrix));
+      this.moveHistory.push(move);
+      this.currentHistoryIndex += 1;
+    };
+
+    this.mu = new MoveActions();
+    this.mu.L = (slice = 0, clockwise = true) => userMoveOperation(new Move('L', 0 + slice, !clockwise, 'x', this.rotateVer, this.getCubesVer));
+    this.mu.R = (slice = 0, clockwise = true) => userMoveOperation(new Move('R', this.sideLength - 1 - slice, clockwise, 'x', this.rotateVer, this.getCubesVer));
+    this.mu.U = (slice = 0, clockwise = true) => userMoveOperation(new Move('U', this.sideLength - 1 - slice, clockwise, 'y', this.rotateHor, this.getCubesHor));
+    this.mu.D = (slice = 0, clockwise = true) => userMoveOperation(new Move('D', 0 + slice, !clockwise, 'y', this.rotateHor, this.getCubesHor));
+    this.mu.F = (slice = 0, clockwise = true) => userMoveOperation(new Move('F', this.sideLength - 1 - slice, clockwise, 'z', this.rotateDep, this.getCubesDep));
+    this.mu.B = (slice = 0, clockwise = true) => userMoveOperation(new Move('B', 0 + slice, !clockwise, 'z', this.rotateDep, this.getCubesDep));
   }
 
   public reset = () => {
     this.matrix = this.createMatrix();
     this.matrixReference = this.createMatrixReference();
-    this.currentHistoryIndex = -1;
+    this.currentHistoryIndex = 0;
 
-    this.moveHistory = [];
-    this.matrixHistory = [];
+    this.moveHistory = [null];
+    this.matrixHistory = [this.deepCopyMatrix(this.matrix)];
     this.currentMoves = [];
   }
 
   public update = (matrix: Matrix) => {
-    this.matrix = matrix;
+    this.matrix = this.deepCopyMatrix(matrix);
     this.matrixReference = this.createMatrixReference();
   }
 
   // option to push to matrix history or not
   private moveOperation = (move: Move) => {
-    // this.matrixHistory.push([...this.matrix]);
+    move.rotate(true);
+
     this.matrixHistory.push(this.deepCopyMatrix(this.matrix));
     this.moveHistory.push(move);
-
-    move.rotate(true);
     this.currentMoves.push(move);
     this.currentHistoryIndex += 1;
   }
 
   public moveBackward = () => {
-    if (this.currentHistoryIndex !== -1) {
+    console.log(this.currentHistoryIndex);
+    if (this.currentHistoryIndex > 0) {
       const currentMove = this.moveHistory[this.currentHistoryIndex];
       const oppositeMove = Move.getOpposite(currentMove);
-      this.currentMoves.push(oppositeMove);
+      oppositeMove.rotate(true);
       this.currentHistoryIndex -= 1;
-      console.log(this.currentHistoryIndex);
+      this.currentMoves.push(oppositeMove);
     }
   }
 
@@ -135,12 +162,21 @@ class RubikModel {
     }
   }
 
+  public addMove = (move: MoveInterface, slice: number, clockwise: boolean) => {
+    if (this.currentHistoryIndex < this.moveHistory.length) {
+      this.matrixHistory = this.matrixHistory.slice(0, this.currentHistoryIndex + 1);
+      this.moveHistory = this.moveHistory.slice(0, this.currentHistoryIndex + 1);
+    }
+    move(slice, clockwise);
+  }
+
   public getNextMove = (): Move => this.currentMoves.shift();
 
   public jumpToHistoryIndex = (historyIndex: number) => {
     this.update(this.matrixHistory[historyIndex]);
-    console.log(this.matrixHistory);
-    this.currentHistoryIndex = historyIndex - 1;
+    // console.log(this.matrixHistory);
+    // this.currentHistoryIndex = historyIndex - 1;
+    this.currentHistoryIndex = historyIndex;
   }
 
   private deepCopyMatrix = (matrix: Matrix) => {
@@ -170,6 +206,125 @@ class RubikModel {
     } else {
       this.doRandomMoves(moves);
     }
+  }
+
+  private generateMoveRotations = () => {
+    const defMoves: MoveInterface[] = [
+      this.m.L,
+      this.m.R,
+      this.m.U,
+      this.m.D,
+      this.m.F,
+      this.m.B,
+    ];
+
+    this.moveRotations = new Array(6);
+
+    const verticalMoves: MoveInterface[][] = [];
+    const verticalOppMoves: MoveInterface[][] = [];
+    const horizontalMoves: MoveInterface[][] = [];
+    const horizontalOppMoves: MoveInterface[][] = [];
+    const depthMoves: MoveInterface[][] = [];
+    const depthOppMoves: MoveInterface[][] = [];
+
+
+    for (let i = 0; i < 4; i += 1) {
+      // private sequenceVer: number[] = [s.u, s.b, s.d, s.f, s.u]
+      verticalMoves.push([
+        this.m.L,
+        this.m.R,
+        defMoves[this.sequenceVer[(0 + i) % 4]],
+        defMoves[this.sequenceVer[(2 + i) % 4]],
+        defMoves[this.sequenceVer[(3 + i) % 4]],
+        defMoves[this.sequenceVer[(1 + i) % 4]],
+      ]);
+
+      // private sequenceVerRev: number[] = [s.f, s.d, s.b, s.u, s.f]
+      verticalOppMoves.push([
+        this.m.R,
+        this.m.L,
+        defMoves[this.sequenceVerRev[(1 + i) % 4]],
+        defMoves[this.sequenceVerRev[(3 + i) % 4]],
+        defMoves[this.sequenceVerRev[(0 + i) % 4]],
+        defMoves[this.sequenceVerRev[(2 + i) % 4]],
+      ]);
+
+      // private sequenceHor: number[] = [s.f, s.l, s.b, s.r, s.f]
+      horizontalMoves.push([
+        this.m.D,
+        this.m.U,
+        defMoves[this.sequenceHor[(1 + i) % 4]],
+        defMoves[this.sequenceHor[(3 + i) % 4]],
+        defMoves[this.sequenceHor[(0 + i) % 4]],
+        defMoves[this.sequenceHor[(2 + i) % 4]],
+      ]);
+
+      // private sequenceHorRev: number[] = [s.r, s.b, s.l, s.f, s.r]
+      horizontalOppMoves.push([
+        this.m.U,
+        this.m.D,
+        defMoves[this.sequenceHorRev[(0 + i) % 4]],
+        defMoves[this.sequenceHorRev[(2 + i) % 4]],
+        defMoves[this.sequenceHorRev[(3 + i) % 4]],
+        defMoves[this.sequenceHorRev[(1 + i) % 4]],
+      ]);
+
+      // private sequenceDep: number[] = [s.l, s.u, s.r, s.d, s.l]
+      depthMoves.push([
+        this.m.B,
+        this.m.F,
+        defMoves[this.sequenceDep[(2 + i) % 4]],
+        defMoves[this.sequenceDep[(0 + i) % 4]],
+        defMoves[this.sequenceDep[(1 + i) % 4]],
+        defMoves[this.sequenceDep[(3 + i) % 4]],
+      ]);
+
+      // private sequenceDepRev: number[] = [s.d, s.r, s.u, s.l, s.d]
+      depthOppMoves.push([
+        this.m.F,
+        this.m.B,
+        defMoves[this.sequenceDepRev[(3 + i) % 4]],
+        defMoves[this.sequenceDepRev[(1 + i) % 4]],
+        defMoves[this.sequenceDepRev[(2 + i) % 4]],
+        defMoves[this.sequenceDepRev[(0 + i) % 4]],
+      ]);
+    }
+
+    this.moveRotations[s.f] = [];
+    this.moveRotations[s.f].push(verticalMoves[0]);
+    this.moveRotations[s.f].push(horizontalOppMoves[0]);
+    this.moveRotations[s.f].push(verticalOppMoves[0]);
+    this.moveRotations[s.f].push(horizontalMoves[0]);
+
+    this.moveRotations[s.u] = [];
+    this.moveRotations[s.u].push(verticalMoves[1]);
+    this.moveRotations[s.u].push(depthMoves[0]);
+    this.moveRotations[s.u].push(verticalOppMoves[3]);
+    this.moveRotations[s.u].push(depthOppMoves[0]);
+
+    this.moveRotations[s.b] = [];
+    this.moveRotations[s.b].push(verticalOppMoves[2]);
+    this.moveRotations[s.b].push(horizontalOppMoves[2]);
+    this.moveRotations[s.b].push(verticalMoves[2]);
+    this.moveRotations[s.b].push(horizontalMoves[2]);
+
+    this.moveRotations[s.d] = [];
+    this.moveRotations[s.d].push(verticalMoves[3]);
+    this.moveRotations[s.d].push(depthOppMoves[2]);
+    this.moveRotations[s.d].push(verticalOppMoves[1]);
+    this.moveRotations[s.d].push(depthMoves[2]);
+
+    this.moveRotations[s.l] = [];
+    this.moveRotations[s.l].push(depthMoves[3]);
+    this.moveRotations[s.l].push(horizontalOppMoves[3]);
+    this.moveRotations[s.l].push(depthOppMoves[1]);
+    this.moveRotations[s.l].push(horizontalMoves[1]);
+
+    this.moveRotations[s.r] = [];
+    this.moveRotations[s.r].push(depthOppMoves[3]);
+    this.moveRotations[s.r].push(horizontalOppMoves[1]);
+    this.moveRotations[s.r].push(depthMoves[1]);
+    this.moveRotations[s.r].push(horizontalMoves[3]);
   }
 
   private doRandomMoves = (num: number, randomSlices = false) => {
@@ -283,11 +438,11 @@ class RubikModel {
     this.rotateFaceReal(slice, s.b, s.f, clockwise ? this.posClockwise : this.posCounter, realMatrix);
   }
 
-  private getCubesHor = (slice: number): number[] => this.getCubes(this.posHor, this.sequenceHor, slice, s.d, s.u);
+  public getCubesHor = (slice: number): number[] => this.getCubes(this.posHor, this.sequenceHor, slice, s.d, s.u);
 
-  private getCubesVer = (slice: number): number[] => this.getCubes(this.posVer, this.sequenceVer, slice, s.l, s.r);
+  public getCubesVer = (slice: number): number[] => this.getCubes(this.posVer, this.sequenceVer, slice, s.l, s.r);
 
-  private getCubesDep = (slice: number): number[] => this.getCubes(this.posDep, this.sequenceDep, slice, s.b, s.f);
+  public getCubesDep = (slice: number): number[] => this.getCubes(this.posDep, this.sequenceDep, slice, s.b, s.f);
 
   private getCubes = (slices: Slices, sequence: Array<number>, slice: number, bottom: number, top: number): number[] => {
     if (slice === 0) {

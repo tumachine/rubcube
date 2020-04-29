@@ -34,6 +34,8 @@ class Move {
   public getCubes(): number[] {
     return this.cubeGetter(this.slice);
   }
+
+  public toString = (): string => `${this.side}${this.clockwise ? '' : "'"}${this.slice === 0 ? '' : this.slice + 1}`;
 }
 
 type CubeGetter = (slice: number) => number[];

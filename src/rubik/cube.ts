@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import * as THREE from '../../node_modules/three/src/Three';
-import { sides } from './utils';
+import { sides, sidesOrientaion, getTextTexture, getTextMesh, createMesh } from './utils';
 import { Vector3, Euler } from '../../node_modules/three/src/Three';
 // import { makeTextSprite } from './utils';
 // import * as THREE from 'three';
@@ -18,39 +18,6 @@ const orange = 0xFFA500;
 
 const colors = [green, blue, orange, red, white, yellow];
 
-interface MeshSideOrient {
-  (mesh: THREE.Mesh, detach: number);
-}
-
-const sidesOrientaion: MeshSideOrient[] = new Array(6);
-
-sidesOrientaion[sides.f] = (mesh: THREE.Mesh, detach: number = 0) => {
-  mesh.translateZ(0.5 + detach);
-};
-sidesOrientaion[sides.b] = (mesh: THREE.Mesh, detach: number = 0) => {
-  mesh.translateZ(-0.5 - detach);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * 180);
-};
-sidesOrientaion[sides.l] = (mesh: THREE.Mesh, detach: number = 0) => {
-  mesh.translateX(-0.5 - detach);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * 90);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * 180);
-};
-sidesOrientaion[sides.r] = (mesh: THREE.Mesh, detach: number = 0) => {
-  mesh.translateX(0.5 + detach);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * 90);
-};
-sidesOrientaion[sides.u] = (mesh: THREE.Mesh, detach: number = 0) => {
-  mesh.translateY(0.5 + detach);
-  mesh.rotateX(THREE.MathUtils.DEG2RAD * 90);
-  mesh.rotateX(THREE.MathUtils.DEG2RAD * 180);
-};
-sidesOrientaion[sides.d] = (mesh: THREE.Mesh, detach: number = 0) => {
-  mesh.translateY(-0.5 - detach);
-  mesh.rotateX(THREE.MathUtils.DEG2RAD * 90);
-};
-
-
 export default class Cube {
   boxMaterial: THREE.MeshPhongMaterial
 
@@ -60,7 +27,11 @@ export default class Cube {
 
   cube: THREE.Object3D
 
-  meshes: THREE.Mesh[]
+  baseMeshes: THREE.Mesh[]
+
+  outerMeshes: THREE.Mesh[]
+
+  textMeshes: THREE.Mesh[]
 
   originalPosition: THREE.Vector3
 
@@ -72,20 +43,29 @@ export default class Cube {
     this.originalPosition = new Vector3(x, y, z);
     this.originalRotation = new Euler(this.cube.rotation.x, this.cube.rotation.y, this.cube.rotation.z);
 
-    this.meshes = new Array(6);
+    this.baseMeshes = new Array(6);
+    this.outerMeshes = new Array(6);
+    this.textMeshes = new Array(6);
   }
 
-  createMeshes(faceSide: number) {
-    const material = new THREE.MeshBasicMaterial();
+  createMeshes(faceSide: number, detach: number = 0) {
+    const baseMesh = createMesh(boxWidth, boxHeight);
+    sidesOrientaion[faceSide](baseMesh, detach, 0);
+    this.baseMeshes[faceSide] = baseMesh;
+    this.cube.add(baseMesh);
+  }
 
-    const mesh = new THREE.Mesh(
-      new THREE.PlaneBufferGeometry(boxWidth, boxHeight),
-      material,
-    );
+  createOuterMeshes(faceSide: number, detach: number) {
+    const outerMesh = createMesh(boxWidth, boxHeight);
+    sidesOrientaion[faceSide](outerMesh, detach, 180);
+    this.outerMeshes[faceSide] = outerMesh;
+    this.cube.add(outerMesh);
+  }
 
-    sidesOrientaion[faceSide](mesh, 0);
-
-    this.meshes[faceSide] = mesh;
+  createTextMeshes(faceSide: number, detach: number = 0.05) {
+    const mesh = getTextMesh();
+    sidesOrientaion[faceSide](mesh, detach, 0);
+    this.textMeshes[faceSide] = mesh;
     this.cube.add(mesh);
   }
 
@@ -95,56 +75,22 @@ export default class Cube {
   }
 
   setColor(faceSide: number, color: number) {
-    const mesh = this.meshes[faceSide];
+    const mesh = this.baseMeshes[faceSide];
     (mesh.material as THREE.MeshBasicMaterial).color.set(colors[color]);
   }
 
-  // setColor(faceSide: number, color: number) {
-  //   const material = new THREE.MeshBasicMaterial();
-  //   material.color.set(colors[color]);
+  setOuterColor(faceSide: number, color: number) {
+    const mesh = this.outerMeshes[faceSide];
+    (mesh.material as THREE.MeshBasicMaterial).color.set(colors[color]);
+  }
 
-  //   const mesh = new THREE.Mesh(
-  //     new THREE.PlaneBufferGeometry(boxWidth, boxHeight),
-  //     // new THREE.PlaneGeometry(boxWidth, boxHeight),
-  //     material,
-  //   );
-
-  //   sidesOrientaion[faceSide](mesh, 0);
-
-  //   this.cube.add(mesh);
-  // }
+  setText(faceSide: number, text: string) {
+    const texture = getTextTexture(text);
+    const mesh = this.textMeshes[faceSide];
+    (mesh.material as THREE.MeshBasicMaterial).map = texture;
+  }
 
   getCube() {
     return this.cube;
-  }
-
-  addText(text: string, faceSide: number) {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-
-    canvas.width = 256;
-    canvas.height = 256;
-
-    context.font = 'Bold 120px Arial';
-    context.fillStyle = 'rgba(0,0,0,0.95)';
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-
-    context.fillText(text, 128, 128);
-
-    const texture = new THREE.Texture(canvas);
-    texture.needsUpdate = true;
-
-    const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
-    material.transparent = true;
-
-    const mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(1, 1),
-      material,
-    );
-
-    sidesOrientaion[faceSide](mesh, 0.05);
-
-    this.cube.add(mesh);
   }
 }
