@@ -12,6 +12,7 @@ export class MoveActions {
     B: MoveInterface
 }
 
+
 export interface MoveInterface {
   (slice?: number, clockwise?: boolean): void
 }

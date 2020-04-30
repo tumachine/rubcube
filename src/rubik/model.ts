@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable no-param-reassign */
-import { sides as s } from './utils';
+import { sides as s, sides } from './utils';
 import Face from './face';
 import { MoveActions, MoveInterface } from './moveActions';
 import Move from './move';
@@ -64,6 +64,8 @@ class RubikModel {
   // user mouse moves
   public mu: MoveActions
 
+  private allMoves: Move[][][] = new Array(6);
+
   public constructor(sideLength: number) {
     this.sideLength = sideLength;
     this.totalColors = sideLength * sideLength;
@@ -76,12 +78,18 @@ class RubikModel {
 
     this.m = new MoveActions();
 
-    this.m.L = (slice = 0, clockwise = true) => this.moveOperation(new Move('L', 0 + slice, !clockwise, 'x', this.rotateVer, this.getCubesVer));
-    this.m.R = (slice = 0, clockwise = true) => this.moveOperation(new Move('R', this.sideLength - 1 - slice, clockwise, 'x', this.rotateVer, this.getCubesVer));
-    this.m.U = (slice = 0, clockwise = true) => this.moveOperation(new Move('U', this.sideLength - 1 - slice, clockwise, 'y', this.rotateHor, this.getCubesHor));
-    this.m.D = (slice = 0, clockwise = true) => this.moveOperation(new Move('D', 0 + slice, !clockwise, 'y', this.rotateHor, this.getCubesHor));
-    this.m.F = (slice = 0, clockwise = true) => this.moveOperation(new Move('F', this.sideLength - 1 - slice, clockwise, 'z', this.rotateDep, this.getCubesDep));
-    this.m.B = (slice = 0, clockwise = true) => this.moveOperation(new Move('B', 0 + slice, !clockwise, 'z', this.rotateDep, this.getCubesDep));
+    // this.m.L = (slice = 0, clockwise = true) => this.moveOperation(new Move('L', 0 + slice, !clockwise, 'x', this.rotateVer, this.getCubesVer));
+    // this.m.R = (slice = 0, clockwise = true) => this.moveOperation(new Move('R', this.sideLength - 1 - slice, clockwise, 'x', this.rotateVer, this.getCubesVer));
+    // this.m.U = (slice = 0, clockwise = true) => this.moveOperation(new Move('U', this.sideLength - 1 - slice, clockwise, 'y', this.rotateHor, this.getCubesHor));
+    // this.m.D = (slice = 0, clockwise = true) => this.moveOperation(new Move('D', 0 + slice, !clockwise, 'y', this.rotateHor, this.getCubesHor));
+    // this.m.F = (slice = 0, clockwise = true) => this.moveOperation(new Move('F', this.sideLength - 1 - slice, clockwise, 'z', this.rotateDep, this.getCubesDep));
+    // this.m.B = (slice = 0, clockwise = true) => this.moveOperation(new Move('B', 0 + slice, !clockwise, 'z', this.rotateDep, this.getCubesDep));
+    this.m.L = (slice = 0, clockwise = true) => this.moveOperation(this.getMove(sides.l, slice, clockwise));
+    this.m.R = (slice = 0, clockwise = true) => this.moveOperation(this.getMove(sides.r, slice, clockwise));
+    this.m.U = (slice = 0, clockwise = true) => this.moveOperation(this.getMove(sides.u, slice, clockwise));
+    this.m.D = (slice = 0, clockwise = true) => this.moveOperation(this.getMove(sides.d, slice, clockwise));
+    this.m.F = (slice = 0, clockwise = true) => this.moveOperation(this.getMove(sides.f, slice, clockwise));
+    this.m.B = (slice = 0, clockwise = true) => this.moveOperation(this.getMove(sides.b, slice, clockwise));
 
     this.reset();
 
@@ -96,9 +104,15 @@ class RubikModel {
 
     this.generateMoveRotations();
     this.generateUserMoves();
+
+    this.generateMoves();
   }
 
-  generateUserMoves = () => {
+  public getMove = (side: number, slice: number, clockwise: boolean): Move => {
+    return this.allMoves[side][slice][clockwise ? 1 : 0];
+  };
+
+  private generateUserMoves = () => {
     const userMoveOperation = (move: Move) => {
       move.rotate(true);
       move.rotate(false);
@@ -109,12 +123,12 @@ class RubikModel {
     };
 
     this.mu = new MoveActions();
-    this.mu.L = (slice = 0, clockwise = true) => userMoveOperation(new Move('L', 0 + slice, !clockwise, 'x', this.rotateVer, this.getCubesVer));
-    this.mu.R = (slice = 0, clockwise = true) => userMoveOperation(new Move('R', this.sideLength - 1 - slice, clockwise, 'x', this.rotateVer, this.getCubesVer));
-    this.mu.U = (slice = 0, clockwise = true) => userMoveOperation(new Move('U', this.sideLength - 1 - slice, clockwise, 'y', this.rotateHor, this.getCubesHor));
-    this.mu.D = (slice = 0, clockwise = true) => userMoveOperation(new Move('D', 0 + slice, !clockwise, 'y', this.rotateHor, this.getCubesHor));
-    this.mu.F = (slice = 0, clockwise = true) => userMoveOperation(new Move('F', this.sideLength - 1 - slice, clockwise, 'z', this.rotateDep, this.getCubesDep));
-    this.mu.B = (slice = 0, clockwise = true) => userMoveOperation(new Move('B', 0 + slice, !clockwise, 'z', this.rotateDep, this.getCubesDep));
+    this.mu.L = (slice = 0, clockwise = true) => userMoveOperation(this.getMove(sides.l, slice, clockwise));
+    this.mu.R = (slice = 0, clockwise = true) => userMoveOperation(this.getMove(sides.r, slice, clockwise));
+    this.mu.U = (slice = 0, clockwise = true) => userMoveOperation(this.getMove(sides.u, slice, clockwise));
+    this.mu.D = (slice = 0, clockwise = true) => userMoveOperation(this.getMove(sides.d, slice, clockwise));
+    this.mu.F = (slice = 0, clockwise = true) => userMoveOperation(this.getMove(sides.f, slice, clockwise));
+    this.mu.B = (slice = 0, clockwise = true) => userMoveOperation(this.getMove(sides.b, slice, clockwise));
   }
 
   public reset = () => {
@@ -163,11 +177,15 @@ class RubikModel {
   }
 
   public addMove = (move: MoveInterface, slice: number, clockwise: boolean) => {
+    this.removeHistoryByCurrentIndex();
+    move(slice, clockwise);
+  }
+
+  public removeHistoryByCurrentIndex = () => {
     if (this.currentHistoryIndex < this.moveHistory.length) {
       this.matrixHistory = this.matrixHistory.slice(0, this.currentHistoryIndex + 1);
       this.moveHistory = this.moveHistory.slice(0, this.currentHistoryIndex + 1);
     }
-    move(slice, clockwise);
   }
 
   public getNextMove = (): Move => this.currentMoves.shift();
@@ -196,8 +214,6 @@ class RubikModel {
 
   public getCube = (side: number, direction: number): number => this.matrixReference[side][direction];
 
-  // public getCubeFromInterface = (side: number, direction: number, inter: number[]): number => this.matrixReference[side][inter[direction]];
-
   public getCubeFromInterface = (side: number, direction: number, inter: number[][]): number => this.matrixReference[side][inter[side][direction]];
 
   public scramble = (moves: number) => {
@@ -206,6 +222,35 @@ class RubikModel {
     } else {
       this.doRandomMoves(moves);
     }
+  }
+
+  private generateMoves = () => {
+    const t0 = performance.now();
+    this.allMoves = new Array(6);
+
+    for (let i = 0; i < 6; i += 1) {
+      this.allMoves[i] = new Array(this.sideLength);
+      for (let j = 0; j < this.sideLength; j += 1) {
+        this.allMoves[i][j] = new Array(2);
+      }
+    }
+
+    for (let slice = 0; slice < this.sideLength; slice += 1) {
+      this.allMoves[sides.l][slice][0] = new Move('L', 0 + slice, true, 'x', this.rotateVer, this.getCubesVer);
+      this.allMoves[sides.l][slice][1] = new Move('L', 0 + slice, false, 'x', this.rotateVer, this.getCubesVer);
+      this.allMoves[sides.r][slice][0] = new Move('R', this.sideLength - 1 - slice, false, 'x', this.rotateVer, this.getCubesVer);
+      this.allMoves[sides.r][slice][1] = new Move('R', this.sideLength - 1 - slice, true, 'x', this.rotateVer, this.getCubesVer);
+      this.allMoves[sides.u][slice][0] = new Move('U', this.sideLength - 1 - slice, false, 'y', this.rotateHor, this.getCubesHor);
+      this.allMoves[sides.u][slice][1] = new Move('U', this.sideLength - 1 - slice, true, 'y', this.rotateHor, this.getCubesHor);
+      this.allMoves[sides.d][slice][0] = new Move('D', 0 + slice, true, 'y', this.rotateHor, this.getCubesHor);
+      this.allMoves[sides.d][slice][1] = new Move('D', 0 + slice, false, 'y', this.rotateHor, this.getCubesHor);
+      this.allMoves[sides.f][slice][0] = new Move('F', this.sideLength - 1 - slice, false, 'z', this.rotateDep, this.getCubesDep);
+      this.allMoves[sides.f][slice][1] = new Move('F', this.sideLength - 1 - slice, true, 'z', this.rotateDep, this.getCubesDep);
+      this.allMoves[sides.b][slice][0] = new Move('B', 0 + slice, true, 'z', this.rotateDep, this.getCubesDep);
+      this.allMoves[sides.b][slice][1] = new Move('B', 0 + slice, false, 'z', this.rotateDep, this.getCubesDep);
+    }
+    const t1 = performance.now();
+    console.log('Took', (t1 - t0).toFixed(4), 'milliseconds to generate all moves');
   }
 
   private generateMoveRotations = () => {

@@ -47,6 +47,15 @@ export enum colors {
   yellow = 5,
 }
 
+export const createCamera = () => {
+  const fov = 75;
+  const aspect = 2;
+  const near = 0.1;
+  const far = 20;
+  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+  return camera;
+};
+
 interface MeshSideOrient {
   (mesh: THREE.Mesh, detach: number, rotation: number);
 }
@@ -126,6 +135,45 @@ export const getTextMesh = (): THREE.Mesh => {
   );
   return mesh;
 };
+
+export const getLargestValue = (vec: THREE.Vector3): string => {
+  const absX = Math.abs(vec.x);
+  const absY = Math.abs(vec.y);
+  const absZ = Math.abs(vec.z);
+  if (absX > absY && absX > absZ) {
+    return 'x';
+  }
+
+  if (absY > absX && absY > absZ) {
+    return 'y';
+  }
+
+  return 'z';
+};
+
+// make it so, addition of an element would always push an array
+// modification of an element, only allowed if names are the same
+// addRenderer(renderObj: RenderInterface, indexOn: number = null) {
+//   if (indexOn !== null) {
+//     // update value
+//     if (this.renderObjects.length < indexOn + 1) {
+//       for (let i = 0; i < indexOn + 1; i += 1) {
+//         this.renderObjects.push(null);
+//         if (this.renderObjects.length === indexOn + 1) {
+//           break;
+//         }
+//       }
+//       this.renderObjects[indexOn] = renderObj;
+//     } else if (this.renderObjects[indexOn].name === renderObj.name) {
+//       this.renderObjects[indexOn] = renderObj;
+//     } else {
+//       console.log('Incorrect addition of a render object');
+//     }
+//   } else {
+//     this.renderObjects.push(renderObj);
+//   }
+//   console.log(this.renderObjects);
+// }
 
 // hashes for correctly identifying color combinations on a cube
 export const colorHashes: Array<number> = [1, 10, 100, 1000, 10000, 100000];

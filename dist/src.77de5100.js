@@ -83109,6 +83109,15 @@ var colors;
   colors[colors["yellow"] = 5] = "yellow";
 })(colors = exports.colors || (exports.colors = {}));
 
+exports.createCamera = function () {
+  var fov = 75;
+  var aspect = 2;
+  var near = 0.1;
+  var far = 20;
+  var camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+  return camera;
+};
+
 exports.sidesOrientaion = new Array(6);
 
 exports.sidesOrientaion[sides.f] = function (mesh, detach, rotation) {
@@ -83225,7 +83234,46 @@ exports.getTextMesh = function () {
   material.transparent = true;
   var mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
   return mesh;
-}; // hashes for correctly identifying color combinations on a cube
+};
+
+exports.getLargestValue = function (vec) {
+  var absX = Math.abs(vec.x);
+  var absY = Math.abs(vec.y);
+  var absZ = Math.abs(vec.z);
+
+  if (absX > absY && absX > absZ) {
+    return 'x';
+  }
+
+  if (absY > absX && absY > absZ) {
+    return 'y';
+  }
+
+  return 'z';
+}; // make it so, addition of an element would always push an array
+// modification of an element, only allowed if names are the same
+// addRenderer(renderObj: RenderInterface, indexOn: number = null) {
+//   if (indexOn !== null) {
+//     // update value
+//     if (this.renderObjects.length < indexOn + 1) {
+//       for (let i = 0; i < indexOn + 1; i += 1) {
+//         this.renderObjects.push(null);
+//         if (this.renderObjects.length === indexOn + 1) {
+//           break;
+//         }
+//       }
+//       this.renderObjects[indexOn] = renderObj;
+//     } else if (this.renderObjects[indexOn].name === renderObj.name) {
+//       this.renderObjects[indexOn] = renderObj;
+//     } else {
+//       console.log('Incorrect addition of a render object');
+//     }
+//   } else {
+//     this.renderObjects.push(renderObj);
+//   }
+//   console.log(this.renderObjects);
+// }
+// hashes for correctly identifying color combinations on a cube
 
 
 exports.colorHashes = [1, 10, 100, 1000, 10000, 100000];
@@ -87030,6 +87078,11 @@ function () {
     this.sequenceHorRev = [utils_1.sides.r, utils_1.sides.b, utils_1.sides.l, utils_1.sides.f, utils_1.sides.r];
     this.sequenceVerRev = [utils_1.sides.f, utils_1.sides.d, utils_1.sides.b, utils_1.sides.u, utils_1.sides.f];
     this.sequenceDepRev = [utils_1.sides.d, utils_1.sides.r, utils_1.sides.u, utils_1.sides.l, utils_1.sides.d];
+    this.allMoves = new Array(6);
+
+    this.getMove = function (side, slice, clockwise) {
+      return _this.allMoves[side][slice][clockwise ? 1 : 0];
+    };
 
     this.generateUserMoves = function () {
       var userMoveOperation = function userMoveOperation(move) {
@@ -87054,7 +87107,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(new move_1.default('L', 0 + slice, !clockwise, 'x', _this.rotateVer, _this.getCubesVer));
+        return userMoveOperation(_this.getMove(utils_1.sides.l, slice, clockwise));
       };
 
       _this.mu.R = function (slice, clockwise) {
@@ -87066,7 +87119,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(new move_1.default('R', _this.sideLength - 1 - slice, clockwise, 'x', _this.rotateVer, _this.getCubesVer));
+        return userMoveOperation(_this.getMove(utils_1.sides.r, slice, clockwise));
       };
 
       _this.mu.U = function (slice, clockwise) {
@@ -87078,7 +87131,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(new move_1.default('U', _this.sideLength - 1 - slice, clockwise, 'y', _this.rotateHor, _this.getCubesHor));
+        return userMoveOperation(_this.getMove(utils_1.sides.u, slice, clockwise));
       };
 
       _this.mu.D = function (slice, clockwise) {
@@ -87090,7 +87143,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(new move_1.default('D', 0 + slice, !clockwise, 'y', _this.rotateHor, _this.getCubesHor));
+        return userMoveOperation(_this.getMove(utils_1.sides.d, slice, clockwise));
       };
 
       _this.mu.F = function (slice, clockwise) {
@@ -87102,7 +87155,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(new move_1.default('F', _this.sideLength - 1 - slice, clockwise, 'z', _this.rotateDep, _this.getCubesDep));
+        return userMoveOperation(_this.getMove(utils_1.sides.f, slice, clockwise));
       };
 
       _this.mu.B = function (slice, clockwise) {
@@ -87114,7 +87167,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(new move_1.default('B', 0 + slice, !clockwise, 'z', _this.rotateDep, _this.getCubesDep));
+        return userMoveOperation(_this.getMove(utils_1.sides.b, slice, clockwise));
       };
     };
 
@@ -87169,12 +87222,16 @@ function () {
     };
 
     this.addMove = function (move, slice, clockwise) {
+      _this.removeHistoryByCurrentIndex();
+
+      move(slice, clockwise);
+    };
+
+    this.removeHistoryByCurrentIndex = function () {
       if (_this.currentHistoryIndex < _this.moveHistory.length) {
         _this.matrixHistory = _this.matrixHistory.slice(0, _this.currentHistoryIndex + 1);
         _this.moveHistory = _this.moveHistory.slice(0, _this.currentHistoryIndex + 1);
       }
-
-      move(slice, clockwise);
     };
 
     this.getNextMove = function () {
@@ -87213,8 +87270,7 @@ function () {
 
     this.getCube = function (side, direction) {
       return _this.matrixReference[side][direction];
-    }; // public getCubeFromInterface = (side: number, direction: number, inter: number[]): number => this.matrixReference[side][inter[direction]];
-
+    };
 
     this.getCubeFromInterface = function (side, direction, inter) {
       return _this.matrixReference[side][inter[side][direction]];
@@ -87226,6 +87282,37 @@ function () {
       } else {
         _this.doRandomMoves(moves);
       }
+    };
+
+    this.generateMoves = function () {
+      var t0 = performance.now();
+      _this.allMoves = new Array(6);
+
+      for (var i = 0; i < 6; i += 1) {
+        _this.allMoves[i] = new Array(_this.sideLength);
+
+        for (var j = 0; j < _this.sideLength; j += 1) {
+          _this.allMoves[i][j] = new Array(2);
+        }
+      }
+
+      for (var slice = 0; slice < _this.sideLength; slice += 1) {
+        _this.allMoves[utils_1.sides.l][slice][0] = new move_1.default('L', 0 + slice, true, 'x', _this.rotateVer, _this.getCubesVer);
+        _this.allMoves[utils_1.sides.l][slice][1] = new move_1.default('L', 0 + slice, false, 'x', _this.rotateVer, _this.getCubesVer);
+        _this.allMoves[utils_1.sides.r][slice][0] = new move_1.default('R', _this.sideLength - 1 - slice, false, 'x', _this.rotateVer, _this.getCubesVer);
+        _this.allMoves[utils_1.sides.r][slice][1] = new move_1.default('R', _this.sideLength - 1 - slice, true, 'x', _this.rotateVer, _this.getCubesVer);
+        _this.allMoves[utils_1.sides.u][slice][0] = new move_1.default('U', _this.sideLength - 1 - slice, false, 'y', _this.rotateHor, _this.getCubesHor);
+        _this.allMoves[utils_1.sides.u][slice][1] = new move_1.default('U', _this.sideLength - 1 - slice, true, 'y', _this.rotateHor, _this.getCubesHor);
+        _this.allMoves[utils_1.sides.d][slice][0] = new move_1.default('D', 0 + slice, true, 'y', _this.rotateHor, _this.getCubesHor);
+        _this.allMoves[utils_1.sides.d][slice][1] = new move_1.default('D', 0 + slice, false, 'y', _this.rotateHor, _this.getCubesHor);
+        _this.allMoves[utils_1.sides.f][slice][0] = new move_1.default('F', _this.sideLength - 1 - slice, false, 'z', _this.rotateDep, _this.getCubesDep);
+        _this.allMoves[utils_1.sides.f][slice][1] = new move_1.default('F', _this.sideLength - 1 - slice, true, 'z', _this.rotateDep, _this.getCubesDep);
+        _this.allMoves[utils_1.sides.b][slice][0] = new move_1.default('B', 0 + slice, true, 'z', _this.rotateDep, _this.getCubesDep);
+        _this.allMoves[utils_1.sides.b][slice][1] = new move_1.default('B', 0 + slice, false, 'z', _this.rotateDep, _this.getCubesDep);
+      }
+
+      var t1 = performance.now();
+      console.log('Took', (t1 - t0).toFixed(4), 'milliseconds to generate all moves');
     };
 
     this.generateMoveRotations = function () {
@@ -87630,7 +87717,12 @@ function () {
     this.generatePositions();
     this.createRotations();
     this.f = new face_1.default(sideLength);
-    this.m = new moveActions_1.MoveActions();
+    this.m = new moveActions_1.MoveActions(); // this.m.L = (slice = 0, clockwise = true) => this.moveOperation(new Move('L', 0 + slice, !clockwise, 'x', this.rotateVer, this.getCubesVer));
+    // this.m.R = (slice = 0, clockwise = true) => this.moveOperation(new Move('R', this.sideLength - 1 - slice, clockwise, 'x', this.rotateVer, this.getCubesVer));
+    // this.m.U = (slice = 0, clockwise = true) => this.moveOperation(new Move('U', this.sideLength - 1 - slice, clockwise, 'y', this.rotateHor, this.getCubesHor));
+    // this.m.D = (slice = 0, clockwise = true) => this.moveOperation(new Move('D', 0 + slice, !clockwise, 'y', this.rotateHor, this.getCubesHor));
+    // this.m.F = (slice = 0, clockwise = true) => this.moveOperation(new Move('F', this.sideLength - 1 - slice, clockwise, 'z', this.rotateDep, this.getCubesDep));
+    // this.m.B = (slice = 0, clockwise = true) => this.moveOperation(new Move('B', 0 + slice, !clockwise, 'z', this.rotateDep, this.getCubesDep));
 
     this.m.L = function (slice, clockwise) {
       if (slice === void 0) {
@@ -87641,7 +87733,7 @@ function () {
         clockwise = true;
       }
 
-      return _this.moveOperation(new move_1.default('L', 0 + slice, !clockwise, 'x', _this.rotateVer, _this.getCubesVer));
+      return _this.moveOperation(_this.getMove(utils_1.sides.l, slice, clockwise));
     };
 
     this.m.R = function (slice, clockwise) {
@@ -87653,7 +87745,7 @@ function () {
         clockwise = true;
       }
 
-      return _this.moveOperation(new move_1.default('R', _this.sideLength - 1 - slice, clockwise, 'x', _this.rotateVer, _this.getCubesVer));
+      return _this.moveOperation(_this.getMove(utils_1.sides.r, slice, clockwise));
     };
 
     this.m.U = function (slice, clockwise) {
@@ -87665,7 +87757,7 @@ function () {
         clockwise = true;
       }
 
-      return _this.moveOperation(new move_1.default('U', _this.sideLength - 1 - slice, clockwise, 'y', _this.rotateHor, _this.getCubesHor));
+      return _this.moveOperation(_this.getMove(utils_1.sides.u, slice, clockwise));
     };
 
     this.m.D = function (slice, clockwise) {
@@ -87677,7 +87769,7 @@ function () {
         clockwise = true;
       }
 
-      return _this.moveOperation(new move_1.default('D', 0 + slice, !clockwise, 'y', _this.rotateHor, _this.getCubesHor));
+      return _this.moveOperation(_this.getMove(utils_1.sides.d, slice, clockwise));
     };
 
     this.m.F = function (slice, clockwise) {
@@ -87689,7 +87781,7 @@ function () {
         clockwise = true;
       }
 
-      return _this.moveOperation(new move_1.default('F', _this.sideLength - 1 - slice, clockwise, 'z', _this.rotateDep, _this.getCubesDep));
+      return _this.moveOperation(_this.getMove(utils_1.sides.f, slice, clockwise));
     };
 
     this.m.B = function (slice, clockwise) {
@@ -87701,13 +87793,14 @@ function () {
         clockwise = true;
       }
 
-      return _this.moveOperation(new move_1.default('B', 0 + slice, !clockwise, 'z', _this.rotateDep, _this.getCubesDep));
+      return _this.moveOperation(_this.getMove(utils_1.sides.b, slice, clockwise));
     };
 
     this.reset();
     this.interface = [this.stRotations[0], this.stRotations[0], this.stRotations[0], this.stRotations[0], this.stRotations[0], this.stRotations[0]];
     this.generateMoveRotations();
     this.generateUserMoves();
+    this.generateMoves();
   }
 
   RubikModel.prototype.createEmptySlices = function () {
@@ -87865,6 +87958,8 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+/* eslint-disable no-lonely-if */
+
 /* eslint-disable max-len */
 
 var THREE = __importStar(require("../../node_modules/three/src/Three"));
@@ -87873,29 +87968,41 @@ var cube_1 = __importDefault(require("./cube"));
 
 var utils_1 = require("./utils");
 
-var Three_1 = require("../../node_modules/three/src/Three");
-
 var RubikView =
 /** @class */
 function () {
-  function RubikView(rubikModel) {
+  function RubikView(rubikModel, scene) {
     var _this = this;
 
     this.drawCube = true;
     this.drawOuterCube = false;
     this.drawText = false;
     this.completingMouseMove = false;
+    this.distanceTrigger = 0.2;
+
+    this.getMousePosition = function (mouse, plane) {
+      if (plane === void 0) {
+        plane = utils_1.planeOrientation.XY;
+      }
+
+      var vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
+      vector.unproject(_this.scene.camera);
+      var dir = vector.sub(_this.scene.camera.position).normalize();
+      var distance = -_this.scene.camera.position[plane] / dir[plane];
+
+      var pos = _this.scene.camera.position.clone().add(dir.multiplyScalar(distance));
+
+      return pos;
+    };
 
     this.calculateCubeOnFace = function (side, point) {
-      var vector = _this.get2DVector(utils_1.sidesMap[side], point); // console.log(vector.x, vector.y);
-
+      var vector = _this.get2DVector(utils_1.sidesMap[side], point);
 
       var cubeNum = vector.y * _this.rubikModel.sideLength + vector.x;
       _this.selectedCube = cubeNum;
       _this.selectedFace = utils_1.sidesMap[side];
       console.log(side + ": " + cubeNum); // this.cubes[this.rubikModel.getCube(sidesArr[sidesMap[side]], cubeNum)].setColor(sidesMap[side], 2);
       // this.cubes[this.rubikModel.getCubeFromInterface(sidesArr[sidesMap[side]], cubeNum, this.rubikModel.interface)].setColor(sidesMap[side], 2);
-      // we need to know slice
     };
 
     this.get2DVector = function (side, point) {
@@ -87942,20 +88049,34 @@ function () {
       }
     };
 
-    this.getLargestValue = function (vec) {
-      var absX = Math.abs(vec.x);
-      var absY = Math.abs(vec.y);
-      var absZ = Math.abs(vec.z);
+    this.activateSlice = function (cubes) {
+      cubes.forEach(function (i) {
+        return _this.activeGroup.push(_this.cubes[i].cube);
+      });
 
-      if (absX > absY && absX > absZ) {
-        return 'x';
-      }
+      _this.pivot.rotation.set(0, 0, 0);
 
-      if (absY > absX && absY > absZ) {
-        return 'y';
-      }
+      _this.pivot.updateMatrixWorld();
 
-      return 'z';
+      _this.rubik.add(_this.pivot);
+
+      _this.activeGroup.forEach(function (e) {
+        _this.pivot.attach(e);
+      });
+    };
+
+    this.deactivateSlice = function () {
+      _this.pivot.updateMatrixWorld();
+
+      _this.rubik.remove(_this.pivot);
+
+      _this.activeGroup.forEach(function (cube) {
+        cube.updateMatrixWorld();
+
+        _this.rubik.attach(cube);
+      });
+
+      _this.activeGroup = [];
     };
 
     this.startNextMove = function () {
@@ -87969,22 +88090,9 @@ function () {
       if (_this.currentMove) {
         if (!_this.isMoving) {
           _this.isMoving = true;
-          _this.moveDirection = _this.currentMove.clockwise ? -1 : 1; // select cubes that need to be rotated
+          _this.moveDirection = _this.currentMove.clockwise ? -1 : 1;
 
-          _this.currentMove.getCubes().forEach(function (i) {
-            return _this.activeGroup.push(_this.cubes[i].cube);
-          }); // this.setActiveGroup(slice, side);
-
-
-          _this.pivot.rotation.set(0, 0, 0);
-
-          _this.pivot.updateMatrixWorld();
-
-          _this.rubik.add(_this.pivot);
-
-          _this.activeGroup.forEach(function (e) {
-            _this.pivot.attach(e);
-          });
+          _this.activateSlice(_this.currentMove.getCubes());
         } else {
           console.log('Already moving!');
         }
@@ -88011,20 +88119,11 @@ function () {
     this.moveComplete = function () {
       _this.isMoving = false;
 
-      _this.pivot.updateMatrixWorld();
-
-      _this.rubik.remove(_this.pivot);
-
-      _this.activeGroup.forEach(function (cube) {
-        cube.updateMatrixWorld();
-
-        _this.rubik.attach(cube);
-      }); // update matrix reference
+      _this.deactivateSlice(); // update matrix reference
 
 
       _this.currentMove.rotate(false);
 
-      _this.activeGroup = [];
       _this.moveDirection = undefined;
 
       _this.startNextMove();
@@ -88036,7 +88135,7 @@ function () {
       }
 
       if (_this.completingMouseMove) {
-        _this.doMouseMove();
+        _this.completeMouseMove();
       }
     };
 
@@ -88079,9 +88178,8 @@ function () {
       for (var cube = 0; cube < _this.rubikModel.totalColors; cube += 1) {
         for (var s = 0; s < utils_1.sidesArr.length; s += 1) {
           _this.cubes[_this.rubikModel.getCube(utils_1.sidesArr[s], cube)].createMeshes(utils_1.sidesArr[s]); // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createOuterMeshes(sidesArr[s], this.rubikModel.sideLength);
+          // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createTextMeshes(sidesArr[s]);
 
-
-          _this.cubes[_this.rubikModel.getCube(utils_1.sidesArr[s], cube)].createTextMeshes(utils_1.sidesArr[s]);
         }
       } // this.baseMeshes = this.getAllMeshes();
 
@@ -88106,7 +88204,9 @@ function () {
 
     this.name = 'rubik';
     this.rubikModel = rubikModel;
-    this.rubik = new THREE.Object3D(); // pay attention to it
+    this.scene = scene;
+    this.rubik = new THREE.Object3D();
+    this.raycaster = new THREE.Raycaster(); // pay attention to it
 
     this.cubes = this.createGraphicRubik();
     this.cubes.map(function (cube) {
@@ -88122,7 +88222,67 @@ function () {
     this.rotationSpeed = 0.2;
     this.pivot = new THREE.Object3D();
     this.activeGroup = [];
+    this.clickedOnFace = false;
+    this.eventMoveComplete = new CustomEvent('moveComplete');
   }
+
+  RubikView.prototype.mouseUp = function (position) {
+    this.mouseIsDown = false;
+
+    if (this.rotating) {
+      this.stopRotation();
+      this.rotating = false;
+    }
+
+    this.scene.controls.enabled = true;
+  };
+
+  RubikView.prototype.mouseDown = function (position) {
+    this.mouseIsDown = true;
+    this.positionOnMouseDown = position.clone();
+    this.raycaster.setFromCamera(position, this.scene.camera);
+    var intersects = this.raycaster.intersectObjects(this.raycastMeshes);
+
+    if (intersects.length > 0) {
+      this.clickedOnFace = true;
+      this.scene.controls.enabled = false;
+      var intersection = intersects[0];
+      var obj = intersection.object;
+      var point = intersection.point;
+      this.calculateCubeOnFace(obj.name, point); // console.log(`Clicked: ${name}`);
+      // console.log(`Point: ${intersects[0].point.x} ${intersects[0].point.y} ${intersects[0].point.z}`);
+    }
+  };
+
+  RubikView.prototype.mouseMove = function (position) {
+    if (this.mouseIsDown) {
+      var mPosDown = this.getMousePosition(this.positionOnMouseDown);
+      var mPos = this.getMousePosition(position);
+
+      if (this.rotating) {
+        var orientation = this.selectedOrientation;
+        var mPosLast = this.getMousePosition(this.lastMousePosition, orientation);
+        mPos = this.getMousePosition(position, orientation);
+        var dir = mPos.sub(mPosLast);
+        this.rotateWithMouse(dir);
+        this.lastMousePosition = position.clone();
+      } else if (this.clickedOnFace) {
+        var distance = mPos.sub(mPosDown).distanceTo(new THREE.Vector3(0, 0, 0));
+
+        if (distance >= this.distanceTrigger) {
+          console.log('TRIGGER');
+          var orientation = this.selectedOrientation;
+          mPosDown = this.getMousePosition(this.positionOnMouseDown, orientation);
+          mPos = this.getMousePosition(position, orientation);
+          var dir = mPos.sub(mPosDown);
+          this.mouseMoveTrigger(dir);
+          this.clickedOnFace = false;
+          this.lastMousePosition = position.clone();
+          this.rotating = true;
+        }
+      }
+    }
+  };
 
   RubikView.prototype.stopRotation = function () {
     var rotation = Math.PI / 2;
@@ -88146,24 +88306,12 @@ function () {
     this.completingMouseMove = true;
   };
 
-  RubikView.prototype.doMouseMove = function () {
+  RubikView.prototype.completeMouseMove = function () {
     // console.log('doing mouse move');
     // console.log(this.targetRotation);
     // console.log(this.pivot.rotation[this.mouseAxis]);
-    // if (this.pivot.rotation[this.mouseAxis] > this.targetRotation) {
-    //   this.pivot.rotation[this.mouseAxis] += (this.mouseClockwise * 0.03);
-    // } else if (this.pivot.rotation[this.mouseAxis] < this.targetRotation) {
-    //   this.pivot.rotation[this.mouseAxis] += (this.mouseClockwise * 0.03 * -1);
-    // }
-    // const completion = Math.abs(this.pivot.rotation[this.mouseAxis] - this.targetRotation);
-    // const degrees = MathUtils.degToRad(5);
-    // if (completion <= degrees) {
-    //   this.pivot.rotation[this.mouseAxis] = this.targetRotation;
-    //   this.moveMouseComplete();
-    // }
     var rotation = Math.PI / 2;
     var halfRotation = rotation / 2;
-    console.log('Mouse move');
 
     if (this.pivot.rotation[this.mouseAxis] > 0) {
       if (this.pivot.rotation[this.mouseAxis] % rotation < halfRotation) {
@@ -88180,90 +88328,34 @@ function () {
     }
 
     var completion = Math.abs(this.pivot.rotation[this.mouseAxis] % (Math.PI * 2) - this.targetRotation);
-    var degrees = Three_1.MathUtils.degToRad(5);
+    var degrees = THREE.MathUtils.degToRad(5);
 
     if (completion <= degrees) {
       this.pivot.rotation[this.mouseAxis] = this.targetRotation;
-      this.moveMouseComplete(this.pivot.rotation[this.mouseAxis] / rotation);
+      this.finishMouseMove(this.pivot.rotation[this.mouseAxis] / rotation);
     }
   };
 
-  RubikView.prototype.moveMouseComplete = function (rotations) {
-    var _this = this;
-
+  RubikView.prototype.finishMouseMove = function (rotations) {
     this.completingMouseMove = false;
-    this.pivot.updateMatrixWorld();
-    this.rubik.remove(this.pivot);
-    this.activeGroup.forEach(function (cube) {
-      cube.updateMatrixWorld();
-
-      _this.rubik.attach(cube);
-    });
-    var rotation;
-
-    if (this.selectedFace === utils_1.sides.l) {
-      if (this.mouseLargest === 'y') {
-        rotation = rotations > 0;
-      } else if (this.mouseLargest === 'z') {
-        rotation = rotations > 0;
-      }
-    } else if (this.selectedFace === utils_1.sides.r) {
-      // D B
-      if (this.mouseLargest === 'y') {
-        rotation = rotations > 0;
-      } else if (this.mouseLargest === 'z') {
-        rotation = rotations > 0;
-      }
-    } else if (this.selectedFace === utils_1.sides.u) {
-      // B L
-      if (this.mouseLargest === 'x') {
-        rotation = rotations < 0;
-      } else if (this.mouseLargest === 'z') {
-        rotation = rotations > 0;
-      }
-    } else if (this.selectedFace === utils_1.sides.d) {
-      // B L
-      if (this.mouseLargest === 'x') {
-        rotation = rotations > 0;
-      } else if (this.mouseLargest === 'z') {
-        rotation = rotations > 0;
-      }
-    } else if (this.selectedFace === utils_1.sides.f) {
-      // L D
-      if (this.mouseLargest === 'x') {
-        rotation = rotations > 0;
-      } else if (this.mouseLargest === 'y') {
-        rotation = rotations > 0;
-      }
-    } else if (this.selectedFace === utils_1.sides.b) {
-      // L D
-      if (this.mouseLargest === 'x') {
-        rotation = rotations > 0;
-      } else if (this.mouseLargest === 'y') {
-        rotation = rotations > 0;
-      }
-    } // update matrix reference
-
+    this.deactivateSlice();
 
     for (var i = 0; i < Math.abs(rotations); i += 1) {
-      this.mouseMove(this.mouseSlice, rotation);
-    } // this.mouseMove(this.mouseSlice, rotation);
+      this.mouseMoveAction(this.mouseSlice, rotations > 0);
+    }
 
-
-    this.activeGroup = [];
+    window.dispatchEvent(this.eventMoveComplete);
   };
 
-  RubikView.prototype.rotate = function (rotation) {
+  RubikView.prototype.rotateWithMouse = function (rotation) {
     this.pivot.rotation[this.mouseAxis] += rotation[this.mouseLargest] * 0.4 * this.mouseClockwise;
   };
 
-  RubikView.prototype.rotateWithMouse = function (direction) {
-    var _this = this;
-
+  RubikView.prototype.mouseMoveTrigger = function (direction) {
     var col = this.selectedCube % this.rubikModel.sideLength;
     var row = Math.floor(this.selectedCube / this.rubikModel.sideLength); // determine what kind of move is to be performed
 
-    var largest = this.getLargestValue(direction);
+    var largest = utils_1.getLargestValue(direction);
     var move = null;
     var rotation;
     var cubes;
@@ -88285,6 +88377,7 @@ function () {
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
+        mRotation = false;
       }
     } else if (this.selectedFace === utils_1.sides.r) {
       // D B
@@ -88294,6 +88387,7 @@ function () {
         cubes = this.rubikModel.getCubesDep(col);
         slice = col;
         axis = 'z';
+        mRotation = false;
       } else if (largest === 'z') {
         rotation = direction.z < 0;
         move = this.rubikModel.mu.D;
@@ -88317,6 +88411,7 @@ function () {
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
+        mRotation = false;
       }
     } else if (this.selectedFace === utils_1.sides.d) {
       // B L
@@ -88326,6 +88421,7 @@ function () {
         cubes = this.rubikModel.getCubesDep(row);
         slice = row;
         axis = 'z';
+        mRotation = false;
       } else if (largest === 'z') {
         rotation = direction.z < 0;
         move = this.rubikModel.mu.L;
@@ -88342,6 +88438,7 @@ function () {
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
+        mRotation = false;
       } else if (largest === 'y') {
         rotation = direction.y < 0;
         move = this.rubikModel.mu.L;
@@ -88365,43 +88462,37 @@ function () {
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
+        mRotation = false;
       }
     }
 
     console.log(largest, rotation, this.selectedFace);
+    console.log(mRotation);
     this.mouseAxis = axis;
     this.mouseLargest = largest;
     this.mouseClockwise = mRotation ? -1 : 1;
-    this.mouseMove = move;
+    this.mouseMoveAction = move;
     this.mouseSlice = slice;
     this.mouseMoveRotation = rotation;
-    cubes.forEach(function (i) {
-      return _this.activeGroup.push(_this.cubes[i].cube);
-    });
-    this.pivot.rotation.set(0, 0, 0);
-    this.pivot.updateMatrixWorld();
-    this.rubik.add(this.pivot);
-    this.activeGroup.forEach(function (e) {
-      _this.pivot.attach(e);
-    });
+    this.activateSlice(cubes);
   };
 
-  RubikView.prototype.changeCamera = function (camera) {
+  RubikView.prototype.changeCamera = function () {
     var length = this.rubikModel.sideLength;
-    camera.position.set(length * 1.5, length * 1.2, length * 2);
-    camera.far = length * 4;
-    camera.updateProjectionMatrix(); // this.camera.lookAt(this.controls.target);
+    this.scene.camera.position.set(length * 1.5, length * 1.2, length * 2);
+    this.scene.camera.far = length * 4;
+    this.scene.camera.updateProjectionMatrix();
   };
 
-  RubikView.prototype.addToScene = function (scene) {
-    var rubik3DObject = scene.getObjectByName('rubik');
+  RubikView.prototype.addToScene = function () {
+    var rubik3DObject = this.scene.scene.getObjectByName('rubik');
 
     if (rubik3DObject !== undefined) {
-      scene.remove(rubik3DObject);
+      this.scene.scene.remove(rubik3DObject);
     }
 
     this.rubik.name = 'rubik';
-    scene.add(this.rubik);
+    this.scene.scene.add(this.rubik);
     console.log('Added rubik to scene');
   };
 
@@ -88441,7 +88532,7 @@ function () {
     this.historyButtonNotActiveColor = '#4CAF50';
 
     this.scramble = function () {
-      _this.rubikModel.scramble(2);
+      _this.rubikModel.scramble(50);
 
       _this.refreshHistoryButtons();
 
@@ -88610,7 +88701,12 @@ function () {
         button.innerHTML = utils_1.sidesStr[i];
 
         button.onclick = function () {
-          _this.changeOrientation(i);
+          _this.changeOrientation(i); // const camera = createCamera();
+          // camera.up.set(0, -1, 0);
+          // camera.position.set(0, 0, 6);
+          // this.scene.changeCamera(camera);
+          // this.scene.resizeRendererToDisplaySize();
+
         };
 
         _this.orientationDiv.appendChild(button);
@@ -88650,18 +88746,29 @@ function () {
   }
 
   RubikManager.prototype.drawNewRubik = function () {
-    this.scene.addRenderer(this.rubikView, this.renderOrder.get(this.rubikView.name));
-    this.scene.addToScene(this.rubikView);
-    this.scene.changeCamera(this.rubikView);
+    this.scene.renderObjects[0] = this.rubikView;
+    this.scene.mouseObjects[0] = this.rubikView;
+    this.rubikView.addToScene();
+    this.rubikView.changeCamera();
     this.rubikView.createMeshes();
-    this.rubikView.colorizeRubik();
-    this.rubikView.placeTextOnRubik(null);
+    this.rubikView.colorizeRubik(); // this.rubikView.placeTextOnRubik(null);
   };
 
   RubikManager.prototype.addRubik = function (length) {
+    var _this = this;
+
     this.rubikModel = new model_1.default(length);
-    this.rubikView = new view_1.default(this.rubikModel);
+    this.rubikView = new view_1.default(this.rubikModel, this.scene);
     this.rubikSolver = new solver_1.default(this.rubikModel);
+    window.addEventListener('moveComplete', function (e) {
+      console.log('event happened');
+
+      _this.rubikModel.removeHistoryByCurrentIndex();
+
+      _this.clearHistoryButtons();
+
+      _this.refreshHistoryButtons();
+    }, false);
     this.moveRotation = 0;
     this.moveOrientation = this.rubikModel.moveRotations[utils_1.sides.f][this.moveRotation];
     this.historyButtons = [];
@@ -88704,8 +88811,6 @@ var OrbitControls_1 = require("../node_modules/three/examples/jsm/controls/Orbit
 
 var manager_1 = __importDefault(require("./rubik/manager"));
 
-var Three_1 = require("../node_modules/three/src/Three");
-
 var utils_1 = require("./rubik/utils");
 
 function createLight() {
@@ -88716,50 +88821,28 @@ function createLight() {
   return light;
 }
 
-function createCamera() {
-  var fov = 75;
-  var aspect = 2;
-  var near = 0.1;
-  var far = 20;
-  var camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-  return camera;
-}
-
 var MainScene =
 /** @class */
 function () {
   function MainScene() {
     var _this = this;
 
-    this.distanceTrigger = 0.2;
+    this.changeCamera = function (camera) {
+      _this.camera = camera;
+      _this.controls = new OrbitControls_1.OrbitControls(_this.camera, _this.renderer.domElement);
+      var canvas = _this.renderer.domElement;
+      _this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
+
+      _this.camera.updateProjectionMatrix();
+
+      _this.controls.update();
+    };
 
     this.updateMousePosition = function (event) {
       var rect = _this.canvas.getBoundingClientRect();
 
       _this.mouse.x = event.clientX / rect.width * 2 - 1;
       _this.mouse.y = -(event.clientY / rect.height) * 2 + 1;
-    }; // if (side === sides.l || side === sides.r) {
-    //   vector = new THREE.Vector2(z, y);
-    // } else if (side === sides.u || side === sides.d) {
-    //   vector = new THREE.Vector2(x, z);
-    // } else if (side === sides.f || side === sides.b) {
-    //   vector = new THREE.Vector2(x, y);
-    // }
-
-
-    this.getMousePosition = function (mouse, plane) {
-      if (plane === void 0) {
-        plane = utils_1.planeOrientation.XY;
-      }
-
-      var vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
-      vector.unproject(_this.camera);
-      var dir = vector.sub(_this.camera.position).normalize();
-      var distance = -_this.camera.position[plane] / dir[plane];
-
-      var pos = _this.camera.position.clone().add(dir.multiplyScalar(distance));
-
-      return pos;
     };
 
     this.resizeRendererToDisplaySize = function () {
@@ -88802,135 +88885,47 @@ function () {
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas
     });
-    this.camera = createCamera();
-    this.controls = new OrbitControls_1.OrbitControls(this.camera, this.renderer.domElement); // this.camera.position.z = 10;
-
-    this.controls.update(); // camera.position.set(0, 50, 0)
-    // camera.up.set(0, 0, 1)
-    // camera.lookAt(0, 0, 0)
-
+    this.camera = utils_1.createCamera();
+    this.controls = new OrbitControls_1.OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.update();
     this.scene = new THREE.Scene();
     this.scene.add(this.light);
     this.renderObjects = [];
-    this.raycaster = new THREE.Raycaster();
+    this.mouseObjects = [];
     this.mouse = new THREE.Vector3();
-    document.addEventListener('mousedown', this.onDocumentMouseDown.bind(this), false);
-    document.addEventListener('mouseup', this.onDocumentMouseUp.bind(this), false);
-    document.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
-    this.clickedOnFace = false;
+    document.addEventListener('mousedown', this.onMouseDown.bind(this), false);
+    document.addEventListener('mouseup', this.onMouseUp.bind(this), false);
+    document.addEventListener('mousemove', this.onMouseMove.bind(this), false);
   }
 
-  MainScene.prototype.onDocumentMouseMove = function (event) {
+  MainScene.prototype.onMouseMove = function (event) {
     this.updateMousePosition(event);
 
-    if (this.mouseIsDown) {
-      var mousePosition = this.mouse.clone();
-      var mPosDown = this.getMousePosition(this.positionOnMouseDown);
-      var mPos = this.getMousePosition(mousePosition);
-
-      if (this.rotating) {
-        //   this.clickedOnFace = false;
-        var orientation = this.renderObjects[0].selectedOrientation;
-        var mPosLast = this.getMousePosition(this.lastMousePosition, orientation);
-        mPos = this.getMousePosition(mousePosition, orientation); // const dir = mPos.sub(mPosLast).normalize();
-
-        var dir = mPos.sub(mPosLast);
-        var mouseLargest = this.renderObjects[0].mouseLargest;
-        this.renderObjects[0].rotate(dir);
-        this.lastMousePosition = this.mouse.clone();
-      } else if (this.clickedOnFace) {
-        var distance = mPos.sub(mPosDown).distanceTo(new Three_1.Vector3(0, 0, 0));
-
-        if (distance >= this.distanceTrigger) {
-          console.log('TRIGGER');
-          var orientation = this.renderObjects[0].selectedOrientation;
-          mPosDown = this.getMousePosition(this.positionOnMouseDown, orientation);
-          mPos = this.getMousePosition(mousePosition, orientation);
-          var dir = mPos.sub(mPosDown);
-          this.renderObjects[0].rotateWithMouse(dir);
-          this.clickedOnFace = false;
-          this.lastMousePosition = this.mouse.clone();
-          this.rotating = true;
-        }
-      }
+    for (var i = 0; i < this.mouseObjects.length; i += 1) {
+      this.mouseObjects[i].mouseMove(this.mouse);
     }
   };
 
-  MainScene.prototype.onDocumentMouseUp = function (event) {
-    console.log('detect mouse up');
+  MainScene.prototype.onMouseUp = function (event) {
     event.preventDefault();
-    this.mouseIsDown = false;
-
-    if (this.rotating) {
-      this.renderObjects[0].stopRotation();
-      this.rotating = false;
-    }
-
     this.updateMousePosition(event);
-    this.controls.enabled = true;
+
+    for (var i = 0; i < this.mouseObjects.length; i += 1) {
+      this.mouseObjects[i].mouseUp(this.mouse);
+    }
   };
 
-  MainScene.prototype.onDocumentMouseDown = function (event) {
+  MainScene.prototype.onMouseDown = function (event) {
     event.preventDefault();
-    this.mouseIsDown = true;
     this.updateMousePosition(event);
-    this.positionOnMouseDown = this.mouse.clone();
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-    var intersects = this.raycaster.intersectObjects(this.renderObjects[0].raycastMeshes);
 
-    if (intersects.length > 0) {
-      this.clickedOnFace = true;
-      this.controls.enabled = false;
-      var intersection = intersects[0];
-      var obj = intersection.object;
-      var point = intersection.point;
-      this.renderObjects[0].calculateCubeOnFace(obj.name, point); // console.log(`Clicked: ${name}`);
-      // console.log(`Point: ${intersects[0].point.x} ${intersects[0].point.y} ${intersects[0].point.z}`);
+    for (var i = 0; i < this.mouseObjects.length; i += 1) {
+      this.mouseObjects[i].mouseDown(this.mouse);
     }
-  }; // make it so, addition of an element would always push an array
-  // modification of an element, only allowed if names are the same
-
-
-  MainScene.prototype.addRenderer = function (renderObj, indexOn) {
-    if (indexOn === void 0) {
-      indexOn = null;
-    }
-
-    if (indexOn !== null) {
-      // update value
-      if (this.renderObjects.length < indexOn + 1) {
-        for (var i = 0; i < indexOn + 1; i += 1) {
-          this.renderObjects.push(null);
-
-          if (this.renderObjects.length === indexOn + 1) {
-            break;
-          }
-        }
-
-        this.renderObjects[indexOn] = renderObj;
-      } else if (this.renderObjects[indexOn].name === renderObj.name) {
-        this.renderObjects[indexOn] = renderObj;
-      } else {
-        console.log('Incorrect addition of a render object');
-      }
-    } else {
-      this.renderObjects.push(renderObj);
-    }
-
-    console.log(this.renderObjects);
-  };
-
-  MainScene.prototype.addToScene = function (renderObj) {
-    renderObj.addToScene(this.scene);
-  };
-
-  MainScene.prototype.changeCamera = function (renderObj) {
-    renderObj.changeCamera(this.camera);
   };
 
   return MainScene;
-}(); // objects render order
-
+}();
 
 window.onload = function () {
   var main = new MainScene();
@@ -88976,6 +88971,8 @@ window.onload = function () {
 
   main.render();
 };
+
+exports.default = MainScene;
 },{"../node_modules/three/src/Three":"../node_modules/three/src/Three.js","../node_modules/three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","./rubik/manager":"rubik/manager.ts","./rubik/utils":"rubik/utils.ts"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -89004,7 +89001,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59884" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58596" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

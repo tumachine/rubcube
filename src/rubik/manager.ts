@@ -1,10 +1,11 @@
 import RubikSolver from './solver';
 import RubikModel from './model';
 import RubikView from './view';
-import { sides as s, sidesStr, sidesArr } from './utils';
-import { ChangeSceneInterface, MainScene } from '../d';
-import Move from './move';
+import { sides as s, sidesStr, sidesArr, createCamera } from './utils';
 import { MoveInterface } from './moveActions';
+import MainScene from '..';
+import * as THREE from '../../node_modules/three/src/Three';
+import { OrbitControls } from '../../node_modules/three/examples/jsm/controls/OrbitControls';
 
 class RubikManager {
   private rubikModel: RubikModel
@@ -50,19 +51,27 @@ class RubikManager {
   }
 
   private drawNewRubik() {
-    this.scene.addRenderer(this.rubikView, this.renderOrder.get(this.rubikView.name));
-    this.scene.addToScene(this.rubikView);
-    this.scene.changeCamera(this.rubikView);
+    this.scene.renderObjects[0] = this.rubikView;
+    this.scene.mouseObjects[0] = this.rubikView;
+    this.rubikView.addToScene();
+    this.rubikView.changeCamera();
 
     this.rubikView.createMeshes();
     this.rubikView.colorizeRubik();
-    this.rubikView.placeTextOnRubik(null);
+    // this.rubikView.placeTextOnRubik(null);
   }
 
   private addRubik(length: number) {
     this.rubikModel = new RubikModel(length);
-    this.rubikView = new RubikView(this.rubikModel);
+    this.rubikView = new RubikView(this.rubikModel, this.scene);
     this.rubikSolver = new RubikSolver(this.rubikModel);
+
+    window.addEventListener('moveComplete', (e) => {
+      console.log('event happened');
+      this.rubikModel.removeHistoryByCurrentIndex();
+      this.clearHistoryButtons();
+      this.refreshHistoryButtons();
+    }, false);
 
     this.moveRotation = 0;
     this.moveOrientation = this.rubikModel.moveRotations[s.f][this.moveRotation];
@@ -76,7 +85,7 @@ class RubikManager {
   }
 
   public scramble = () => {
-    this.rubikModel.scramble(2);
+    this.rubikModel.scramble(50);
     this.refreshHistoryButtons();
     this.rubikView.startNextMove();
   }
@@ -211,6 +220,16 @@ class RubikManager {
       button.innerHTML = sidesStr[i];
       button.onclick = () => {
         this.changeOrientation(i);
+
+
+        // const camera = createCamera();
+
+        // camera.up.set(0, -1, 0);
+        // camera.position.set(0, 0, 6);
+
+        // this.scene.changeCamera(camera);
+
+        // this.scene.resizeRendererToDisplaySize();
       };
       this.orientationDiv.appendChild(button);
     }

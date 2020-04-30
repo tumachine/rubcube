@@ -1,11 +1,9 @@
 // import * as THREE from 'three';
 import * as THREE from '../node_modules/three/src/Three';
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls';
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { RenderInterface, ChangeSceneInterface } from './d';
+import { RenderInterface, MouseInterface } from './d';
 import RubikManager from './rubik/manager';
-import { MathUtils, Vector3, Vector2 } from '../node_modules/three/src/Three';
-import { planeOrientation } from './rubik/utils';
+import { createCamera } from './rubik/utils';
 
 function createLight() {
   const color = 0xFFFFFF;
@@ -13,15 +11,6 @@ function createLight() {
   const light = new THREE.DirectionalLight(color, intensity);
   // light.position.set(-1, 2, 4)
   return light;
-}
-
-function createCamera() {
-  const fov = 75;
-  const aspect = 2;
-  const near = 0.1;
-  const far = 20;
-  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-  return camera;
 }
 
 class MainScene {
@@ -33,29 +22,17 @@ class MainScene {
 
   camera: THREE.PerspectiveCamera
 
+  rotationCamera: THREE.PerspectiveCamera
+
   controls: OrbitControls
 
   scene: THREE.Scene
 
   renderObjects: RenderInterface[]
 
-  raycaster: THREE.Raycaster
+  mouseObjects: MouseInterface[]
 
   mouse: THREE.Vector3
-
-  mouseIsDown: boolean;
-
-  positionOnMouseDown: THREE.Vector3
-
-  positionOnMouseUp: THREE.Vector3
-
-  clickedOnFace: boolean
-
-  distanceTrigger: number = 0.2
-
-  lastMousePosition: Vector3
-
-  rotating: boolean
 
   constructor() {
     this.light = createLight();
@@ -65,11 +42,8 @@ class MainScene {
     this.camera = createCamera();
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    // this.camera.position.z = 10;
+
     this.controls.update();
-    // camera.position.set(0, 50, 0)
-    // camera.up.set(0, 0, 1)
-    // camera.lookAt(0, 0, 0)
 
     this.scene = new THREE.Scene();
 
@@ -77,15 +51,27 @@ class MainScene {
 
     this.renderObjects = [];
 
-    this.raycaster = new THREE.Raycaster();
+    this.mouseObjects = [];
+
     this.mouse = new THREE.Vector3();
-    document.addEventListener('mousedown', this.onDocumentMouseDown.bind(this), false);
 
-    document.addEventListener('mouseup', this.onDocumentMouseUp.bind(this), false);
+    document.addEventListener('mousedown', this.onMouseDown.bind(this), false);
 
-    document.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
+    document.addEventListener('mouseup', this.onMouseUp.bind(this), false);
 
-    this.clickedOnFace = false;
+    document.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+  }
+
+  changeCamera = (camera: THREE.PerspectiveCamera) => {
+    this.camera = camera;
+
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+
+    const canvas = this.renderer.domElement;
+    this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    this.camera.updateProjectionMatrix();
+
+    this.controls.update();
   }
 
   updateMousePosition = (event: MouseEvent) => {
@@ -94,137 +80,32 @@ class MainScene {
     this.mouse.y = -(event.clientY / rect.height) * 2 + 1;
   }
 
-  // if (side === sides.l || side === sides.r) {
-  //   vector = new THREE.Vector2(z, y);
-  // } else if (side === sides.u || side === sides.d) {
-  //   vector = new THREE.Vector2(x, z);
-  // } else if (side === sides.f || side === sides.b) {
-  //   vector = new THREE.Vector2(x, y);
-  // }
-
-  getMousePosition = (mouse: Vector3, plane: planeOrientation = planeOrientation.XY): THREE.Vector3 => {
-    const vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
-    vector.unproject(this.camera);
-    const dir = vector.sub(this.camera.position).normalize();
-    const distance = -this.camera.position[plane] / dir[plane];
-    const pos = this.camera.position.clone().add(dir.multiplyScalar(distance));
-    return pos;
-  }
-
-
-  onDocumentMouseMove(event: MouseEvent) {
+  onMouseMove(event: MouseEvent) {
     this.updateMousePosition(event);
-    if (this.mouseIsDown) {
-      const mousePosition = this.mouse.clone();
 
-      let mPosDown = this.getMousePosition(this.positionOnMouseDown);
-      let mPos = this.getMousePosition(mousePosition);
-
-      if (this.rotating) {
-      //   this.clickedOnFace = false;
-
-        const orientation = this.renderObjects[0].selectedOrientation;
-        const mPosLast = this.getMousePosition(this.lastMousePosition, orientation);
-        mPos = this.getMousePosition(mousePosition, orientation);
-        // const dir = mPos.sub(mPosLast).normalize();
-        const dir = mPos.sub(mPosLast);
-
-        const { mouseLargest } = this.renderObjects[0];
-        this.renderObjects[0].rotate(dir);
-
-        this.lastMousePosition = this.mouse.clone();
-
-      } else if (this.clickedOnFace) {
-        const distance = mPos.sub(mPosDown).distanceTo(new Vector3(0, 0, 0));
-        if (distance >= this.distanceTrigger) {
-          console.log('TRIGGER');
-
-          const orientation = this.renderObjects[0].selectedOrientation;
-          mPosDown = this.getMousePosition(this.positionOnMouseDown, orientation);
-          mPos = this.getMousePosition(mousePosition, orientation);
-          const dir = mPos.sub(mPosDown);
-          this.renderObjects[0].rotateWithMouse(dir);
-
-          this.clickedOnFace = false;
-
-          this.lastMousePosition = this.mouse.clone();
-          this.rotating = true;
-        }
-      }
+    for (let i = 0; i < this.mouseObjects.length; i += 1) {
+      this.mouseObjects[i].mouseMove(this.mouse);
     }
   }
 
-  onDocumentMouseUp(event: MouseEvent) {
-    console.log('detect mouse up');
-    event.preventDefault();
-    this.mouseIsDown = false;
-
-    if (this.rotating) {
-      this.renderObjects[0].stopRotation();
-      this.rotating = false;
-    }
-
-    this.updateMousePosition(event);
-
-    this.controls.enabled = true;
-  }
-
-  onDocumentMouseDown(event: MouseEvent) {
+  onMouseUp(event: MouseEvent) {
     event.preventDefault();
 
-    this.mouseIsDown = true;
+    this.updateMousePosition(event);
+
+    for (let i = 0; i < this.mouseObjects.length; i += 1) {
+      this.mouseObjects[i].mouseUp(this.mouse);
+    }
+  }
+
+  onMouseDown(event: MouseEvent) {
+    event.preventDefault();
 
     this.updateMousePosition(event);
 
-    this.positionOnMouseDown = this.mouse.clone();
-
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-
-    const intersects = this.raycaster.intersectObjects(this.renderObjects[0].raycastMeshes);
-    if (intersects.length > 0) {
-      this.clickedOnFace = true;
-      this.controls.enabled = false;
-      const intersection = intersects[0];
-      const obj = intersection.object as THREE.Mesh;
-      const { point } = intersection;
-      this.renderObjects[0].calculateCubeOnFace(obj.name, point);
-
-
-      // console.log(`Clicked: ${name}`);
-      // console.log(`Point: ${intersects[0].point.x} ${intersects[0].point.y} ${intersects[0].point.z}`);
+    for (let i = 0; i < this.mouseObjects.length; i += 1) {
+      this.mouseObjects[i].mouseDown(this.mouse);
     }
-  }
-
-  // make it so, addition of an element would always push an array
-  // modification of an element, only allowed if names are the same
-  addRenderer(renderObj: RenderInterface, indexOn: number = null) {
-    if (indexOn !== null) {
-      // update value
-      if (this.renderObjects.length < indexOn + 1) {
-        for (let i = 0; i < indexOn + 1; i += 1) {
-          this.renderObjects.push(null);
-          if (this.renderObjects.length === indexOn + 1) {
-            break;
-          }
-        }
-        this.renderObjects[indexOn] = renderObj;
-      } else if (this.renderObjects[indexOn].name === renderObj.name) {
-        this.renderObjects[indexOn] = renderObj;
-      } else {
-        console.log('Incorrect addition of a render object');
-      }
-    } else {
-      this.renderObjects.push(renderObj);
-    }
-    console.log(this.renderObjects);
-  }
-
-  addToScene(renderObj: ChangeSceneInterface) {
-    renderObj.addToScene(this.scene);
-  }
-
-  changeCamera(renderObj: ChangeSceneInterface) {
-    renderObj.changeCamera(this.camera);
   }
 
   resizeRendererToDisplaySize = () => {
@@ -257,8 +138,6 @@ class MainScene {
   }
 }
 
-
-// objects render order
 
 window.onload = () => {
   const main = new MainScene();
@@ -308,3 +187,5 @@ window.onload = () => {
 
   main.render();
 };
+
+export default MainScene;
