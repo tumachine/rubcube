@@ -1,0 +1,362 @@
+// import * as TWEEN from '@tweenjs/tween.js';
+import TWEEN from 'tween.ts';
+import * as THREE from '../../node_modules/three/src/Three';
+import { Vector3 } from '../../node_modules/three/src/Three';
+import { createCamera, sides } from '../rubik/utils';
+
+interface CameraPosition {
+  rotation: THREE.Vector3
+  position: THREE.Vector3
+}
+
+class CameraControls {
+  private camera: THREE.PerspectiveCamera
+
+  private renderer: HTMLCanvasElement
+
+  public target: THREE.Object3D
+
+  pivotPoint: THREE.Object3D
+
+  currentZRotation: number
+
+  backgroundCamera: THREE.PerspectiveCamera
+
+  cameraAxesHelper: THREE.Object3D
+
+  scene: THREE.Scene
+
+  turnPositions: THREE.Vector3[][][]
+
+  turnRotations: THREE.Quaternion[][]
+
+  currentSide: sides
+
+  clock: THREE.Clock
+
+  public constructor(camera: THREE.PerspectiveCamera, renderer: HTMLCanvasElement, scene: THREE.Scene) {
+    this.camera = camera;
+    this.renderer = renderer;
+    this.scene = scene;
+
+    this.currentZRotation = 0;
+
+    // this.backgroundCamera = createCamera();
+    // this.backgroundCamera.position.z = 20;
+
+    this.camera.position.y = -10;
+    // this.camera.position.y = 10;
+    this.camera.lookAt(this.scene.position);
+
+    this.camera.add(new THREE.AxesHelper(10));
+
+    this.pivotPoint = new THREE.Object3D();
+    // const helper = new THREE.AxesHelper(10);
+    // this.pivotPoint.add(helper);
+    this.scene.add(this.pivotPoint);
+
+    this.camera.lookAt(this.pivotPoint.position);
+
+    // const geometry = new THREE.BoxGeometry(1, 1, 1);
+    // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    // this.cameraAxesHelper = new THREE.Mesh(geometry, material);
+    // this.cameraAxesHelper.add(new THREE.AxesHelper(10));
+    // this.scene.add(this.cameraAxesHelper);
+    this.generateTurns();
+    this.currentSide = sides.f;
+
+    this.clock = new THREE.Clock();
+
+    this.turnLeft();
+  }
+
+  turnLeft = () => {
+    const turnVector = this.turnPositions[this.currentSide][0][sides.l];
+    const length = 10;
+    const startPosition = this.camera.position.clone();
+    const endPosition = turnVector.multiplyScalar(length);
+    console.log(startPosition);
+    console.log(endPosition);
+
+    const posTween = new TWEEN.Tween(startPosition)
+      .to(endPosition, 1000)
+      .easing(TWEEN.Easing.Linear.None)
+      .onUpdate(
+        () => {
+          this.camera.position.copy(startPosition);
+          const angle = 0.005;
+          const { x, z } = this.camera.position;
+          this.camera.position.y = y * Math.cos(angle) + z * Math.sin(angle);
+          this.camera.position.z = z * Math.cos(angle) - y * Math.sin(angle);
+
+          console.log(this.camera.position);
+        },
+      )
+      .start();
+
+    const qm = new THREE.Quaternion();
+    const curQuaternion = this.camera.quaternion.clone();
+    // const targetQuaternion = this.createQuaternion(Math.PI / 2, 0, -Math.PI / 2);
+    const targetQuaternion = this.turnRotations[this.currentSide][sides.l];
+    console.log(this.camera.quaternion.clone());
+    // targetQuaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0);
+    // targetQuaternion.setFromAxisAngle(new THREE.Vector3(), Math.PI);
+    const vector = new THREE.Vector3();
+
+    const start = { t: 0 };
+    const end = { t: 1 };
+
+    const rotTween = new TWEEN.Tween(start).to(end, 1000)
+      .easing(TWEEN.Easing.Linear.None)
+      .onUpdate(() => {
+        THREE.Quaternion.slerp(curQuaternion, targetQuaternion, qm, start.t);
+        qm.normalize();
+        this.camera.rotation.setFromQuaternion(qm);
+
+        console.log(this.camera.quaternion);
+      })
+      .start();
+  }
+
+  determineSide(vector: THREE.Vector3) {
+    if (vector.x === 1) {
+      this.currentSide = sides.r;
+    } else if (vector.x === -1) {
+      this.currentSide = sides.l;
+    } else if (vector.y === 1) {
+      this.currentSide = sides.u;
+    } else if (vector.y === -1) {
+      this.currentSide = sides.d;
+    } else if (vector.z === 1) {
+      this.currentSide = sides.f;
+    } else if (vector.z === -1) {
+      this.currentSide = sides.b;
+    }
+  }
+
+  private generateTurns = () => {
+    this.turnPositions = new Array<Array<Array<Vector3>>>(6);
+    const front = new Vector3(0, 0, 1);
+    const left = new Vector3(-1, 0, 0);
+    const back = new Vector3(0, 0, -1);
+    const right = new Vector3(1, 0, 0);
+    const up = new Vector3(0, 1, 0);
+    const down = new Vector3(0, -1, 0);
+
+    const verticalSlice = [back, up, front, down];
+    const horizontalSlice = [left, back, right, front];
+    const depthSlice = [left, up, right, down];
+
+    const verticalSliceOpp = [front, up, back, down];
+    const horizontalSliceOpp = [left, front, right, back];
+    const depthSliceOpp = [right, up, left, down];
+
+    const leftTurnPositions = [];
+    const upTurnPositioins = [];
+    const rightTurnPositions = [];
+    const downTurnPositions = [];
+    const frontTurnPositions = [];
+    const backTurnPositions = [];
+
+    for (let i = 0; i < 4; i += 1) {
+      const leftTurns = new Array<Vector3>(6);
+      leftTurns[sides.f] = left;
+      leftTurns[sides.b] = right;
+
+      leftTurns[sides.l] = verticalSlice[(0 + i) % 4];
+      leftTurns[sides.u] = verticalSlice[(1 + i) % 4];
+      leftTurns[sides.r] = verticalSlice[(2 + i) % 4];
+      leftTurns[sides.d] = verticalSlice[(3 + 1) % 4];
+
+      const rightTurns = new Array<Vector3>(6);
+      rightTurns[sides.f] = right;
+      rightTurns[sides.b] = left;
+
+      rightTurns[sides.l] = verticalSliceOpp[(0 + i) % 4];
+      rightTurns[sides.u] = verticalSliceOpp[(1 + i) % 4];
+      rightTurns[sides.r] = verticalSliceOpp[(2 + i) % 4];
+      rightTurns[sides.d] = verticalSliceOpp[(3 + i) % 4];
+
+      const frontTurns = new Array<Vector3>(6);
+      frontTurns[sides.f] = front;
+      frontTurns[sides.b] = back;
+
+      frontTurns[sides.l] = depthSlice[(0 + i) % 4];
+      frontTurns[sides.u] = depthSlice[(1 + i) % 4];
+      frontTurns[sides.r] = depthSlice[(2 + i) % 4];
+      frontTurns[sides.d] = depthSlice[(3 + i) % 4];
+
+      const backTurns = new Array<Vector3>(6);
+      backTurns[sides.f] = back;
+      backTurns[sides.b] = front;
+
+      backTurns[sides.l] = depthSliceOpp[(0 + i) % 4];
+      backTurns[sides.u] = depthSliceOpp[(1 + i) % 4];
+      backTurns[sides.r] = depthSliceOpp[(2 + i) % 4];
+      backTurns[sides.d] = depthSliceOpp[(3 + i) % 4];
+
+      const upTurns = new Array<Vector3>(6);
+      upTurns[sides.f] = up;
+      upTurns[sides.b] = down;
+
+      upTurns[sides.l] = horizontalSlice[(0 + i) % 4];
+      upTurns[sides.u] = horizontalSlice[(1 + i) % 4];
+      upTurns[sides.r] = horizontalSlice[(2 + i) % 4];
+      upTurns[sides.d] = horizontalSlice[(3 + i) % 4];
+
+      const downTurns = new Array<Vector3>(6);
+      downTurns[sides.f] = down;
+      downTurns[sides.b] = up;
+
+      downTurns[sides.l] = horizontalSliceOpp[(0 + i) % 4];
+      downTurns[sides.u] = horizontalSliceOpp[(1 + i) % 4];
+      downTurns[sides.r] = horizontalSliceOpp[(2 + i) % 4];
+      downTurns[sides.d] = horizontalSliceOpp[(3 + i) % 4];
+
+      leftTurnPositions.push(leftTurns);
+      upTurnPositioins.push(upTurns);
+      rightTurnPositions.push(rightTurns);
+      downTurnPositions.push(downTurns);
+      frontTurnPositions.push(frontTurns);
+      backTurnPositions.push(backTurns);
+    }
+
+    this.turnPositions = [
+      leftTurnPositions,
+      rightTurnPositions,
+      upTurnPositioins,
+      downTurnPositions,
+      frontTurnPositions,
+      backTurnPositions,
+    ];
+
+    this.turnRotations = new Array<Array<THREE.Quaternion>>(6);
+    this.turnRotations[sides.f] = new Array<THREE.Quaternion>(4);
+    this.turnRotations[sides.f][0] = this.createQuaternion(0);
+    this.turnRotations[sides.f][1] = this.createQuaternion(0, 0, Math.PI / 2);
+    this.turnRotations[sides.f][2] = this.createQuaternion(0, 0, Math.PI);
+    this.turnRotations[sides.f][3] = this.createQuaternion(0, 0, -Math.PI / 2);
+
+    this.turnRotations[sides.b] = new Array<THREE.Quaternion>(4);
+    this.turnRotations[sides.b][0] = this.createQuaternion(0, Math.PI, Math.PI / 2);
+    this.turnRotations[sides.b][1] = this.createQuaternion(0, Math.PI, Math.PI);
+    this.turnRotations[sides.b][2] = this.createQuaternion(0, Math.PI, -Math.PI / 2);
+    this.turnRotations[sides.b][3] = this.createQuaternion(0, Math.PI);
+
+    this.turnRotations[sides.l] = new Array<THREE.Quaternion>(4);
+    this.turnRotations[sides.l][0] = this.createQuaternion(-Math.PI / 2, -Math.PI / 2);
+    this.turnRotations[sides.l][1] = this.createQuaternion(-Math.PI, -Math.PI / 2);
+    this.turnRotations[sides.l][2] = this.createQuaternion(-Math.PI - Math.PI / 2, -Math.PI / 2);
+    this.turnRotations[sides.l][3] = this.createQuaternion(-Math.PI * 2, -Math.PI / 2);
+
+    this.turnRotations[sides.r] = new Array<THREE.Quaternion>(4);
+    this.turnRotations[sides.r][0] = this.createQuaternion(0, Math.PI / 2);
+    this.turnRotations[sides.r][1] = this.createQuaternion(Math.PI / 2, Math.PI / 2);
+    this.turnRotations[sides.r][2] = this.createQuaternion(Math.PI, Math.PI / 2);
+    this.turnRotations[sides.r][3] = this.createQuaternion(Math.PI + Math.PI / 2, Math.PI / 2);
+
+    this.turnRotations[sides.u] = new Array<THREE.Quaternion>(4);
+    this.turnRotations[sides.u][0] = this.createQuaternion(-Math.PI / 2);
+    this.turnRotations[sides.u][1] = this.createQuaternion(-Math.PI / 2, 0, Math.PI / 2);
+    this.turnRotations[sides.u][2] = this.createQuaternion(-Math.PI / 2, 0, Math.PI);
+    this.turnRotations[sides.u][3] = this.createQuaternion(-Math.PI / 2, 0, Math.PI + Math.PI / 2);
+
+    this.turnRotations[sides.d] = new Array<THREE.Quaternion>(4);
+    this.turnRotations[sides.d][0] = this.createQuaternion(Math.PI / 2, 0, -Math.PI / 2);
+    this.turnRotations[sides.d][1] = this.createQuaternion(Math.PI / 2, 0, 0);
+    this.turnRotations[sides.d][2] = this.createQuaternion(Math.PI / 2, Math.PI / 2);
+    this.turnRotations[sides.d][3] = this.createQuaternion(Math.PI / 2, Math.PI);
+  }
+
+  private createQuaternion = (x?: number, y?: number, z?: number) => {
+    const quat = new THREE.Quaternion();
+    return quat.setFromEuler(new THREE.Euler(x, y, z));
+  }
+
+  private rotateHor = () => {
+    // rotate around y axis
+    // this.camera.position.x = x * Math.cos(angle) + z * Math.sin(angle);
+    // this.camera.position.z = z * Math.cos(angle) - x * Math.sin(angle);
+  }
+
+
+  public rotate(degrees: number) {
+    const { x, y, z } = this.camera.position;
+
+    const angle = 180;
+    // rotate around y axis
+    // this.camera.position.x = x * Math.cos(angle) + z * Math.sin(angle);
+    // this.camera.position.z = z * Math.cos(angle) - x * Math.sin(angle);
+
+    // rotate around x axis
+    // this.camera.position.y = y * Math.cos(angle) + z * Math.sin(angle);
+    // this.camera.position.z = z * Math.cos(angle) - y * Math.sin(angle);
+
+    // rotate around z axis
+    // this.camera.position.y = y * Math.cos(angle) + x * Math.sin(angle);
+    // this.camera.position.x = x * Math.cos(angle) - y * Math.sin(angle);
+    this.camera.lookAt(this.target.position);
+  }
+
+  private aroundY(angle: number): THREE.Vector3 {
+    const { x, z } = this.camera.position;
+    const fPosition = new Vector3();
+    fPosition.x = x * Math.cos(angle) + z * Math.sin(angle);
+    fPosition.z = z * Math.cos(angle) - x * Math.sin(angle);
+    return fPosition;
+  }
+
+  private aroundX(angle: number): THREE.Vector3 {
+    const { y, z } = this.camera.position;
+    const fPosition = new Vector3();
+    fPosition.y = y * Math.cos(angle) + z * Math.sin(angle);
+    fPosition.z = z * Math.cos(angle) - y * Math.sin(angle);
+    return fPosition;
+  }
+
+  private aroundZ(angle: number): THREE.Vector3 {
+    const { x, y } = this.camera.position;
+    const fPosition = new Vector3();
+    fPosition.y = y * Math.cos(angle) + x * Math.sin(angle);
+    fPosition.x = x * Math.cos(angle) - y * Math.sin(angle);
+    return fPosition;
+  }
+
+  public update() {
+    const { x, z, y } = this.camera.position;
+
+    // const angle = 0.005;
+    // this.camera.position.y = y * Math.cos(angle) + z * Math.sin(angle);
+    // this.camera.position.z = z * Math.cos(angle) - y * Math.sin(angle);
+
+    // this.camera.lookAt(this.scene.position);
+    // this.pivotPoint.lookAt(this.camera.position);
+
+    // this.currentZRotation += 0.01;
+    // this.pivotPoint.rotation.z += this.currentZRotation;
+    // this.camera.rotation.z = this.pivotPoint.rotation.z;
+
+    TWEEN.update();
+  }
+  // rotate around y axis
+  // this.camera.position.x = x * Math.cos(angle) + z * Math.sin(angle);
+  // this.camera.position.z = z * Math.cos(angle) - x * Math.sin(angle);
+
+  // rotate around x axis
+  // this.camera.position.y = y * Math.cos(angle) + z * Math.sin(angle);
+  // this.camera.position.z = z * Math.cos(angle) - y * Math.sin(angle);
+
+  // rotate around z axis
+  // this.camera.position.y = y * Math.cos(angle) + x * Math.sin(angle);
+  // this.camera.position.x = x * Math.cos(angle) - y * Math.sin(angle);
+
+  // this.cameraAxesHelper.rotation.x = this.camera.rotation.x;
+  // this.cameraAxesHelper.rotation.y = this.camera.rotation.y;
+  // this.cameraAxesHelper.rotation.z = this.camera.rotation.z;
+
+  // this.cameraAxesHelper.position.x = this.camera.position.x;
+  // this.cameraAxesHelper.position.y = this.camera.position.y;
+  // this.cameraAxesHelper.position.z = this.camera.position.z;
+}
+
+export default CameraControls;

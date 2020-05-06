@@ -1,9 +1,12 @@
 // import * as THREE from 'three';
 import * as THREE from '../node_modules/three/src/Three';
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls';
+import { TrackballControls } from '../node_modules/three/examples/jsm/controls/TrackballControls';
+import { FlyControls } from '../node_modules/three/examples/jsm/controls/FlyControls';
 import { RenderInterface, MouseInterface } from './d';
 import RubikManager from './rubik/manager';
 import { createCamera } from './rubik/utils';
+import CameraControls from './lib/CameraControls';
 
 function createLight() {
   const color = 0xFFFFFF;
@@ -22,8 +25,6 @@ class MainScene {
 
   camera: THREE.PerspectiveCamera
 
-  rotationCamera: THREE.PerspectiveCamera
-
   controls: OrbitControls
 
   scene: THREE.Scene
@@ -39,15 +40,18 @@ class MainScene {
     this.canvas = document.querySelector('#c');
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
 
-    this.camera = createCamera();
-
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-
-    this.controls.update();
-
     this.scene = new THREE.Scene();
 
     this.scene.add(this.light);
+
+    this.camera = createCamera();
+
+    // this.controls = new CameraControls(this.camera, this.renderer.domElement, this);
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+
+    // this.controls.update();
+
+    // this.scene.background = new THREE.Color(0x3399ff);
 
     this.renderObjects = [];
 
@@ -60,18 +64,9 @@ class MainScene {
     document.addEventListener('mouseup', this.onMouseUp.bind(this), false);
 
     document.addEventListener('mousemove', this.onMouseMove.bind(this), false);
-  }
 
-  changeCamera = (camera: THREE.PerspectiveCamera) => {
-    this.camera = camera;
-
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-
-    const canvas = this.renderer.domElement;
-    this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
-    this.camera.updateProjectionMatrix();
-
-    this.controls.update();
+    const helper = new THREE.AxesHelper(5);
+    this.scene.add(helper);
   }
 
   updateMousePosition = (event: MouseEvent) => {
@@ -138,7 +133,6 @@ class MainScene {
   }
 }
 
-
 window.onload = () => {
   const main = new MainScene();
 
@@ -183,7 +177,6 @@ window.onload = () => {
   next.onclick = () => {
     rubikManager.next();
   };
-
 
   main.render();
 };

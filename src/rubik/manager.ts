@@ -5,7 +5,7 @@ import { sides as s, sidesStr, sidesArr, createCamera } from './utils';
 import { MoveInterface } from './moveActions';
 import MainScene from '..';
 import * as THREE from '../../node_modules/three/src/Three';
-import { OrbitControls } from '../../node_modules/three/examples/jsm/controls/OrbitControls';
+import { MathUtils } from '../../node_modules/three/src/Three';
 
 class RubikManager {
   private rubikModel: RubikModel
@@ -45,7 +45,7 @@ class RubikManager {
     this.orientationDiv = orientationDiv;
     this.renderOrder.set('rubik', 0);
 
-    this.addRubik(4);
+    this.addRubik(3);
 
     this.createOrientationButtons();
   }
@@ -54,11 +54,12 @@ class RubikManager {
     this.scene.renderObjects[0] = this.rubikView;
     this.scene.mouseObjects[0] = this.rubikView;
     this.rubikView.addToScene();
-    this.rubikView.changeCamera();
 
     this.rubikView.createMeshes();
     this.rubikView.colorizeRubik();
-    // this.rubikView.placeTextOnRubik(null);
+    this.rubikView.placeTextOnRubik(null);
+    // this.scene.controls.changeCamera(this.rubikModel.sideLength);
+    this.rubikView.changeCamera();
   }
 
   private addRubik(length: number) {
@@ -99,11 +100,13 @@ class RubikManager {
   }
 
   public sizeUp = () => {
+    this.rubikView.dispose();
     this.addRubik(this.rubikModel.sideLength + 1);
   }
 
   public sizeDown = () => {
     if (this.rubikModel.sideLength > 3) {
+      this.rubikView.dispose();
       this.addRubik(this.rubikModel.sideLength - 1);
     }
   }
@@ -220,16 +223,9 @@ class RubikManager {
       button.innerHTML = sidesStr[i];
       button.onclick = () => {
         this.changeOrientation(i);
-
-
-        // const camera = createCamera();
-
-        // camera.up.set(0, -1, 0);
-        // camera.position.set(0, 0, 6);
-
-        // this.scene.changeCamera(camera);
-
-        // this.scene.resizeRendererToDisplaySize();
+        this.rubikView.rubik.rotateX(MathUtils.degToRad(90));
+        console.log('clicked orientation');
+        console.log(this.rubikView.rubik.rotation);
       };
       this.orientationDiv.appendChild(button);
     }

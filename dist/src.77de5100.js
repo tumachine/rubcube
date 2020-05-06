@@ -83118,9 +83118,39 @@ exports.createCamera = function () {
   return camera;
 };
 
-exports.sidesOrientaion = new Array(6);
+exports.sidesOrientaion = new Array(6); // sidesOrientaion[sides.f] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
+//   mesh.translateZ(0.5 + detach);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+// };
+// sidesOrientaion[sides.b] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
+//   mesh.translateZ(-0.5 - detach);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * 180);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+// };
+// sidesOrientaion[sides.l] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
+//   mesh.translateX(-0.5 - detach);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * 90);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * 180);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+// };
+// sidesOrientaion[sides.r] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
+//   mesh.translateX(0.5 + detach);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * 90);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+// };
+// sidesOrientaion[sides.u] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
+//   mesh.translateY(0.5 + detach);
+//   mesh.rotateX(THREE.MathUtils.DEG2RAD * 90);
+//   mesh.rotateX(THREE.MathUtils.DEG2RAD * 180);
+//   mesh.rotateX(THREE.MathUtils.DEG2RAD * rotation);
+// };
+// sidesOrientaion[sides.d] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
+//   mesh.translateY(-0.5 - detach);
+//   mesh.rotateX(THREE.MathUtils.DEG2RAD * 90);
+//   mesh.rotateX(THREE.MathUtils.DEG2RAD * rotation);
+// };
 
-exports.sidesOrientaion[sides.f] = function (mesh, detach, rotation) {
+exports.sidesOrientaion[sides.f] = function (object, detach, rotation) {
   if (detach === void 0) {
     detach = 0;
   }
@@ -83129,11 +83159,11 @@ exports.sidesOrientaion[sides.f] = function (mesh, detach, rotation) {
     rotation = 0;
   }
 
-  mesh.translateZ(0.5 + detach);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+  object.translateZ(0.5 + detach);
+  object.rotateY(THREE.MathUtils.DEG2RAD * rotation);
 };
 
-exports.sidesOrientaion[sides.b] = function (mesh, detach, rotation) {
+exports.sidesOrientaion[sides.b] = function (object, detach, rotation) {
   if (detach === void 0) {
     detach = 0;
   }
@@ -83142,12 +83172,12 @@ exports.sidesOrientaion[sides.b] = function (mesh, detach, rotation) {
     rotation = 0;
   }
 
-  mesh.translateZ(-0.5 - detach);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * 180);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+  object.translateZ(-0.5 - detach);
+  object.rotateY(THREE.MathUtils.DEG2RAD * 180);
+  object.rotateY(THREE.MathUtils.DEG2RAD * rotation);
 };
 
-exports.sidesOrientaion[sides.l] = function (mesh, detach, rotation) {
+exports.sidesOrientaion[sides.l] = function (object, detach, rotation) {
   if (detach === void 0) {
     detach = 0;
   }
@@ -83156,13 +83186,13 @@ exports.sidesOrientaion[sides.l] = function (mesh, detach, rotation) {
     rotation = 0;
   }
 
-  mesh.translateX(-0.5 - detach);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * 90);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * 180);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+  object.translateX(-0.5 - detach);
+  object.rotateY(THREE.MathUtils.DEG2RAD * 90);
+  object.rotateY(THREE.MathUtils.DEG2RAD * 180);
+  object.rotateY(THREE.MathUtils.DEG2RAD * rotation);
 };
 
-exports.sidesOrientaion[sides.r] = function (mesh, detach, rotation) {
+exports.sidesOrientaion[sides.r] = function (object, detach, rotation) {
   if (detach === void 0) {
     detach = 0;
   }
@@ -83171,12 +83201,12 @@ exports.sidesOrientaion[sides.r] = function (mesh, detach, rotation) {
     rotation = 0;
   }
 
-  mesh.translateX(0.5 + detach);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * 90);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+  object.translateX(0.5 + detach);
+  object.rotateY(THREE.MathUtils.DEG2RAD * 90);
+  object.rotateY(THREE.MathUtils.DEG2RAD * rotation);
 };
 
-exports.sidesOrientaion[sides.u] = function (mesh, detach, rotation) {
+exports.sidesOrientaion[sides.u] = function (object, detach, rotation) {
   if (detach === void 0) {
     detach = 0;
   }
@@ -83185,13 +83215,13 @@ exports.sidesOrientaion[sides.u] = function (mesh, detach, rotation) {
     rotation = 0;
   }
 
-  mesh.translateY(0.5 + detach);
-  mesh.rotateX(THREE.MathUtils.DEG2RAD * 90);
-  mesh.rotateX(THREE.MathUtils.DEG2RAD * 180);
-  mesh.rotateX(THREE.MathUtils.DEG2RAD * rotation);
+  object.translateY(0.5 + detach);
+  object.rotateX(THREE.MathUtils.DEG2RAD * 90);
+  object.rotateX(THREE.MathUtils.DEG2RAD * 180);
+  object.rotateX(THREE.MathUtils.DEG2RAD * rotation);
 };
 
-exports.sidesOrientaion[sides.d] = function (mesh, detach, rotation) {
+exports.sidesOrientaion[sides.d] = function (object, detach, rotation) {
   if (detach === void 0) {
     detach = 0;
   }
@@ -83200,9 +83230,9 @@ exports.sidesOrientaion[sides.d] = function (mesh, detach, rotation) {
     rotation = 0;
   }
 
-  mesh.translateY(-0.5 - detach);
-  mesh.rotateX(THREE.MathUtils.DEG2RAD * 90);
-  mesh.rotateX(THREE.MathUtils.DEG2RAD * rotation);
+  object.translateY(-0.5 - detach);
+  object.rotateX(THREE.MathUtils.DEG2RAD * 90);
+  object.rotateX(THREE.MathUtils.DEG2RAD * rotation);
 };
 
 exports.createMesh = function (boxWidth, boxHeight) {
@@ -87928,6 +87958,26 @@ function () {
     mesh.material.map = texture;
   };
 
+  Cube.prototype.dispose = function () {
+    for (var i = 0; i < 6; i += 1) {
+      if (this.baseMeshes[i] !== undefined) {
+        this.baseMeshes[i].material.dispose();
+        this.baseMeshes[i].geometry.dispose();
+      }
+
+      if (this.outerMeshes[i] !== undefined) {
+        this.outerMeshes[i].material.dispose();
+        this.outerMeshes[i].geometry.dispose();
+      }
+
+      if (this.textMeshes[i] !== undefined) {
+        this.textMeshes[i].material.map.dispose();
+        this.textMeshes[i].material.dispose();
+        this.textMeshes[i].geometry.dispose();
+      }
+    }
+  };
+
   Cube.prototype.getCube = function () {
     return this.cube;
   };
@@ -87967,6 +88017,8 @@ var THREE = __importStar(require("../../node_modules/three/src/Three"));
 var cube_1 = __importDefault(require("./cube"));
 
 var utils_1 = require("./utils");
+
+var Three_1 = require("../../node_modules/three/src/Three");
 
 var RubikView =
 /** @class */
@@ -88178,8 +88230,9 @@ function () {
       for (var cube = 0; cube < _this.rubikModel.totalColors; cube += 1) {
         for (var s = 0; s < utils_1.sidesArr.length; s += 1) {
           _this.cubes[_this.rubikModel.getCube(utils_1.sidesArr[s], cube)].createMeshes(utils_1.sidesArr[s]); // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createOuterMeshes(sidesArr[s], this.rubikModel.sideLength);
-          // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createTextMeshes(sidesArr[s]);
 
+
+          _this.cubes[_this.rubikModel.getCube(utils_1.sidesArr[s], cube)].createTextMeshes(utils_1.sidesArr[s]);
         }
       } // this.baseMeshes = this.getAllMeshes();
 
@@ -88191,6 +88244,10 @@ function () {
           _this.cubes[_this.rubikModel.getCube(utils_1.sidesArr[s], cube)].resetPosition();
         }
       }
+    };
+
+    this.rotate = function () {
+      _this.rubik.rotateX(Three_1.MathUtils.degToRad(90));
     };
 
     this.colorizeRubik = function () {
@@ -88224,6 +88281,7 @@ function () {
     this.activeGroup = [];
     this.clickedOnFace = false;
     this.eventMoveComplete = new CustomEvent('moveComplete');
+    console.log(scene.renderer.info.memory);
   }
 
   RubikView.prototype.mouseUp = function (position) {
@@ -88232,14 +88290,16 @@ function () {
     if (this.rotating) {
       this.stopRotation();
       this.rotating = false;
-    }
+    } // this.scene.controls.enable(true);
+
 
     this.scene.controls.enabled = true;
   };
 
   RubikView.prototype.mouseDown = function (position) {
     this.mouseIsDown = true;
-    this.positionOnMouseDown = position.clone();
+    this.positionOnMouseDown = position.clone(); // console.log(this.positionOnMouseDown);
+
     this.raycaster.setFromCamera(position, this.scene.camera);
     var intersects = this.raycaster.intersectObjects(this.raycastMeshes);
 
@@ -88249,8 +88309,7 @@ function () {
       var intersection = intersects[0];
       var obj = intersection.object;
       var point = intersection.point;
-      this.calculateCubeOnFace(obj.name, point); // console.log(`Clicked: ${name}`);
-      // console.log(`Point: ${intersects[0].point.x} ${intersects[0].point.y} ${intersects[0].point.z}`);
+      this.calculateCubeOnFace(obj.name, point); // console.log(`Point: ${intersects[0].point.x} ${intersects[0].point.y} ${intersects[0].point.z}`);
     }
   };
 
@@ -88484,6 +88543,14 @@ function () {
     this.scene.camera.updateProjectionMatrix();
   };
 
+  RubikView.prototype.dispose = function () {
+    for (var cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
+      for (var s = 0; s < utils_1.sidesArr.length; s += 1) {
+        this.cubes[this.rubikModel.getCube(utils_1.sidesArr[s], cube)].dispose();
+      }
+    }
+  };
+
   RubikView.prototype.addToScene = function () {
     var rubik3DObject = this.scene.scene.getObjectByName('rubik');
 
@@ -88521,6 +88588,8 @@ var view_1 = __importDefault(require("./view"));
 
 var utils_1 = require("./utils");
 
+var Three_1 = require("../../node_modules/three/src/Three");
+
 var RubikManager =
 /** @class */
 function () {
@@ -88551,11 +88620,15 @@ function () {
     };
 
     this.sizeUp = function () {
+      _this.rubikView.dispose();
+
       _this.addRubik(_this.rubikModel.sideLength + 1);
     };
 
     this.sizeDown = function () {
       if (_this.rubikModel.sideLength > 3) {
+        _this.rubikView.dispose();
+
         _this.addRubik(_this.rubikModel.sideLength - 1);
       }
     };
@@ -88701,12 +88774,12 @@ function () {
         button.innerHTML = utils_1.sidesStr[i];
 
         button.onclick = function () {
-          _this.changeOrientation(i); // const camera = createCamera();
-          // camera.up.set(0, -1, 0);
-          // camera.position.set(0, 0, 6);
-          // this.scene.changeCamera(camera);
-          // this.scene.resizeRendererToDisplaySize();
+          _this.changeOrientation(i);
 
+          _this.rubikView.rubik.rotateX(Three_1.MathUtils.degToRad(90));
+
+          console.log('clicked orientation');
+          console.log(_this.rubikView.rubik.rotation);
         };
 
         _this.orientationDiv.appendChild(button);
@@ -88741,7 +88814,7 @@ function () {
     this.movementDiv = movementDiv;
     this.orientationDiv = orientationDiv;
     this.renderOrder.set('rubik', 0);
-    this.addRubik(4);
+    this.addRubik(3);
     this.createOrientationButtons();
   }
 
@@ -88749,9 +88822,11 @@ function () {
     this.scene.renderObjects[0] = this.rubikView;
     this.scene.mouseObjects[0] = this.rubikView;
     this.rubikView.addToScene();
-    this.rubikView.changeCamera();
     this.rubikView.createMeshes();
-    this.rubikView.colorizeRubik(); // this.rubikView.placeTextOnRubik(null);
+    this.rubikView.colorizeRubik();
+    this.rubikView.placeTextOnRubik(null); // this.scene.controls.changeCamera(this.rubikModel.sideLength);
+
+    this.rubikView.changeCamera();
   };
 
   RubikManager.prototype.addRubik = function (length) {
@@ -88782,7 +88857,7 @@ function () {
 }();
 
 exports.default = RubikManager;
-},{"./solver":"rubik/solver.ts","./model":"rubik/model.ts","./view":"rubik/view.ts","./utils":"rubik/utils.ts"}],"index.ts":[function(require,module,exports) {
+},{"./solver":"rubik/solver.ts","./model":"rubik/model.ts","./view":"rubik/view.ts","./utils":"rubik/utils.ts","../../node_modules/three/src/Three":"../node_modules/three/src/Three.js"}],"index.ts":[function(require,module,exports) {
 "use strict";
 
 var __importStar = this && this.__importStar || function (mod) {
@@ -88826,17 +88901,6 @@ var MainScene =
 function () {
   function MainScene() {
     var _this = this;
-
-    this.changeCamera = function (camera) {
-      _this.camera = camera;
-      _this.controls = new OrbitControls_1.OrbitControls(_this.camera, _this.renderer.domElement);
-      var canvas = _this.renderer.domElement;
-      _this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
-
-      _this.camera.updateProjectionMatrix();
-
-      _this.controls.update();
-    };
 
     this.updateMousePosition = function (event) {
       var rect = _this.canvas.getBoundingClientRect();
@@ -88885,17 +88949,21 @@ function () {
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas
     });
-    this.camera = utils_1.createCamera();
-    this.controls = new OrbitControls_1.OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.update();
     this.scene = new THREE.Scene();
     this.scene.add(this.light);
+    this.camera = utils_1.createCamera(); // this.controls = new CameraControls(this.camera, this.renderer.domElement, this);
+
+    this.controls = new OrbitControls_1.OrbitControls(this.camera, this.renderer.domElement); // this.controls.update();
+    // this.scene.background = new THREE.Color(0x3399ff);
+
     this.renderObjects = [];
     this.mouseObjects = [];
     this.mouse = new THREE.Vector3();
     document.addEventListener('mousedown', this.onMouseDown.bind(this), false);
     document.addEventListener('mouseup', this.onMouseUp.bind(this), false);
     document.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+    var helper = new THREE.AxesHelper(5);
+    this.scene.add(helper);
   }
 
   MainScene.prototype.onMouseMove = function (event) {
@@ -89001,7 +89069,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58596" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57341" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

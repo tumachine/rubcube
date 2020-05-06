@@ -1,0 +1,256 @@
+
+import TWEEN from 'tween.ts';
+import * as THREE from '../../node_modules/three/src/Three';
+import { createCamera, sides } from '../rubik/utils';
+import { Vector3, Object3D, Quaternion, OrthographicCamera, Euler } from '../../node_modules/three/src/Three';
+
+interface CameraPosition {
+  rotation: THREE.Vector3
+  position: THREE.Vector3
+}
+
+class CameraControls {
+  private camera: THREE.PerspectiveCamera
+
+  private renderer: HTMLCanvasElement
+
+  public target: THREE.Object3D
+
+  pivotPoint: THREE.Object3D
+
+  currentZRotation: number
+
+  backgroundCamera: THREE.PerspectiveCamera
+
+  cameraAxesHelper: THREE.Object3D
+
+  scene: THREE.Scene
+
+  objectPos: Array<Object3D>
+
+  objQuaternions: Array<Array<Quaternion>>
+
+  public constructor(camera: THREE.PerspectiveCamera, renderer: HTMLCanvasElement, scene: THREE.Scene) {
+    this.camera = camera;
+    this.renderer = renderer;
+    this.scene = scene;
+
+    this.pivotPoint = new THREE.Object3D();
+    this.scene.add(this.pivotPoint);
+
+    this.generateCameraPositions();
+    this.distanceObjects(5);
+
+    // this.backgroundCamera = createCamera();
+    // this.backgroundCamera.position.z = 20;
+
+    this.camera.position.copy(this.objectPos[0].position);
+    // this.camera.quaternion.copy(this.objQuaternions[0][0]);
+    this.camera.lookAt(this.pivotPoint.position);
+
+    // this.camera.rotateX(Math.PI / 4);
+    this.camera.add(new THREE.AxesHelper(10));
+
+    // const helper = new THREE.AxesHelper(10);
+    // this.pivotPoint.add(helper);
+
+    // this.camera.lookAt(this.pivotPoint.position);
+
+    // const geometry = new THREE.BoxGeometry(1, 1, 1);
+    // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    // this.cameraAxesHelper = new THREE.Mesh(geometry, material);
+    // this.cameraAxesHelper.add(new THREE.AxesHelper(10));
+    // this.scene.add(this.cameraAxesHelper);
+
+    const turnsDiv = document.getElementById('turns');
+    turnsDiv.appendChild(this.createTurnButton('left', this.moveLeft));
+    turnsDiv.appendChild(this.createTurnButton('right', this.moveRight));
+    turnsDiv.appendChild(this.createTurnButton('rotate', this.rotate));
+
+    // this.moveLeft();
+  }
+
+  private createTurnButton = (name: string, func: Function) => {
+    const button = document.createElement('button');
+    button.innerHTML = name;
+    button.onclick = () => {
+      func();
+      console.log(`clicked: ${name}`);
+    };
+    return button;
+  }
+
+  private distanceObjects = (distance: number) => {
+    for (let i = 0; i < this.objectPos.length; i += 1) {
+      this.objectPos[i].position.multiplyScalar(distance);
+    }
+  }
+
+  private generateCameraPositions = () => {
+    const directions: Vector3[] = [];
+
+    // // set front
+    // directions.push(new Vector3(1, 1, 1).normalize());
+    // directions.push(new Vector3(-1, 1, 1).normalize());
+    // directions.push(new Vector3(-1, -1, 1).normalize());
+    // directions.push(new Vector3(1, -1, 1).normalize());
+
+    // // set back
+    // directions.push(new Vector3(1, 1, -1).normalize());
+    // directions.push(new Vector3(-1, 1, -1).normalize());
+    // directions.push(new Vector3(-1, -1, -1).normalize());
+    // directions.push(new Vector3(1, -1, -1).normalize());
+
+    // set front
+    directions.push(new Vector3(0.8, 0.8, 1).normalize());
+    directions.push(new Vector3(-0.8, 0.8, 1).normalize());
+    directions.push(new Vector3(-0.8, -0.8, 1).normalize());
+    directions.push(new Vector3(0.8, -0.8, 1).normalize());
+
+    // set back
+    directions.push(new Vector3(0.8, 0.8, -1).normalize());
+    directions.push(new Vector3(-0.8, 0.8, -1).normalize());
+    directions.push(new Vector3(-0.8, -0.8, -1).normalize());
+    directions.push(new Vector3(0.8, -0.8, -1).normalize());
+
+    this.objectPos = [];
+
+    for (let i = 0; i < 8; i += 1) {
+      const obj = new Object3D();
+
+      obj.position.copy(directions[i]);
+      this.objectPos.push(obj);
+
+      this.pivotPoint.add(obj);
+      obj.lookAt(this.pivotPoint.position);
+      obj.rotateY(Math.PI);
+    }
+
+    // this.objQuaternions = [];
+
+    // const deg120 = (Math.PI * 2) / 3;
+    // for (let i = 0; i < 8; i += 1) {
+    //   const objEulers: Euler[] = [];
+
+    //   const origRotation = this.objectPos[i].rotation.clone();
+    //   objEulers.push(origRotation.clone());
+    //   for (let r = 0; r < 2; r += 1) {
+    //     origRotation.z += deg120;
+    //     objEulers.push(origRotation.clone());
+    //   }
+
+    //   const objQuat: Quaternion[] = [];
+    //   for (let q = 0; q < 3; q += 1) {
+    //     objQuat.push(new Quaternion().setFromEuler(objEulers[q]));
+    //   }
+    //   this.objQuaternions.push(objQuat);
+    // }
+  }
+
+  private findClosestObj = (dir: Vector3, firstClosest: boolean): number => {
+    const obj = new Object3D();
+
+    obj.position.copy(this.camera.position);
+    obj.rotation.copy(this.camera.rotation);
+
+    if (obj.rotation.z < 0) {
+      obj.rotateX(Math.PI / 4);
+    } else {
+      obj.rotateX(-Math.PI / 4);
+    }
+
+    obj.translateX(dir.x);
+    obj.translateY(dir.y);
+    obj.translateZ(dir.z);
+
+    const distances: number[] = [];
+    for (let i = 0; i < this.objectPos.length; i += 1) {
+      distances.push(obj.position.distanceTo(this.objectPos[i].position));
+    }
+
+    let first = Number.MAX_VALUE;
+    let second = Number.MAX_VALUE;
+    for (let i = 0; i < distances.length; i += 1) {
+      if (distances[i] < first) {
+        second = first;
+        first = distances[i];
+      } else if (distances[i] < second && distances[i] !== first) {
+        second = distances[i];
+      }
+    }
+
+    for (let i = 0; i < distances.length; i += 1) {
+      if (firstClosest) {
+        if (first === distances[i]) {
+          return i;
+        }
+      } else {
+        if (second === distances[i]) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+
+  private moveLeft = () => {
+    const vectLeft = new Vector3(-1, 0, 0);
+    const index = this.findClosestObj(vectLeft, false);
+    this.turn(index);
+  }
+
+  private moveRight = () => {
+    const vectLeft = new Vector3(1, 0, 0);
+    const index = this.findClosestObj(vectLeft, false);
+    this.turn(index);
+  }
+
+  rotate = (speed: number = 400) => {
+    const qm = new THREE.Quaternion();
+    const curQuaternion = this.camera.quaternion.clone();
+
+    const obj = new Object3D();
+    obj.quaternion.copy(this.camera.quaternion.clone());
+    obj.rotateZ((Math.PI * 2) / 3);
+
+    const targetQuaternion = obj.quaternion;
+
+    const start = { t: 0 };
+    const end = { t: 1 };
+
+    const rotTween = new TWEEN.Tween(start).to(end, speed)
+      .easing(TWEEN.Easing.Linear.None)
+      .onUpdate(() => {
+        THREE.Quaternion.slerp(curQuaternion, targetQuaternion, qm, start.t);
+        qm.normalize();
+        this.camera.rotation.setFromQuaternion(qm);
+      })
+      .start();
+  }
+
+  turn = (objectIndex: number, speed: number = 400) => {
+    const startPosition = this.camera.position.clone();
+    const endPosition = this.objectPos[objectIndex].position.clone();
+
+    const angle = { value: 0 };
+    const angleEnd = startPosition.angleTo(endPosition);
+    const normal = startPosition.clone().cross(endPosition).normalize();
+
+    const posTween = new TWEEN.Tween(angle)
+      .to({ value: angleEnd }, speed)
+      .easing(TWEEN.Easing.Linear.None)
+      .onUpdate(
+        () => {
+          this.camera.position.copy(startPosition).applyAxisAngle(normal, angle.value);
+          this.camera.lookAt(this.pivotPoint.position);
+        },
+      )
+      .start();
+  }
+
+  public update() {
+    TWEEN.update();
+  }
+}
+
+export default CameraControls;

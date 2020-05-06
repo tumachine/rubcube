@@ -19,12 +19,6 @@ const orange = 0xFFA500;
 const colors = [green, blue, orange, red, white, yellow];
 
 export default class Cube {
-  boxMaterial: THREE.MeshPhongMaterial
-
-  boxGeometry: THREE.BoxGeometry
-
-  box: THREE.Mesh;
-
   cube: THREE.Object3D
 
   baseMeshes: THREE.Mesh[]
@@ -88,6 +82,24 @@ export default class Cube {
     const texture = getTextTexture(text);
     const mesh = this.textMeshes[faceSide];
     (mesh.material as THREE.MeshBasicMaterial).map = texture;
+  }
+
+  dispose() {
+    for (let i = 0; i < 6; i += 1) {
+      if (this.baseMeshes[i] !== undefined) {
+        (this.baseMeshes[i].material as THREE.MeshBasicMaterial).dispose();
+        this.baseMeshes[i].geometry.dispose();
+      }
+      if (this.outerMeshes[i] !== undefined) {
+        (this.outerMeshes[i].material as THREE.MeshBasicMaterial).dispose();
+        this.outerMeshes[i].geometry.dispose();
+      }
+      if (this.textMeshes[i] !== undefined) {
+        (this.textMeshes[i].material as THREE.MeshBasicMaterial).map.dispose();
+        (this.textMeshes[i].material as THREE.MeshBasicMaterial).dispose();
+        this.textMeshes[i].geometry.dispose();
+      }
+    }
   }
 
   getCube() {

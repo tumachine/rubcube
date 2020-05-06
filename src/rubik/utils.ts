@@ -57,41 +57,73 @@ export const createCamera = () => {
 };
 
 interface MeshSideOrient {
-  (mesh: THREE.Mesh, detach: number, rotation: number);
+  (object: THREE.Object3D, detach: number, rotation: number);
 }
 
 export const sidesOrientaion: MeshSideOrient[] = new Array(6);
 
-sidesOrientaion[sides.f] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
-  mesh.translateZ(0.5 + detach);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+// sidesOrientaion[sides.f] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
+//   mesh.translateZ(0.5 + detach);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+// };
+// sidesOrientaion[sides.b] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
+//   mesh.translateZ(-0.5 - detach);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * 180);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+// };
+// sidesOrientaion[sides.l] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
+//   mesh.translateX(-0.5 - detach);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * 90);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * 180);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+// };
+// sidesOrientaion[sides.r] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
+//   mesh.translateX(0.5 + detach);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * 90);
+//   mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+// };
+// sidesOrientaion[sides.u] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
+//   mesh.translateY(0.5 + detach);
+//   mesh.rotateX(THREE.MathUtils.DEG2RAD * 90);
+//   mesh.rotateX(THREE.MathUtils.DEG2RAD * 180);
+//   mesh.rotateX(THREE.MathUtils.DEG2RAD * rotation);
+// };
+// sidesOrientaion[sides.d] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
+//   mesh.translateY(-0.5 - detach);
+//   mesh.rotateX(THREE.MathUtils.DEG2RAD * 90);
+//   mesh.rotateX(THREE.MathUtils.DEG2RAD * rotation);
+// };
+
+sidesOrientaion[sides.f] = (object: THREE.Object3D, detach: number = 0, rotation: number = 0) => {
+  object.translateZ(0.5 + detach);
+  object.rotateY(THREE.MathUtils.DEG2RAD * rotation);
 };
-sidesOrientaion[sides.b] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
-  mesh.translateZ(-0.5 - detach);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * 180);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+sidesOrientaion[sides.b] = (object: THREE.Object3D, detach: number = 0, rotation: number = 0) => {
+  object.translateZ(-0.5 - detach);
+  object.rotateY(THREE.MathUtils.DEG2RAD * 180);
+  object.rotateY(THREE.MathUtils.DEG2RAD * rotation);
 };
-sidesOrientaion[sides.l] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
-  mesh.translateX(-0.5 - detach);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * 90);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * 180);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+sidesOrientaion[sides.l] = (object: THREE.Object3D, detach: number = 0, rotation: number = 0) => {
+  object.translateX(-0.5 - detach);
+  object.rotateY(THREE.MathUtils.DEG2RAD * 90);
+  object.rotateY(THREE.MathUtils.DEG2RAD * 180);
+  object.rotateY(THREE.MathUtils.DEG2RAD * rotation);
 };
-sidesOrientaion[sides.r] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
-  mesh.translateX(0.5 + detach);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * 90);
-  mesh.rotateY(THREE.MathUtils.DEG2RAD * rotation);
+sidesOrientaion[sides.r] = (object: THREE.Object3D, detach: number = 0, rotation: number = 0) => {
+  object.translateX(0.5 + detach);
+  object.rotateY(THREE.MathUtils.DEG2RAD * 90);
+  object.rotateY(THREE.MathUtils.DEG2RAD * rotation);
 };
-sidesOrientaion[sides.u] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
-  mesh.translateY(0.5 + detach);
-  mesh.rotateX(THREE.MathUtils.DEG2RAD * 90);
-  mesh.rotateX(THREE.MathUtils.DEG2RAD * 180);
-  mesh.rotateX(THREE.MathUtils.DEG2RAD * rotation);
+sidesOrientaion[sides.u] = (object: THREE.Object3D, detach: number = 0, rotation: number = 0) => {
+  object.translateY(0.5 + detach);
+  object.rotateX(THREE.MathUtils.DEG2RAD * 90);
+  object.rotateX(THREE.MathUtils.DEG2RAD * 180);
+  object.rotateX(THREE.MathUtils.DEG2RAD * rotation);
 };
-sidesOrientaion[sides.d] = (mesh: THREE.Mesh, detach: number = 0, rotation: number = 0) => {
-  mesh.translateY(-0.5 - detach);
-  mesh.rotateX(THREE.MathUtils.DEG2RAD * 90);
-  mesh.rotateX(THREE.MathUtils.DEG2RAD * rotation);
+sidesOrientaion[sides.d] = (object: THREE.Object3D, detach: number = 0, rotation: number = 0) => {
+  object.translateY(-0.5 - detach);
+  object.rotateX(THREE.MathUtils.DEG2RAD * 90);
+  object.rotateX(THREE.MathUtils.DEG2RAD * rotation);
 };
 
 export const createMesh = (boxWidth: number, boxHeight: number) => {

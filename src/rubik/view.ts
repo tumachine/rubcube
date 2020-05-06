@@ -8,6 +8,7 @@ import RubikModel from './model';
 import { RenderInterface, MouseInterface } from '../d';
 import { MoveInterface } from './moveActions';
 import MainScene from '..';
+import { MathUtils } from '../../node_modules/three/src/Three';
 
 class RubikView implements RenderInterface, MouseInterface {
   private rubikModel: RubikModel
@@ -78,6 +79,7 @@ class RubikView implements RenderInterface, MouseInterface {
 
   public eventMoveComplete: CustomEvent
 
+
   constructor(rubikModel: RubikModel, scene: MainScene) {
     this.name = 'rubik';
     this.rubikModel = rubikModel;
@@ -106,6 +108,7 @@ class RubikView implements RenderInterface, MouseInterface {
     this.clickedOnFace = false;
 
     this.eventMoveComplete = new CustomEvent('moveComplete');
+    console.log(scene.renderer.info.memory);
   }
 
   private getMousePosition = (mouse: THREE.Vector3, plane: planeOrientation = planeOrientation.XY): THREE.Vector3 => {
@@ -125,6 +128,7 @@ class RubikView implements RenderInterface, MouseInterface {
       this.rotating = false;
     }
 
+    // this.scene.controls.enable(true);
     this.scene.controls.enabled = true;
   }
 
@@ -132,6 +136,7 @@ class RubikView implements RenderInterface, MouseInterface {
     this.mouseIsDown = true;
 
     this.positionOnMouseDown = position.clone();
+    // console.log(this.positionOnMouseDown);
 
     this.raycaster.setFromCamera(position, this.scene.camera);
 
@@ -145,7 +150,6 @@ class RubikView implements RenderInterface, MouseInterface {
       this.calculateCubeOnFace(obj.name, point);
 
 
-      // console.log(`Clicked: ${name}`);
       // console.log(`Point: ${intersects[0].point.x} ${intersects[0].point.y} ${intersects[0].point.z}`);
     }
   }
@@ -542,6 +546,13 @@ class RubikView implements RenderInterface, MouseInterface {
     return cubes;
   }
 
+  changeCamera() {
+    const length = this.rubikModel.sideLength;
+    this.scene.camera.position.set(length * 1.5, length * 1.2, length * 2);
+    this.scene.camera.far = length * 4;
+    this.scene.camera.updateProjectionMatrix();
+  }
+
   placeTextOnRubik = (inter: number[][]) => {
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
       for (let s = 0; s < sidesArr.length; s += 1) {
@@ -555,7 +566,7 @@ class RubikView implements RenderInterface, MouseInterface {
       for (let s = 0; s < sidesArr.length; s += 1) {
         this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createMeshes(sidesArr[s]);
         // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createOuterMeshes(sidesArr[s], this.rubikModel.sideLength);
-        // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createTextMeshes(sidesArr[s]);
+        this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createTextMeshes(sidesArr[s]);
       }
     }
     // this.baseMeshes = this.getAllMeshes();
@@ -569,6 +580,10 @@ class RubikView implements RenderInterface, MouseInterface {
     }
   }
 
+  rotate = () => {
+    this.rubik.rotateX(MathUtils.degToRad(90));
+  }
+
   colorizeRubik = () => {
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
       for (let s = 0; s < sidesArr.length; s += 1) {
@@ -578,11 +593,12 @@ class RubikView implements RenderInterface, MouseInterface {
     }
   }
 
-  changeCamera() {
-    const length = this.rubikModel.sideLength;
-    this.scene.camera.position.set(length * 1.5, length * 1.2, length * 2);
-    this.scene.camera.far = length * 4;
-    this.scene.camera.updateProjectionMatrix();
+  dispose() {
+    for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
+      for (let s = 0; s < sidesArr.length; s += 1) {
+        this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].dispose();
+      }
+    }
   }
 
   addToScene() {
