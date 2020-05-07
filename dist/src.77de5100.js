@@ -87522,14 +87522,70 @@ function () {
       return matrixRubic;
     };
 
+    this.rotateFaceForView = function (arr, clockwise) {
+      var posFace = clockwise ? _this.posClockwise : _this.posCounter;
+
+      var faceCopy = __spreadArrays(arr);
+
+      for (var i = 0; i < _this.totalColors; i += 1) {
+        arr[i] = faceCopy[posFace[i]];
+      }
+    };
+
+    this.rotateSliceForView = function (slice, clockwise, matrix) {
+      _this.rotate(_this.posVer, clockwise ? _this.sequenceVerRev : _this.sequenceVer, slice, matrix);
+    };
+
+    this.rotateVerMatrix = function (slice, clockwise, matrix, bottom, top) {
+      if (bottom === void 0) {
+        bottom = utils_1.sides.l;
+      }
+
+      if (top === void 0) {
+        top = utils_1.sides.r;
+      }
+
+      _this.rotate(_this.posVer, clockwise ? _this.sequenceVerRev : _this.sequenceVer, slice, matrix);
+
+      _this.rotateFaceReal(slice, bottom, top, clockwise ? _this.posCounter : _this.posClockwise, matrix);
+    };
+
+    this.rotateHorMatrix = function (slice, clockwise, matrix, bottom, top) {
+      if (bottom === void 0) {
+        bottom = utils_1.sides.d;
+      }
+
+      if (top === void 0) {
+        top = utils_1.sides.u;
+      }
+
+      _this.rotate(_this.posHor, clockwise ? _this.sequenceHorRev : _this.sequenceHor, slice, matrix);
+
+      _this.rotateFaceReal(slice, bottom, top, clockwise ? _this.posCounter : _this.posClockwise, matrix);
+    };
+
+    this.rotateDepMatrix = function (slice, clockwise, matrix, bottom, top) {
+      if (bottom === void 0) {
+        bottom = utils_1.sides.b;
+      }
+
+      if (top === void 0) {
+        top = utils_1.sides.f;
+      }
+
+      _this.rotate(clockwise ? _this.posDepRev : _this.posDep, clockwise ? _this.sequenceDepRev : _this.sequenceDep, slice, matrix);
+
+      _this.rotateFaceReal(slice, bottom, top, clockwise ? _this.posClockwise : _this.posCounter, matrix);
+    };
+
     this.rotateVer = function (slice, clockwise, realMatrix) {
       if (realMatrix === void 0) {
         realMatrix = true;
       }
 
-      _this.rotate(_this.posVer, clockwise ? _this.sequenceVerRev : _this.sequenceVer, slice, realMatrix);
+      var matrix = realMatrix ? _this.matrix : _this.matrixReference;
 
-      _this.rotateFaceReal(slice, utils_1.sides.l, utils_1.sides.r, clockwise ? _this.posCounter : _this.posClockwise, realMatrix);
+      _this.rotateVerMatrix(slice, clockwise, matrix);
     };
 
     this.rotateHor = function (slice, clockwise, realMatrix) {
@@ -87537,9 +87593,9 @@ function () {
         realMatrix = true;
       }
 
-      _this.rotate(_this.posHor, clockwise ? _this.sequenceHorRev : _this.sequenceHor, slice, realMatrix);
+      var matrix = realMatrix ? _this.matrix : _this.matrixReference;
 
-      _this.rotateFaceReal(slice, utils_1.sides.d, utils_1.sides.u, clockwise ? _this.posCounter : _this.posClockwise, realMatrix);
+      _this.rotateHorMatrix(slice, clockwise, matrix);
     };
 
     this.rotateDep = function (slice, clockwise, realMatrix) {
@@ -87547,9 +87603,9 @@ function () {
         realMatrix = true;
       }
 
-      _this.rotate(clockwise ? _this.posDepRev : _this.posDep, clockwise ? _this.sequenceDepRev : _this.sequenceDep, slice, realMatrix);
+      var matrix = realMatrix ? _this.matrix : _this.matrixReference;
 
-      _this.rotateFaceReal(slice, utils_1.sides.b, utils_1.sides.f, clockwise ? _this.posClockwise : _this.posCounter, realMatrix);
+      _this.rotateDepMatrix(slice, clockwise, matrix);
     };
 
     this.getCubesHor = function (slice) {
@@ -87683,12 +87739,7 @@ function () {
       }
     };
 
-    this.rotate = function (slices, sequence, slice, realMatrix) {
-      if (realMatrix === void 0) {
-        realMatrix = true;
-      }
-
-      var matrix = realMatrix ? _this.matrix : _this.matrixReference;
+    this.rotate = function (slices, sequence, slice, matrix) {
       var layer = slices[slice];
       var first = layer[0]; // save values of first face
 
@@ -87714,27 +87765,17 @@ function () {
       }
     };
 
-    this.rotateFaceReal = function (slice, bottom, top, clockwiseArr, realMatrix) {
-      if (realMatrix === void 0) {
-        realMatrix = true;
-      }
-
+    this.rotateFaceReal = function (slice, bottom, top, clockwiseArr, matrix) {
       if (slice === 0) {
-        _this.rotateFace(bottom, clockwiseArr, realMatrix);
+        _this.rotateFace(bottom, clockwiseArr, matrix);
       } else if (slice === _this.sideLength - 1) {
-        _this.rotateFace(top, clockwiseArr, realMatrix);
+        _this.rotateFace(top, clockwiseArr, matrix);
       }
     }; // keep matrix and reference separated
     // ref update is unnesesary unless you have a rubik model
 
 
-    this.rotateFace = function (face, positionFace, realMatrix) {
-      if (realMatrix === void 0) {
-        realMatrix = true;
-      }
-
-      var matrix = realMatrix ? _this.matrix : _this.matrixReference;
-
+    this.rotateFace = function (face, positionFace, matrix) {
       var faceCopy = __spreadArrays(matrix[face]);
 
       for (var i = 0; i < _this.totalColors; i += 1) {
@@ -87989,6 +88030,20 @@ exports.default = Cube;
 },{"../../node_modules/three/src/Three":"../node_modules/three/src/Three.js","./utils":"rubik/utils.ts"}],"rubik/view.ts":[function(require,module,exports) {
 "use strict";
 
+var __spreadArrays = this && this.__spreadArrays || function () {
+  for (var s = 0, i = 0, il = arguments.length; i < il; i++) {
+    s += arguments[i].length;
+  }
+
+  for (var r = Array(s), k = 0, i = 0; i < il; i++) {
+    for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++) {
+      r[k] = a[j];
+    }
+  }
+
+  return r;
+};
+
 var __importStar = this && this.__importStar || function (mod) {
   if (mod && mod.__esModule) return mod;
   var result = {};
@@ -88051,9 +88106,14 @@ function () {
       var vector = _this.get2DVector(utils_1.sidesMap[side], point);
 
       var cubeNum = vector.y * _this.rubikModel.sideLength + vector.x;
-      _this.selectedCube = cubeNum;
-      _this.selectedFace = utils_1.sidesMap[side];
-      console.log(side + ": " + cubeNum); // this.cubes[this.rubikModel.getCube(sidesArr[sidesMap[side]], cubeNum)].setColor(sidesMap[side], 2);
+      var cube = _this.turnInterface[utils_1.sidesMap[side]][cubeNum]; // console.log(cubeNum);
+
+      console.log(side + ": " + cube);
+      _this.selectedCube = cube;
+      _this.selectedFace = utils_1.sidesMap[side]; // console.log(`${side}: ${cubeNum}`);
+      // const sideOrient = sidesArr[this.sideO[sidesMap[side]]];
+      // this.cubes[this.rubikModel.getCube(sideOrient, cube)].setColor(sideOrient, 2);
+      // this.cubes[this.rubikModel.getCube(sidesMap[side], cube)].setColor(sidesMap[side], 2);
       // this.cubes[this.rubikModel.getCubeFromInterface(sidesArr[sidesMap[side]], cubeNum, this.rubikModel.interface)].setColor(sidesMap[side], 2);
     };
 
@@ -88073,9 +88133,35 @@ function () {
       } else if (side === utils_1.sides.f || side === utils_1.sides.b) {
         vector = new THREE.Vector2(x, y);
         _this.selectedOrientation = utils_1.planeOrientation.XY;
+      } // if (side === this.sideO[sides.l] || side === this.sideO[sides.r]) {
+      //   vector = new THREE.Vector2(z, y);
+      //   this.selectedOrientation = planeOrientation.ZY;
+      // } else if (side === this.sideO[sides.u] || side === this.sideO[sides.d]) {
+      //   vector = new THREE.Vector2(x, z);
+      //   this.selectedOrientation = planeOrientation.XZ;
+      // } else if (side === this.sideO[sides.f] || side === this.sideO[sides.b]) {
+      //   vector = new THREE.Vector2(x, y);
+      //   this.selectedOrientation = planeOrientation.XY;
+      // }
+
+
+      console.log(vector);
+      return vector;
+    };
+
+    this.rotateVert = function () {
+      _this.rubik.rotateX(Three_1.MathUtils.degToRad(90));
+
+      for (var i = 0; i < _this.rubikModel.sideLength; i += 1) {
+        _this.rubikModel.rotateVerMatrix(i, false, _this.turnInterface);
       }
 
-      return vector;
+      var copySO = __spreadArrays(_this.sideO);
+
+      _this.sideO[utils_1.sides.u] = copySO[utils_1.sides.f];
+      _this.sideO[utils_1.sides.f] = copySO[utils_1.sides.d];
+      _this.sideO[utils_1.sides.d] = copySO[utils_1.sides.b];
+      _this.sideO[utils_1.sides.b] = copySO[utils_1.sides.u];
     };
 
     this.createRaycastMeshes = function () {
@@ -88246,10 +88332,6 @@ function () {
       }
     };
 
-    this.rotate = function () {
-      _this.rubik.rotateX(Three_1.MathUtils.degToRad(90));
-    };
-
     this.colorizeRubik = function () {
       for (var cube = 0; cube < _this.rubikModel.totalColors; cube += 1) {
         for (var s = 0; s < utils_1.sidesArr.length; s += 1) {
@@ -88269,19 +88351,23 @@ function () {
     this.cubes.map(function (cube) {
       return cube ? _this.rubik.add(cube.getCube()) : null;
     });
-    this.createRaycastMeshes();
+    this.createRaycastMeshes(); // this.raycastMeshes.forEach((cube) => this.rubik.add(cube));
+
     this.raycastMeshes.forEach(function (cube) {
-      return _this.rubik.add(cube);
+      return _this.scene.scene.add(cube);
     });
     this.currentMove = null;
     this.isMoving = false;
     this.moveDirection = null;
-    this.rotationSpeed = 0.2;
+    this.rotationSpeed = 0.05;
     this.pivot = new THREE.Object3D();
     this.activeGroup = [];
     this.clickedOnFace = false;
     this.eventMoveComplete = new CustomEvent('moveComplete');
+    this.turnInterface = [__spreadArrays(this.rubikModel.stRotations[0]), __spreadArrays(this.rubikModel.stRotations[0]), __spreadArrays(this.rubikModel.stRotations[0]), __spreadArrays(this.rubikModel.stRotations[0]), __spreadArrays(this.rubikModel.stRotations[0]), __spreadArrays(this.rubikModel.stRotations[0])];
+    this.sideO = [utils_1.sides.l, utils_1.sides.r, utils_1.sides.u, utils_1.sides.d, utils_1.sides.f, utils_1.sides.b];
     console.log(scene.renderer.info.memory);
+    this.rotateVert(); // this.rotateVert();
   }
 
   RubikView.prototype.mouseUp = function (position) {
@@ -88422,7 +88508,7 @@ function () {
     var axis;
     var mRotation;
 
-    if (this.selectedFace === utils_1.sides.l) {
+    if (this.selectedFace === this.sideO[utils_1.sides.l]) {
       if (largest === 'y') {
         rotation = direction.y < 0;
         move = this.rubikModel.mu.B;
@@ -88438,7 +88524,7 @@ function () {
         axis = 'y';
         mRotation = false;
       }
-    } else if (this.selectedFace === utils_1.sides.r) {
+    } else if (this.selectedFace === this.sideO[utils_1.sides.r]) {
       // D B
       if (largest === 'y') {
         rotation = direction.y > 0;
@@ -88455,7 +88541,7 @@ function () {
         axis = 'y';
         mRotation = true;
       }
-    } else if (this.selectedFace === utils_1.sides.u) {
+    } else if (this.selectedFace === this.sideO[utils_1.sides.u]) {
       // B L
       if (largest === 'x') {
         rotation = direction.x < 0;
@@ -88472,7 +88558,7 @@ function () {
         axis = 'x';
         mRotation = false;
       }
-    } else if (this.selectedFace === utils_1.sides.d) {
+    } else if (this.selectedFace === this.sideO[utils_1.sides.d]) {
       // B L
       if (largest === 'x') {
         rotation = direction.x > 0;
@@ -88489,7 +88575,7 @@ function () {
         axis = 'x';
         mRotation = true;
       }
-    } else if (this.selectedFace === utils_1.sides.f) {
+    } else if (this.selectedFace === this.sideO[utils_1.sides.f]) {
       // L D
       if (largest === 'x') {
         rotation = direction.x > 0;
@@ -88506,7 +88592,7 @@ function () {
         axis = 'x';
         mRotation = true;
       }
-    } else if (this.selectedFace === utils_1.sides.b) {
+    } else if (this.selectedFace === this.sideO[utils_1.sides.b]) {
       // L D
       if (largest === 'x') {
         rotation = direction.x < 0;
@@ -89069,7 +89155,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57341" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50064" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

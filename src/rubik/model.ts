@@ -468,19 +468,46 @@ class RubikModel {
     return matrixRubic;
   }
 
+  public rotateFaceForView = (arr: number[], clockwise: boolean) => {
+    const posFace = clockwise ? this.posClockwise : this.posCounter;
+    const faceCopy = [...arr];
+    for (let i = 0; i < this.totalColors; i += 1) {
+      arr[i] = faceCopy[posFace[i]];
+    }
+  }
+
+  public rotateSliceForView = (slice: number, clockwise: boolean, matrix: Matrix) => {
+    this.rotate(this.posVer, clockwise ? this.sequenceVerRev : this.sequenceVer, slice, matrix);
+  }
+
+  public rotateVerMatrix = (slice: number, clockwise: boolean, matrix: Matrix, bottom: number = s.l, top: number = s.r) => {
+    this.rotate(this.posVer, clockwise ? this.sequenceVerRev : this.sequenceVer, slice, matrix);
+    this.rotateFaceReal(slice, bottom, top, clockwise ? this.posCounter : this.posClockwise, matrix);
+  }
+
+  public rotateHorMatrix = (slice: number, clockwise: boolean, matrix: Matrix, bottom: number = s.d, top: number = s.u) => {
+    this.rotate(this.posHor, clockwise ? this.sequenceHorRev : this.sequenceHor, slice, matrix);
+    this.rotateFaceReal(slice, bottom, top, clockwise ? this.posCounter : this.posClockwise, matrix);
+  }
+
+  public rotateDepMatrix = (slice: number, clockwise: boolean, matrix: Matrix, bottom: number = s.b, top: number = s.f) => {
+    this.rotate(clockwise ? this.posDepRev : this.posDep, clockwise ? this.sequenceDepRev : this.sequenceDep, slice, matrix);
+    this.rotateFaceReal(slice, bottom, top, clockwise ? this.posClockwise : this.posCounter, matrix);
+  }
+
   private rotateVer = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
-    this.rotate(this.posVer, clockwise ? this.sequenceVerRev : this.sequenceVer, slice, realMatrix);
-    this.rotateFaceReal(slice, s.l, s.r, clockwise ? this.posCounter : this.posClockwise, realMatrix);
+    const matrix = realMatrix ? this.matrix : this.matrixReference;
+    this.rotateVerMatrix(slice, clockwise, matrix);
   }
 
   private rotateHor = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
-    this.rotate(this.posHor, clockwise ? this.sequenceHorRev : this.sequenceHor, slice, realMatrix);
-    this.rotateFaceReal(slice, s.d, s.u, clockwise ? this.posCounter : this.posClockwise, realMatrix);
+    const matrix = realMatrix ? this.matrix : this.matrixReference;
+    this.rotateHorMatrix(slice, clockwise, matrix);
   }
 
   private rotateDep = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
-    this.rotate(clockwise ? this.posDepRev : this.posDep, clockwise ? this.sequenceDepRev : this.sequenceDep, slice, realMatrix);
-    this.rotateFaceReal(slice, s.b, s.f, clockwise ? this.posClockwise : this.posCounter, realMatrix);
+    const matrix = realMatrix ? this.matrix : this.matrixReference;
+    this.rotateDepMatrix(slice, clockwise, matrix);
   }
 
   public getCubesHor = (slice: number): number[] => this.getCubes(this.posHor, this.sequenceHor, slice, s.d, s.u);
@@ -618,8 +645,7 @@ class RubikModel {
     }
   }
 
-  private rotate = (slices: Slices, sequence: Array<number>, slice: number, realMatrix: boolean = true) => {
-    const matrix = realMatrix ? this.matrix : this.matrixReference;
+  private rotate = (slices: Slices, sequence: Array<number>, slice: number, matrix: Matrix) => {
     const layer = slices[slice];
     let first = layer[0];
     // save values of first face
@@ -641,18 +667,17 @@ class RubikModel {
     }
   }
 
-  private rotateFaceReal = (slice: number, bottom: number, top: number, clockwiseArr: Array<number>, realMatrix: boolean = true) => {
+  private rotateFaceReal = (slice: number, bottom: number, top: number, clockwiseArr: Array<number>, matrix: Matrix) => {
     if (slice === 0) {
-      this.rotateFace(bottom, clockwiseArr, realMatrix);
+      this.rotateFace(bottom, clockwiseArr, matrix);
     } else if (slice === this.sideLength - 1) {
-      this.rotateFace(top, clockwiseArr, realMatrix);
+      this.rotateFace(top, clockwiseArr, matrix);
     }
   }
 
   // keep matrix and reference separated
   // ref update is unnesesary unless you have a rubik model
-  private rotateFace = (face: number, positionFace: Array<number>, realMatrix: boolean = true) => {
-    const matrix = realMatrix ? this.matrix : this.matrixReference;
+  private rotateFace = (face: number, positionFace: Array<number>, matrix: Matrix) => {
     const faceCopy = [...matrix[face]];
     for (let i = 0; i < this.totalColors; i += 1) {
       matrix[face][i] = faceCopy[positionFace[i]];
