@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 /* eslint-disable no-lonely-if */
 /* eslint-disable max-len */
 import * as THREE from '../../node_modules/three/src/Three';
@@ -79,7 +80,6 @@ class RubikView implements RenderInterface, MouseInterface {
 
   public eventMoveComplete: CustomEvent
 
-
   constructor(rubikModel: RubikModel, scene: MainScene) {
     this.name = 'rubik';
     this.rubikModel = rubikModel;
@@ -100,7 +100,7 @@ class RubikView implements RenderInterface, MouseInterface {
 
     this.isMoving = false;
     this.moveDirection = null;
-    this.rotationSpeed = 0.2;
+    this.rotationSpeed = 2;
 
     this.pivot = new THREE.Object3D();
     this.activeGroup = [];
@@ -108,6 +108,7 @@ class RubikView implements RenderInterface, MouseInterface {
     this.clickedOnFace = false;
 
     this.eventMoveComplete = new CustomEvent('moveComplete');
+
     console.log(scene.renderer.info.memory);
   }
 
@@ -316,6 +317,7 @@ class RubikView implements RenderInterface, MouseInterface {
 
     // determine what kind of move is to be performed
     const largest = getLargestValue(direction);
+    console.log(this.rubikModel.moveOrientation);
 
     let move: MoveInterface = null;
     let rotation: boolean;
@@ -327,6 +329,7 @@ class RubikView implements RenderInterface, MouseInterface {
       if (largest === 'y') {
         rotation = direction.y < 0;
         move = this.rubikModel.mu.B;
+        // move = this.rubikModel.moveOrientation[sides.b];
         cubes = this.rubikModel.getCubesDep(col);
         slice = col;
         axis = 'z';
@@ -334,6 +337,7 @@ class RubikView implements RenderInterface, MouseInterface {
       } else if (largest === 'z') {
         rotation = direction.z > 0;
         move = this.rubikModel.mu.D;
+        // move = this.rubikModel.moveOrientation[sides.d];
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
@@ -344,6 +348,7 @@ class RubikView implements RenderInterface, MouseInterface {
       if (largest === 'y') {
         rotation = direction.y > 0;
         move = this.rubikModel.mu.B;
+        // move = this.rubikModel.moveOrientation[sides.b];
         cubes = this.rubikModel.getCubesDep(col);
         slice = col;
         axis = 'z';
@@ -351,6 +356,7 @@ class RubikView implements RenderInterface, MouseInterface {
       } else if (largest === 'z') {
         rotation = direction.z < 0;
         move = this.rubikModel.mu.D;
+        // move = this.rubikModel.moveOrientation[sides.d];
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
@@ -361,6 +367,7 @@ class RubikView implements RenderInterface, MouseInterface {
       if (largest === 'x') {
         rotation = direction.x < 0;
         move = this.rubikModel.mu.B;
+        // move = this.rubikModel.moveOrientation[sides.b];
         cubes = this.rubikModel.getCubesDep(row);
         slice = row;
         axis = 'z';
@@ -368,6 +375,7 @@ class RubikView implements RenderInterface, MouseInterface {
       } else if (largest === 'z') {
         rotation = direction.z > 0;
         move = this.rubikModel.mu.L;
+        // move = this.rubikModel.moveOrientation[sides.l];
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
@@ -378,6 +386,7 @@ class RubikView implements RenderInterface, MouseInterface {
       if (largest === 'x') {
         rotation = direction.x > 0;
         move = this.rubikModel.mu.B;
+        // move = this.rubikModel.moveOrientation[sides.b];
         cubes = this.rubikModel.getCubesDep(row);
         slice = row;
         axis = 'z';
@@ -385,6 +394,7 @@ class RubikView implements RenderInterface, MouseInterface {
       } else if (largest === 'z') {
         rotation = direction.z < 0;
         move = this.rubikModel.mu.L;
+        // move = this.rubikModel.moveOrientation[sides.l];
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
@@ -395,6 +405,7 @@ class RubikView implements RenderInterface, MouseInterface {
       if (largest === 'x') {
         rotation = direction.x > 0;
         move = this.rubikModel.mu.D;
+        // move = this.rubikModel.moveOrientation[sides.d];
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
@@ -402,6 +413,7 @@ class RubikView implements RenderInterface, MouseInterface {
       } else if (largest === 'y') {
         rotation = direction.y < 0;
         move = this.rubikModel.mu.L;
+        // move = this.rubikModel.moveOrientation[sides.l];
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
@@ -412,6 +424,7 @@ class RubikView implements RenderInterface, MouseInterface {
       if (largest === 'x') {
         rotation = direction.x < 0;
         move = this.rubikModel.mu.D;
+        // move = this.rubikModel.moveOrientation[sides.d];
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
@@ -419,6 +432,7 @@ class RubikView implements RenderInterface, MouseInterface {
       } else if (largest === 'y') {
         rotation = direction.y > 0;
         move = this.rubikModel.mu.L;
+        // move = this.rubikModel.moveOrientation[sides.l];
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
@@ -566,7 +580,7 @@ class RubikView implements RenderInterface, MouseInterface {
       for (let s = 0; s < sidesArr.length; s += 1) {
         this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createMeshes(sidesArr[s]);
         // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createOuterMeshes(sidesArr[s], this.rubikModel.sideLength);
-        this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createTextMeshes(sidesArr[s]);
+        // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createTextMeshes(sidesArr[s]);
       }
     }
     // this.baseMeshes = this.getAllMeshes();
@@ -580,14 +594,10 @@ class RubikView implements RenderInterface, MouseInterface {
     }
   }
 
-  rotate = () => {
-    this.rubik.rotateX(MathUtils.degToRad(90));
-  }
-
-  colorizeRubik = () => {
+  colorizeRubik = (matrix: Matrix = this.rubikModel.matrix) => {
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
       for (let s = 0; s < sidesArr.length; s += 1) {
-        this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube));
+        this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube, matrix));
         // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setOuterColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube));
       }
     }

@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 /* eslint-disable max-len */
 /* eslint-disable no-param-reassign */
 import { sides as s, sides } from './utils';
@@ -41,7 +42,7 @@ class RubikModel {
 
   public m: MoveActions
 
-  private matrix: Matrix
+  public matrix: Matrix
 
   private matrixReference: Matrix
 
@@ -61,10 +62,16 @@ class RubikModel {
 
   public moveRotations: MoveInterface[][][]
 
+  public rotations: MoveInterface[][][]
+
   // user mouse moves
   public mu: MoveActions
 
   private allMoves: Move[][][] = new Array(6);
+
+  private sideO: number[]
+
+  public moveOrientation: MoveInterface[]
 
   public constructor(sideLength: number) {
     this.sideLength = sideLength;
@@ -72,7 +79,7 @@ class RubikModel {
 
     this.generatePositions();
 
-    this.createRotations();
+    this.generateRotations();
 
     this.f = new Face(sideLength);
 
@@ -106,6 +113,97 @@ class RubikModel {
     this.generateUserMoves();
 
     this.generateMoves();
+
+    this.generateOrientaionRotations();
+
+    this.sideO = [
+      sides.l,
+      sides.r,
+      sides.u,
+      sides.d,
+      sides.f,
+      sides.b,
+    ];
+    this.moveOrientation = this.rotations[s.f][s.u];
+  }
+
+  public rotateOVer = (clockwise: boolean): Matrix => {
+    const copyMatrix = this.deepCopyMatrix(this.matrix);
+    for (let i = 0; i < this.sideLength; i += 1) {
+      this.rotateVerMatrix(i, clockwise, copyMatrix);
+    }
+    this.rotateSOVer(clockwise);
+    this.determineRotation();
+    return copyMatrix;
+  }
+
+  public rotateOHor = (clockwise: boolean): Matrix => {
+    const copyMatrix = this.deepCopyMatrix(this.matrix);
+    for (let i = 0; i < this.sideLength; i += 1) {
+      this.rotateHorMatrix(i, clockwise, copyMatrix);
+    }
+    this.rotateSOHor(clockwise);
+    this.determineRotation();
+    return copyMatrix;
+  }
+
+  public rotateODep = (clockwise: boolean): Matrix => {
+    const copyMatrix = this.deepCopyMatrix(this.matrix);
+    for (let i = 0; i < this.sideLength; i += 1) {
+      this.rotateDepMatrix(i, clockwise, copyMatrix);
+    }
+    this.rotateSODep(clockwise);
+    this.determineRotation();
+    return copyMatrix;
+  }
+
+  private rotateSOVer = (clockwise: boolean) => {
+    const copySO = [...this.sideO];
+    if (clockwise) {
+      this.sideO[sides.u] = copySO[sides.b];
+      this.sideO[sides.f] = copySO[sides.u];
+      this.sideO[sides.d] = copySO[sides.f];
+      this.sideO[sides.b] = copySO[sides.d];
+    } else {
+      this.sideO[sides.u] = copySO[sides.f];
+      this.sideO[sides.f] = copySO[sides.d];
+      this.sideO[sides.d] = copySO[sides.b];
+      this.sideO[sides.b] = copySO[sides.u];
+    }
+  }
+
+  private rotateSOHor = (clockwise: boolean) => {
+    const copySO = [...this.sideO];
+    if (clockwise) {
+      this.sideO[sides.f] = copySO[sides.l];
+      this.sideO[sides.r] = copySO[sides.f];
+      this.sideO[sides.b] = copySO[sides.r];
+      this.sideO[sides.l] = copySO[sides.b];
+    } else {
+      this.sideO[sides.f] = copySO[sides.r];
+      this.sideO[sides.r] = copySO[sides.b];
+      this.sideO[sides.b] = copySO[sides.l];
+      this.sideO[sides.l] = copySO[sides.f];
+    }
+  }
+
+  private rotateSODep = (clockwise: boolean) => {
+    const copySO = [...this.sideO];
+    if (clockwise) {
+      this.sideO[sides.u] = copySO[sides.r];
+      this.sideO[sides.r] = copySO[sides.d];
+      this.sideO[sides.d] = copySO[sides.l];
+      this.sideO[sides.l] = copySO[sides.u];
+    } else {
+      this.sideO[sides.u] = copySO[sides.l];
+      this.sideO[sides.r] = copySO[sides.u];
+      this.sideO[sides.d] = copySO[sides.r];
+      this.sideO[sides.l] = copySO[sides.d];
+    }
+  }
+
+  private determineRotation = () => {
+    this.moveOrientation = this.rotations[this.sideO[sides.f]][this.sideO[sides.u]];
   }
 
   public getMove = (side: number, slice: number, clockwise: boolean): Move => {
@@ -197,7 +295,7 @@ class RubikModel {
     this.currentHistoryIndex = historyIndex;
   }
 
-  private deepCopyMatrix = (matrix: Matrix) => {
+  public deepCopyMatrix = (matrix: Matrix) => {
     const newMatrix: Matrix = [];
     for (let i = 0; i < matrix.length; i += 1) {
       newMatrix.push([]);
@@ -208,7 +306,7 @@ class RubikModel {
     return newMatrix;
   }
 
-  public getColor = (side: number, direction: number): number => this.matrix[side][direction];
+  public getColor = (side: number, direction: number, matrix: Matrix = this.matrix): number => matrix[side][direction];
 
   public getColorFromInterface = (side: number, direction: number, inter: number[][]): number => this.matrix[side][inter[side][direction]];
 
@@ -372,6 +470,45 @@ class RubikModel {
     this.moveRotations[s.r].push(horizontalMoves[3]);
   }
 
+  private generateOrientaionRotations = () => {
+    // check front and top color
+    // 24 possible rotations
+    this.rotations = [];
+    for (let i = 0; i < 6; i += 1) {
+      this.rotations.push(new Array<MoveInterface[]>(6));
+    }
+
+    this.rotations[sides.l][sides.u] = this.moveRotations[sides.l][0];
+    this.rotations[sides.l][sides.f] = this.moveRotations[sides.l][1];
+    this.rotations[sides.l][sides.d] = this.moveRotations[sides.l][2];
+    this.rotations[sides.l][sides.b] = this.moveRotations[sides.l][3];
+
+    this.rotations[sides.r][sides.u] = this.moveRotations[sides.r][0];
+    this.rotations[sides.r][sides.b] = this.moveRotations[sides.r][1];
+    this.rotations[sides.r][sides.d] = this.moveRotations[sides.r][2];
+    this.rotations[sides.r][sides.f] = this.moveRotations[sides.r][3];
+
+    this.rotations[sides.u][sides.b] = this.moveRotations[sides.u][0];
+    this.rotations[sides.u][sides.r] = this.moveRotations[sides.u][1];
+    this.rotations[sides.u][sides.f] = this.moveRotations[sides.u][2];
+    this.rotations[sides.u][sides.l] = this.moveRotations[sides.u][3];
+
+    this.rotations[sides.d][sides.f] = this.moveRotations[sides.d][0];
+    this.rotations[sides.d][sides.r] = this.moveRotations[sides.d][1];
+    this.rotations[sides.d][sides.b] = this.moveRotations[sides.d][2];
+    this.rotations[sides.d][sides.l] = this.moveRotations[sides.d][3];
+
+    this.rotations[sides.f][sides.u] = this.moveRotations[sides.f][0];
+    this.rotations[sides.f][sides.r] = this.moveRotations[sides.f][1];
+    this.rotations[sides.f][sides.d] = this.moveRotations[sides.f][2];
+    this.rotations[sides.f][sides.l] = this.moveRotations[sides.f][3];
+
+    this.rotations[sides.b][sides.u] = this.moveRotations[sides.b][0];
+    this.rotations[sides.b][sides.l] = this.moveRotations[sides.b][1];
+    this.rotations[sides.b][sides.d] = this.moveRotations[sides.b][2];
+    this.rotations[sides.b][sides.r] = this.moveRotations[sides.b][3];
+  }
+
   private doRandomMoves = (num: number, randomSlices = false) => {
     function randomInt(min: number, max: number) {
       return Math.floor(Math.random() * (max - min + 1) + min);
@@ -468,19 +605,34 @@ class RubikModel {
     return matrixRubic;
   }
 
+  public rotateVerMatrix = (slice: number, clockwise: boolean, matrix: Matrix, bottom: number = s.l, top: number = s.r) => {
+    this.rotate(this.posVer, clockwise ? this.sequenceVerRev : this.sequenceVer, slice, matrix);
+    this.rotateFaceReal(slice, bottom, top, clockwise ? this.posCounter : this.posClockwise, matrix);
+  }
+
+  public rotateHorMatrix = (slice: number, clockwise: boolean, matrix: Matrix, bottom: number = s.d, top: number = s.u) => {
+    this.rotate(this.posHor, clockwise ? this.sequenceHorRev : this.sequenceHor, slice, matrix);
+    this.rotateFaceReal(slice, bottom, top, clockwise ? this.posCounter : this.posClockwise, matrix);
+  }
+
+  public rotateDepMatrix = (slice: number, clockwise: boolean, matrix: Matrix, bottom: number = s.b, top: number = s.f) => {
+    this.rotate(clockwise ? this.posDepRev : this.posDep, clockwise ? this.sequenceDepRev : this.sequenceDep, slice, matrix);
+    this.rotateFaceReal(slice, bottom, top, clockwise ? this.posClockwise : this.posCounter, matrix);
+  }
+
   private rotateVer = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
-    this.rotate(this.posVer, clockwise ? this.sequenceVerRev : this.sequenceVer, slice, realMatrix);
-    this.rotateFaceReal(slice, s.l, s.r, clockwise ? this.posCounter : this.posClockwise, realMatrix);
+    const matrix = realMatrix ? this.matrix : this.matrixReference;
+    this.rotateVerMatrix(slice, clockwise, matrix);
   }
 
   private rotateHor = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
-    this.rotate(this.posHor, clockwise ? this.sequenceHorRev : this.sequenceHor, slice, realMatrix);
-    this.rotateFaceReal(slice, s.d, s.u, clockwise ? this.posCounter : this.posClockwise, realMatrix);
+    const matrix = realMatrix ? this.matrix : this.matrixReference;
+    this.rotateHorMatrix(slice, clockwise, matrix);
   }
 
   private rotateDep = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
-    this.rotate(clockwise ? this.posDepRev : this.posDep, clockwise ? this.sequenceDepRev : this.sequenceDep, slice, realMatrix);
-    this.rotateFaceReal(slice, s.b, s.f, clockwise ? this.posClockwise : this.posCounter, realMatrix);
+    const matrix = realMatrix ? this.matrix : this.matrixReference;
+    this.rotateDepMatrix(slice, clockwise, matrix);
   }
 
   public getCubesHor = (slice: number): number[] => this.getCubes(this.posHor, this.sequenceHor, slice, s.d, s.u);
@@ -511,7 +663,7 @@ class RubikModel {
     return cubes;
   }
 
-  private createRotations = () => {
+  private generateRotations = () => {
     // there are four different positions of standard when rotated
     const standard = [];
     for (let i = 0; i < this.totalColors; i += 1) {
@@ -618,8 +770,7 @@ class RubikModel {
     }
   }
 
-  private rotate = (slices: Slices, sequence: Array<number>, slice: number, realMatrix: boolean = true) => {
-    const matrix = realMatrix ? this.matrix : this.matrixReference;
+  private rotate = (slices: Slices, sequence: Array<number>, slice: number, matrix: Matrix) => {
     const layer = slices[slice];
     let first = layer[0];
     // save values of first face
@@ -641,18 +792,17 @@ class RubikModel {
     }
   }
 
-  private rotateFaceReal = (slice: number, bottom: number, top: number, clockwiseArr: Array<number>, realMatrix: boolean = true) => {
+  private rotateFaceReal = (slice: number, bottom: number, top: number, clockwiseArr: Array<number>, matrix: Matrix) => {
     if (slice === 0) {
-      this.rotateFace(bottom, clockwiseArr, realMatrix);
+      this.rotateFace(bottom, clockwiseArr, matrix);
     } else if (slice === this.sideLength - 1) {
-      this.rotateFace(top, clockwiseArr, realMatrix);
+      this.rotateFace(top, clockwiseArr, matrix);
     }
   }
 
   // keep matrix and reference separated
   // ref update is unnesesary unless you have a rubik model
-  private rotateFace = (face: number, positionFace: Array<number>, realMatrix: boolean = true) => {
-    const matrix = realMatrix ? this.matrix : this.matrixReference;
+  private rotateFace = (face: number, positionFace: Array<number>, matrix: Matrix) => {
     const faceCopy = [...matrix[face]];
     for (let i = 0; i < this.totalColors; i += 1) {
       matrix[face][i] = faceCopy[positionFace[i]];

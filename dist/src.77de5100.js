@@ -87084,6 +87084,8 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+/* eslint-disable prefer-destructuring */
+
 /* eslint-disable max-len */
 
 /* eslint-disable no-param-reassign */
@@ -87109,6 +87111,100 @@ function () {
     this.sequenceVerRev = [utils_1.sides.f, utils_1.sides.d, utils_1.sides.b, utils_1.sides.u, utils_1.sides.f];
     this.sequenceDepRev = [utils_1.sides.d, utils_1.sides.r, utils_1.sides.u, utils_1.sides.l, utils_1.sides.d];
     this.allMoves = new Array(6);
+
+    this.rotateOVer = function (clockwise) {
+      var copyMatrix = _this.deepCopyMatrix(_this.matrix);
+
+      for (var i = 0; i < _this.sideLength; i += 1) {
+        _this.rotateVerMatrix(i, clockwise, copyMatrix);
+      }
+
+      _this.rotateSOVer(clockwise);
+
+      _this.determineRotation();
+
+      return copyMatrix;
+    };
+
+    this.rotateOHor = function (clockwise) {
+      var copyMatrix = _this.deepCopyMatrix(_this.matrix);
+
+      for (var i = 0; i < _this.sideLength; i += 1) {
+        _this.rotateHorMatrix(i, clockwise, copyMatrix);
+      }
+
+      _this.rotateSOHor(clockwise);
+
+      _this.determineRotation();
+
+      return copyMatrix;
+    };
+
+    this.rotateODep = function (clockwise) {
+      var copyMatrix = _this.deepCopyMatrix(_this.matrix);
+
+      for (var i = 0; i < _this.sideLength; i += 1) {
+        _this.rotateDepMatrix(i, clockwise, copyMatrix);
+      }
+
+      _this.rotateSODep(clockwise);
+
+      _this.determineRotation();
+
+      return copyMatrix;
+    };
+
+    this.rotateSOVer = function (clockwise) {
+      var copySO = __spreadArrays(_this.sideO);
+
+      if (clockwise) {
+        _this.sideO[utils_1.sides.u] = copySO[utils_1.sides.b];
+        _this.sideO[utils_1.sides.f] = copySO[utils_1.sides.u];
+        _this.sideO[utils_1.sides.d] = copySO[utils_1.sides.f];
+        _this.sideO[utils_1.sides.b] = copySO[utils_1.sides.d];
+      } else {
+        _this.sideO[utils_1.sides.u] = copySO[utils_1.sides.f];
+        _this.sideO[utils_1.sides.f] = copySO[utils_1.sides.d];
+        _this.sideO[utils_1.sides.d] = copySO[utils_1.sides.b];
+        _this.sideO[utils_1.sides.b] = copySO[utils_1.sides.u];
+      }
+    };
+
+    this.rotateSOHor = function (clockwise) {
+      var copySO = __spreadArrays(_this.sideO);
+
+      if (clockwise) {
+        _this.sideO[utils_1.sides.f] = copySO[utils_1.sides.l];
+        _this.sideO[utils_1.sides.r] = copySO[utils_1.sides.f];
+        _this.sideO[utils_1.sides.b] = copySO[utils_1.sides.r];
+        _this.sideO[utils_1.sides.l] = copySO[utils_1.sides.b];
+      } else {
+        _this.sideO[utils_1.sides.f] = copySO[utils_1.sides.r];
+        _this.sideO[utils_1.sides.r] = copySO[utils_1.sides.b];
+        _this.sideO[utils_1.sides.b] = copySO[utils_1.sides.l];
+        _this.sideO[utils_1.sides.l] = copySO[utils_1.sides.f];
+      }
+    };
+
+    this.rotateSODep = function (clockwise) {
+      var copySO = __spreadArrays(_this.sideO);
+
+      if (clockwise) {
+        _this.sideO[utils_1.sides.u] = copySO[utils_1.sides.r];
+        _this.sideO[utils_1.sides.r] = copySO[utils_1.sides.d];
+        _this.sideO[utils_1.sides.d] = copySO[utils_1.sides.l];
+        _this.sideO[utils_1.sides.l] = copySO[utils_1.sides.u];
+      } else {
+        _this.sideO[utils_1.sides.u] = copySO[utils_1.sides.l];
+        _this.sideO[utils_1.sides.r] = copySO[utils_1.sides.u];
+        _this.sideO[utils_1.sides.d] = copySO[utils_1.sides.r];
+        _this.sideO[utils_1.sides.l] = copySO[utils_1.sides.d];
+      }
+    };
+
+    this.determineRotation = function () {
+      _this.moveOrientation = _this.rotations[_this.sideO[utils_1.sides.f]][_this.sideO[utils_1.sides.u]];
+    };
 
     this.getMove = function (side, slice, clockwise) {
       return _this.allMoves[side][slice][clockwise ? 1 : 0];
@@ -87290,8 +87386,12 @@ function () {
       return newMatrix;
     };
 
-    this.getColor = function (side, direction) {
-      return _this.matrix[side][direction];
+    this.getColor = function (side, direction, matrix) {
+      if (matrix === void 0) {
+        matrix = _this.matrix;
+      }
+
+      return matrix[side][direction];
     };
 
     this.getColorFromInterface = function (side, direction, inter) {
@@ -87431,6 +87531,41 @@ function () {
       _this.moveRotations[utils_1.sides.r].push(horizontalMoves[3]);
     };
 
+    this.generateOrientaionRotations = function () {
+      // check front and top color
+      // 24 possible rotations
+      _this.rotations = [];
+
+      for (var i = 0; i < 6; i += 1) {
+        _this.rotations.push(new Array(6));
+      }
+
+      _this.rotations[utils_1.sides.l][utils_1.sides.u] = _this.moveRotations[utils_1.sides.l][0];
+      _this.rotations[utils_1.sides.l][utils_1.sides.f] = _this.moveRotations[utils_1.sides.l][1];
+      _this.rotations[utils_1.sides.l][utils_1.sides.d] = _this.moveRotations[utils_1.sides.l][2];
+      _this.rotations[utils_1.sides.l][utils_1.sides.b] = _this.moveRotations[utils_1.sides.l][3];
+      _this.rotations[utils_1.sides.r][utils_1.sides.u] = _this.moveRotations[utils_1.sides.r][0];
+      _this.rotations[utils_1.sides.r][utils_1.sides.b] = _this.moveRotations[utils_1.sides.r][1];
+      _this.rotations[utils_1.sides.r][utils_1.sides.d] = _this.moveRotations[utils_1.sides.r][2];
+      _this.rotations[utils_1.sides.r][utils_1.sides.f] = _this.moveRotations[utils_1.sides.r][3];
+      _this.rotations[utils_1.sides.u][utils_1.sides.b] = _this.moveRotations[utils_1.sides.u][0];
+      _this.rotations[utils_1.sides.u][utils_1.sides.r] = _this.moveRotations[utils_1.sides.u][1];
+      _this.rotations[utils_1.sides.u][utils_1.sides.f] = _this.moveRotations[utils_1.sides.u][2];
+      _this.rotations[utils_1.sides.u][utils_1.sides.l] = _this.moveRotations[utils_1.sides.u][3];
+      _this.rotations[utils_1.sides.d][utils_1.sides.f] = _this.moveRotations[utils_1.sides.d][0];
+      _this.rotations[utils_1.sides.d][utils_1.sides.r] = _this.moveRotations[utils_1.sides.d][1];
+      _this.rotations[utils_1.sides.d][utils_1.sides.b] = _this.moveRotations[utils_1.sides.d][2];
+      _this.rotations[utils_1.sides.d][utils_1.sides.l] = _this.moveRotations[utils_1.sides.d][3];
+      _this.rotations[utils_1.sides.f][utils_1.sides.u] = _this.moveRotations[utils_1.sides.f][0];
+      _this.rotations[utils_1.sides.f][utils_1.sides.r] = _this.moveRotations[utils_1.sides.f][1];
+      _this.rotations[utils_1.sides.f][utils_1.sides.d] = _this.moveRotations[utils_1.sides.f][2];
+      _this.rotations[utils_1.sides.f][utils_1.sides.l] = _this.moveRotations[utils_1.sides.f][3];
+      _this.rotations[utils_1.sides.b][utils_1.sides.u] = _this.moveRotations[utils_1.sides.b][0];
+      _this.rotations[utils_1.sides.b][utils_1.sides.l] = _this.moveRotations[utils_1.sides.b][1];
+      _this.rotations[utils_1.sides.b][utils_1.sides.d] = _this.moveRotations[utils_1.sides.b][2];
+      _this.rotations[utils_1.sides.b][utils_1.sides.r] = _this.moveRotations[utils_1.sides.b][3];
+    };
+
     this.doRandomMoves = function (num, randomSlices) {
       if (randomSlices === void 0) {
         randomSlices = false;
@@ -87522,14 +87657,56 @@ function () {
       return matrixRubic;
     };
 
+    this.rotateVerMatrix = function (slice, clockwise, matrix, bottom, top) {
+      if (bottom === void 0) {
+        bottom = utils_1.sides.l;
+      }
+
+      if (top === void 0) {
+        top = utils_1.sides.r;
+      }
+
+      _this.rotate(_this.posVer, clockwise ? _this.sequenceVerRev : _this.sequenceVer, slice, matrix);
+
+      _this.rotateFaceReal(slice, bottom, top, clockwise ? _this.posCounter : _this.posClockwise, matrix);
+    };
+
+    this.rotateHorMatrix = function (slice, clockwise, matrix, bottom, top) {
+      if (bottom === void 0) {
+        bottom = utils_1.sides.d;
+      }
+
+      if (top === void 0) {
+        top = utils_1.sides.u;
+      }
+
+      _this.rotate(_this.posHor, clockwise ? _this.sequenceHorRev : _this.sequenceHor, slice, matrix);
+
+      _this.rotateFaceReal(slice, bottom, top, clockwise ? _this.posCounter : _this.posClockwise, matrix);
+    };
+
+    this.rotateDepMatrix = function (slice, clockwise, matrix, bottom, top) {
+      if (bottom === void 0) {
+        bottom = utils_1.sides.b;
+      }
+
+      if (top === void 0) {
+        top = utils_1.sides.f;
+      }
+
+      _this.rotate(clockwise ? _this.posDepRev : _this.posDep, clockwise ? _this.sequenceDepRev : _this.sequenceDep, slice, matrix);
+
+      _this.rotateFaceReal(slice, bottom, top, clockwise ? _this.posClockwise : _this.posCounter, matrix);
+    };
+
     this.rotateVer = function (slice, clockwise, realMatrix) {
       if (realMatrix === void 0) {
         realMatrix = true;
       }
 
-      _this.rotate(_this.posVer, clockwise ? _this.sequenceVerRev : _this.sequenceVer, slice, realMatrix);
+      var matrix = realMatrix ? _this.matrix : _this.matrixReference;
 
-      _this.rotateFaceReal(slice, utils_1.sides.l, utils_1.sides.r, clockwise ? _this.posCounter : _this.posClockwise, realMatrix);
+      _this.rotateVerMatrix(slice, clockwise, matrix);
     };
 
     this.rotateHor = function (slice, clockwise, realMatrix) {
@@ -87537,9 +87714,9 @@ function () {
         realMatrix = true;
       }
 
-      _this.rotate(_this.posHor, clockwise ? _this.sequenceHorRev : _this.sequenceHor, slice, realMatrix);
+      var matrix = realMatrix ? _this.matrix : _this.matrixReference;
 
-      _this.rotateFaceReal(slice, utils_1.sides.d, utils_1.sides.u, clockwise ? _this.posCounter : _this.posClockwise, realMatrix);
+      _this.rotateHorMatrix(slice, clockwise, matrix);
     };
 
     this.rotateDep = function (slice, clockwise, realMatrix) {
@@ -87547,9 +87724,9 @@ function () {
         realMatrix = true;
       }
 
-      _this.rotate(clockwise ? _this.posDepRev : _this.posDep, clockwise ? _this.sequenceDepRev : _this.sequenceDep, slice, realMatrix);
+      var matrix = realMatrix ? _this.matrix : _this.matrixReference;
 
-      _this.rotateFaceReal(slice, utils_1.sides.b, utils_1.sides.f, clockwise ? _this.posClockwise : _this.posCounter, realMatrix);
+      _this.rotateDepMatrix(slice, clockwise, matrix);
     };
 
     this.getCubesHor = function (slice) {
@@ -87585,7 +87762,7 @@ function () {
       return cubes;
     };
 
-    this.createRotations = function () {
+    this.generateRotations = function () {
       // there are four different positions of standard when rotated
       var standard = [];
 
@@ -87683,12 +87860,7 @@ function () {
       }
     };
 
-    this.rotate = function (slices, sequence, slice, realMatrix) {
-      if (realMatrix === void 0) {
-        realMatrix = true;
-      }
-
-      var matrix = realMatrix ? _this.matrix : _this.matrixReference;
+    this.rotate = function (slices, sequence, slice, matrix) {
       var layer = slices[slice];
       var first = layer[0]; // save values of first face
 
@@ -87714,27 +87886,17 @@ function () {
       }
     };
 
-    this.rotateFaceReal = function (slice, bottom, top, clockwiseArr, realMatrix) {
-      if (realMatrix === void 0) {
-        realMatrix = true;
-      }
-
+    this.rotateFaceReal = function (slice, bottom, top, clockwiseArr, matrix) {
       if (slice === 0) {
-        _this.rotateFace(bottom, clockwiseArr, realMatrix);
+        _this.rotateFace(bottom, clockwiseArr, matrix);
       } else if (slice === _this.sideLength - 1) {
-        _this.rotateFace(top, clockwiseArr, realMatrix);
+        _this.rotateFace(top, clockwiseArr, matrix);
       }
     }; // keep matrix and reference separated
     // ref update is unnesesary unless you have a rubik model
 
 
-    this.rotateFace = function (face, positionFace, realMatrix) {
-      if (realMatrix === void 0) {
-        realMatrix = true;
-      }
-
-      var matrix = realMatrix ? _this.matrix : _this.matrixReference;
-
+    this.rotateFace = function (face, positionFace, matrix) {
       var faceCopy = __spreadArrays(matrix[face]);
 
       for (var i = 0; i < _this.totalColors; i += 1) {
@@ -87745,7 +87907,7 @@ function () {
     this.sideLength = sideLength;
     this.totalColors = sideLength * sideLength;
     this.generatePositions();
-    this.createRotations();
+    this.generateRotations();
     this.f = new face_1.default(sideLength);
     this.m = new moveActions_1.MoveActions(); // this.m.L = (slice = 0, clockwise = true) => this.moveOperation(new Move('L', 0 + slice, !clockwise, 'x', this.rotateVer, this.getCubesVer));
     // this.m.R = (slice = 0, clockwise = true) => this.moveOperation(new Move('R', this.sideLength - 1 - slice, clockwise, 'x', this.rotateVer, this.getCubesVer));
@@ -87831,6 +87993,9 @@ function () {
     this.generateMoveRotations();
     this.generateUserMoves();
     this.generateMoves();
+    this.generateOrientaionRotations();
+    this.sideO = [utils_1.sides.l, utils_1.sides.r, utils_1.sides.u, utils_1.sides.d, utils_1.sides.f, utils_1.sides.b];
+    this.moveOrientation = this.rotations[utils_1.sides.f][utils_1.sides.u];
   }
 
   RubikModel.prototype.createEmptySlices = function () {
@@ -88008,6 +88173,8 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+/* eslint-disable prefer-destructuring */
+
 /* eslint-disable no-lonely-if */
 
 /* eslint-disable max-len */
@@ -88017,8 +88184,6 @@ var THREE = __importStar(require("../../node_modules/three/src/Three"));
 var cube_1 = __importDefault(require("./cube"));
 
 var utils_1 = require("./utils");
-
-var Three_1 = require("../../node_modules/three/src/Three");
 
 var RubikView =
 /** @class */
@@ -88230,9 +88395,8 @@ function () {
       for (var cube = 0; cube < _this.rubikModel.totalColors; cube += 1) {
         for (var s = 0; s < utils_1.sidesArr.length; s += 1) {
           _this.cubes[_this.rubikModel.getCube(utils_1.sidesArr[s], cube)].createMeshes(utils_1.sidesArr[s]); // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createOuterMeshes(sidesArr[s], this.rubikModel.sideLength);
+          // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createTextMeshes(sidesArr[s]);
 
-
-          _this.cubes[_this.rubikModel.getCube(utils_1.sidesArr[s], cube)].createTextMeshes(utils_1.sidesArr[s]);
         }
       } // this.baseMeshes = this.getAllMeshes();
 
@@ -88246,14 +88410,14 @@ function () {
       }
     };
 
-    this.rotate = function () {
-      _this.rubik.rotateX(Three_1.MathUtils.degToRad(90));
-    };
+    this.colorizeRubik = function (matrix) {
+      if (matrix === void 0) {
+        matrix = _this.rubikModel.matrix;
+      }
 
-    this.colorizeRubik = function () {
       for (var cube = 0; cube < _this.rubikModel.totalColors; cube += 1) {
         for (var s = 0; s < utils_1.sidesArr.length; s += 1) {
-          _this.cubes[_this.rubikModel.getCube(utils_1.sidesArr[s], cube)].setColor(utils_1.sidesArr[s], _this.rubikModel.getColor(utils_1.sidesArr[s], cube)); // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setOuterColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube));
+          _this.cubes[_this.rubikModel.getCube(utils_1.sidesArr[s], cube)].setColor(utils_1.sidesArr[s], _this.rubikModel.getColor(utils_1.sidesArr[s], cube, matrix)); // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setOuterColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube));
 
         }
       }
@@ -88276,7 +88440,7 @@ function () {
     this.currentMove = null;
     this.isMoving = false;
     this.moveDirection = null;
-    this.rotationSpeed = 0.2;
+    this.rotationSpeed = 2;
     this.pivot = new THREE.Object3D();
     this.activeGroup = [];
     this.clickedOnFace = false;
@@ -88415,6 +88579,7 @@ function () {
     var row = Math.floor(this.selectedCube / this.rubikModel.sideLength); // determine what kind of move is to be performed
 
     var largest = utils_1.getLargestValue(direction);
+    console.log(this.rubikModel.moveOrientation);
     var move = null;
     var rotation;
     var cubes;
@@ -88425,14 +88590,16 @@ function () {
     if (this.selectedFace === utils_1.sides.l) {
       if (largest === 'y') {
         rotation = direction.y < 0;
-        move = this.rubikModel.mu.B;
+        move = this.rubikModel.mu.B; // move = this.rubikModel.moveOrientation[sides.b];
+
         cubes = this.rubikModel.getCubesDep(col);
         slice = col;
         axis = 'z';
         mRotation = true;
       } else if (largest === 'z') {
         rotation = direction.z > 0;
-        move = this.rubikModel.mu.D;
+        move = this.rubikModel.mu.D; // move = this.rubikModel.moveOrientation[sides.d];
+
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
@@ -88442,14 +88609,16 @@ function () {
       // D B
       if (largest === 'y') {
         rotation = direction.y > 0;
-        move = this.rubikModel.mu.B;
+        move = this.rubikModel.mu.B; // move = this.rubikModel.moveOrientation[sides.b];
+
         cubes = this.rubikModel.getCubesDep(col);
         slice = col;
         axis = 'z';
         mRotation = false;
       } else if (largest === 'z') {
         rotation = direction.z < 0;
-        move = this.rubikModel.mu.D;
+        move = this.rubikModel.mu.D; // move = this.rubikModel.moveOrientation[sides.d];
+
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
@@ -88459,14 +88628,16 @@ function () {
       // B L
       if (largest === 'x') {
         rotation = direction.x < 0;
-        move = this.rubikModel.mu.B;
+        move = this.rubikModel.mu.B; // move = this.rubikModel.moveOrientation[sides.b];
+
         cubes = this.rubikModel.getCubesDep(row);
         slice = row;
         axis = 'z';
         mRotation = true;
       } else if (largest === 'z') {
         rotation = direction.z > 0;
-        move = this.rubikModel.mu.L;
+        move = this.rubikModel.mu.L; // move = this.rubikModel.moveOrientation[sides.l];
+
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
@@ -88476,14 +88647,16 @@ function () {
       // B L
       if (largest === 'x') {
         rotation = direction.x > 0;
-        move = this.rubikModel.mu.B;
+        move = this.rubikModel.mu.B; // move = this.rubikModel.moveOrientation[sides.b];
+
         cubes = this.rubikModel.getCubesDep(row);
         slice = row;
         axis = 'z';
         mRotation = false;
       } else if (largest === 'z') {
         rotation = direction.z < 0;
-        move = this.rubikModel.mu.L;
+        move = this.rubikModel.mu.L; // move = this.rubikModel.moveOrientation[sides.l];
+
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
@@ -88493,14 +88666,16 @@ function () {
       // L D
       if (largest === 'x') {
         rotation = direction.x > 0;
-        move = this.rubikModel.mu.D;
+        move = this.rubikModel.mu.D; // move = this.rubikModel.moveOrientation[sides.d];
+
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
         mRotation = false;
       } else if (largest === 'y') {
         rotation = direction.y < 0;
-        move = this.rubikModel.mu.L;
+        move = this.rubikModel.mu.L; // move = this.rubikModel.moveOrientation[sides.l];
+
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
@@ -88510,14 +88685,16 @@ function () {
       // L D
       if (largest === 'x') {
         rotation = direction.x < 0;
-        move = this.rubikModel.mu.D;
+        move = this.rubikModel.mu.D; // move = this.rubikModel.moveOrientation[sides.d];
+
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
         mRotation = true;
       } else if (largest === 'y') {
         rotation = direction.y > 0;
-        move = this.rubikModel.mu.L;
+        move = this.rubikModel.mu.L; // move = this.rubikModel.moveOrientation[sides.l];
+
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
@@ -88587,8 +88764,6 @@ var model_1 = __importDefault(require("./model"));
 var view_1 = __importDefault(require("./view"));
 
 var utils_1 = require("./utils");
-
-var Three_1 = require("../../node_modules/three/src/Three");
 
 var RubikManager =
 /** @class */
@@ -88763,6 +88938,57 @@ function () {
       };
 
       return button;
+    };
+
+    this.rotateVer = function (clockwise) {
+      var mat = _this.rubikModel.rotateOVer(clockwise);
+
+      _this.moveOrientation = _this.rubikModel.moveOrientation;
+
+      _this.rubikView.colorizeRubik(mat);
+    };
+
+    this.rotateHor = function (clockwise) {
+      var mat = _this.rubikModel.rotateOHor(clockwise);
+
+      _this.moveOrientation = _this.rubikModel.moveOrientation;
+
+      _this.rubikView.colorizeRubik(mat);
+    };
+
+    this.rotateDep = function (clockwise) {
+      var mat = _this.rubikModel.rotateODep(clockwise);
+
+      _this.moveOrientation = _this.rubikModel.moveOrientation;
+
+      _this.rubikView.colorizeRubik(mat);
+    };
+
+    this.createRotationButtons = function () {
+      _this.createRotationButton('VER clockwise', _this.rotateVer, true);
+
+      _this.createRotationButton('VER counter', _this.rotateVer, false);
+
+      _this.createRotationButton('HOR clockwise', _this.rotateHor, true);
+
+      _this.createRotationButton('HOR counter', _this.rotateHor, false);
+
+      _this.createRotationButton('DEP clockwise', _this.rotateDep, true);
+
+      _this.createRotationButton('DEP counter', _this.rotateDep, false);
+    };
+
+    this.createRotationButton = function (name, func, clockwise) {
+      var button = document.createElement('button');
+      button.innerHTML = name;
+
+      button.onclick = function () {
+        func(clockwise);
+        console.log("clicked rotation button " + name);
+      };
+
+      var cubeRotationsDiv = document.getElementById('cube-rotations');
+      cubeRotationsDiv.appendChild(button);
     }; // change orientation
     // with that change, update move
     // total possible orientations 6 sides * 4 rotations = 24
@@ -88775,8 +89001,6 @@ function () {
 
         button.onclick = function () {
           _this.changeOrientation(i);
-
-          _this.rubikView.rubik.rotateX(Three_1.MathUtils.degToRad(90));
 
           console.log('clicked orientation');
           console.log(_this.rubikView.rubik.rotation);
@@ -88816,6 +89040,7 @@ function () {
     this.renderOrder.set('rubik', 0);
     this.addRubik(3);
     this.createOrientationButtons();
+    this.createRotationButtons();
   }
 
   RubikManager.prototype.drawNewRubik = function () {
@@ -88823,8 +89048,8 @@ function () {
     this.scene.mouseObjects[0] = this.rubikView;
     this.rubikView.addToScene();
     this.rubikView.createMeshes();
-    this.rubikView.colorizeRubik();
-    this.rubikView.placeTextOnRubik(null); // this.scene.controls.changeCamera(this.rubikModel.sideLength);
+    this.rubikView.colorizeRubik(); // this.rubikView.placeTextOnRubik(null);
+    // this.scene.controls.changeCamera(this.rubikModel.sideLength);
 
     this.rubikView.changeCamera();
   };
@@ -88857,7 +89082,7 @@ function () {
 }();
 
 exports.default = RubikManager;
-},{"./solver":"rubik/solver.ts","./model":"rubik/model.ts","./view":"rubik/view.ts","./utils":"rubik/utils.ts","../../node_modules/three/src/Three":"../node_modules/three/src/Three.js"}],"index.ts":[function(require,module,exports) {
+},{"./solver":"rubik/solver.ts","./model":"rubik/model.ts","./view":"rubik/view.ts","./utils":"rubik/utils.ts"}],"index.ts":[function(require,module,exports) {
 "use strict";
 
 var __importStar = this && this.__importStar || function (mod) {
@@ -89069,7 +89294,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57341" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52027" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

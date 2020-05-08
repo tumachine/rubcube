@@ -48,6 +48,7 @@ class RubikManager {
     this.addRubik(3);
 
     this.createOrientationButtons();
+    this.createRotationButtons();
   }
 
   private drawNewRubik() {
@@ -57,7 +58,7 @@ class RubikManager {
 
     this.rubikView.createMeshes();
     this.rubikView.colorizeRubik();
-    this.rubikView.placeTextOnRubik(null);
+    // this.rubikView.placeTextOnRubik(null);
     // this.scene.controls.changeCamera(this.rubikModel.sideLength);
     this.rubikView.changeCamera();
   }
@@ -214,6 +215,45 @@ class RubikManager {
     return button;
   }
 
+  private rotateVer = (clockwise: boolean) => {
+    const mat = this.rubikModel.rotateOVer(clockwise);
+    this.moveOrientation = this.rubikModel.moveOrientation;
+    this.rubikView.colorizeRubik(mat);
+  }
+
+  private rotateHor = (clockwise: boolean) => {
+    const mat = this.rubikModel.rotateOHor(clockwise);
+    this.moveOrientation = this.rubikModel.moveOrientation;
+    this.rubikView.colorizeRubik(mat);
+  }
+
+  private rotateDep = (clockwise: boolean) => {
+    const mat = this.rubikModel.rotateODep(clockwise);
+    this.moveOrientation = this.rubikModel.moveOrientation;
+    this.rubikView.colorizeRubik(mat);
+  }
+
+  private createRotationButtons = () => {
+    this.createRotationButton('VER clockwise', this.rotateVer, true);
+    this.createRotationButton('VER counter', this.rotateVer, false);
+    this.createRotationButton('HOR clockwise', this.rotateHor, true);
+    this.createRotationButton('HOR counter', this.rotateHor, false);
+    this.createRotationButton('DEP clockwise', this.rotateDep, true);
+    this.createRotationButton('DEP counter', this.rotateDep, false);
+  }
+
+  private createRotationButton = (name: string, func: Function, clockwise: boolean) => {
+    const button = document.createElement('button');
+    button.innerHTML = name;
+    button.onclick = () => {
+      func(clockwise);
+      console.log(`clicked rotation button ${name}`);
+    };
+
+    const cubeRotationsDiv = document.getElementById('cube-rotations') as HTMLButtonElement;
+    cubeRotationsDiv.appendChild(button);
+  }
+
   // change orientation
   // with that change, update move
   // total possible orientations 6 sides * 4 rotations = 24
@@ -223,7 +263,6 @@ class RubikManager {
       button.innerHTML = sidesStr[i];
       button.onclick = () => {
         this.changeOrientation(i);
-        this.rubikView.rubik.rotateX(MathUtils.degToRad(90));
         console.log('clicked orientation');
         console.log(this.rubikView.rubik.rotation);
       };
