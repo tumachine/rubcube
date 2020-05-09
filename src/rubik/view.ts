@@ -471,10 +471,18 @@ class RubikView implements RenderInterface, MouseInterface {
       console.log('Already moving');
       return;
     }
-    this.currentMove = this.rubikModel.getNextMove();
+    const nextMove = this.rubikModel.getNextMove();
 
-    if (this.currentMove) {
+
+    if (nextMove) {
       if (!this.isMoving) {
+        if (nextMove.graphical) {
+          this.currentMove = this.rubikModel.getGraphicalMove(nextMove.side, nextMove.slice, nextMove.clockwise);
+        } else {
+          this.currentMove = this.rubikModel.getInternalMove(nextMove.side, nextMove.slice, nextMove.clockwise);
+          // this.rubikModel.determineRotation(nextMove.frontSide, nextMove.upSide);
+        }
+        // this.currentMove = this.rubikModel.getInternalMove(nextMove.side, nextMove.slice, nextMove.clockwise);
         this.isMoving = true;
         this.moveDirection = this.currentMove.clockwise ? -1 : 1;
 

@@ -1,13 +1,38 @@
 /* eslint-disable prefer-destructuring */
 /* eslint-disable max-len */
 /* eslint-disable no-param-reassign */
-import { sides as s, sides } from './utils';
+// eslint-disable-next-line max-classes-per-file
+import { sides as s, sides, getLargestValue } from './utils';
 import Face from './face';
 import { MoveActions, MoveInterface } from './moveActions';
 import { Move, MoveOperation } from './move';
 
 type Matrix = Array<Array<number>>;
 type Slices = Array<Array<Array<number>>>;
+
+class MoveH {
+  side: number
+
+  slice: number | number[]
+
+  clockwise: boolean
+
+  graphical: boolean
+
+  public constructor(side: number, slice: number | number[], clockwise: boolean, graphical: boolean = true) {
+    this.side = side;
+    this.slice = slice;
+    this.clockwise = clockwise;
+    this.graphical = graphical;
+  }
+}
+
+interface MoveHistory {
+  side: number,
+  slice: number | number[],
+  clockwise: boolean,
+  graphical: boolean,
+}
 
 
 class RubikModel {
@@ -51,13 +76,13 @@ class RubikModel {
 
   public opRotations: number[][]
 
-  public moveHistory: MoveOperation[]
+  public moveHistory: MoveHistory[]
 
   private matrixHistory: Matrix[]
 
   public currentHistoryIndex: number
 
-  private currentMoves: MoveOperation[]
+  private currentMoves: MoveHistory[]
 
   public interface: number[][]
 
@@ -98,15 +123,6 @@ class RubikModel {
 
     this.reset();
 
-    // this.interface = [
-    //   this.stRotations[0],
-    //   this.stRotations[0],
-    //   this.stRotations[0],
-    //   this.stRotations[0],
-    //   this.stRotations[0],
-    //   this.stRotations[0],
-    // ];
-
     this.generateMoves();
     this.generateUserMoves();
 
@@ -142,10 +158,14 @@ class RubikModel {
   }
 
   private rotateCube = (side: number, sidesRotation: Function, clockwise: boolean) => {
-    const moveO = new MoveOperation(this.moves[side], this.slices, clockwise);
+    // const moveO = new MoveOperation(this.moves[side], this.slices, clockwise);
     // moveO.rotate(false);
 
-    this.currentMoves.push(moveO);
+    this.currentMoves.push({
+      side, slice: this.slices, clockwise, graphical: true,
+    });
+    // const gMove = this.getGraphicalMove(side, this.slices, clockwise);
+    // gMove.rotate(false);
 
     sidesRotation(clockwise);
     this.determineRotation();
@@ -155,13 +175,23 @@ class RubikModel {
     this.moveOrientation = this.rotations[this.SO[sides.f]][this.SO[sides.u]];
   }
 
-  public moveOperation = (move: Move, slice: number | number[], clockwise: boolean) => {
-    const moveO = new MoveOperation(move, slice, clockwise);
-    moveO.rotate(true);
+  public getOrientation = (sideF: number, sideU: number) => this.rotations[sideF][sideU];
+
+  public getGraphicalMove = (side: number, slice: number | number[], clockwise: boolean) => {
+    return new MoveOperation(this.moves[side], slice, clockwise);
+  }
+
+  public getInternalMove = (side: number, slice: number | number[], clockwise: boolean) => {
+    return new MoveOperation(this.moveOrientation[side], slice, clockwise);
+  }
+
+  public moveOperation = (side: number, slice: number | number[], clockwise: boolean) => {
+    const iMove = this.getInternalMove(side, slice, clockwise);
+    iMove.rotate(true);
 
     this.matrixHistory.push(this.deepCopyMatrix(this.matrix));
-    this.moveHistory.push(moveO);
-    this.currentMoves.push(moveO);
+    this.moveHistory.push({ side, slice, clockwise, graphical: true });
+    this.currentMoves.push({ side, slice, clockwise, graphical: true });
     this.currentHistoryIndex += 1;
   };
 
@@ -169,32 +199,31 @@ class RubikModel {
     // option to push to matrix history or not
     this.m = new MoveActions();
     // this.m.L = (slice = 0, clockwise = true) => this.moveOperation(this.moves[sides.l], slice, clockwise);
-    this.m.L = (slice = 0, clockwise = true) => this.moveOperation(this.moveOrientation[sides.l], slice, clockwise);
-    this.m.R = (slice = 0, clockwise = true) => this.moveOperation(this.moveOrientation[sides.r], slice, clockwise);
-    this.m.U = (slice = 0, clockwise = true) => this.moveOperation(this.moveOrientation[sides.u], slice, clockwise);
-    this.m.D = (slice = 0, clockwise = true) => this.moveOperation(this.moveOrientation[sides.d], slice, clockwise);
-    this.m.F = (slice = 0, clockwise = true) => this.moveOperation(this.moveOrientation[sides.f], slice, clockwise);
-    this.m.B = (slice = 0, clockwise = true) => this.moveOperation(this.moveOrientation[sides.b], slice, clockwise);
+    this.m.L = (slice = 0, clockwise = true) => this.moveOperation(sides.l, slice, clockwise);
+    this.m.R = (slice = 0, clockwise = true) => this.moveOperation(sides.r, slice, clockwise);
+    this.m.U = (slice = 0, clockwise = true) => this.moveOperation(sides.u, slice, clockwise);
+    this.m.D = (slice = 0, clockwise = true) => this.moveOperation(sides.d, slice, clockwise);
+    this.m.F = (slice = 0, clockwise = true) => this.moveOperation(sides.f, slice, clockwise);
+    this.m.B = (slice = 0, clockwise = true) => this.moveOperation(sides.b, slice, clockwise);
   }
 
   private generateUserMoves = () => {
-    const userMoveOperation = (move: Move, slice: number, clockwise: boolean) => {
-      const moveO = new MoveOperation(move, slice, clockwise);
-      moveO.rotate(true);
-      moveO.rotate(false);
+    const userMoveOperation = (side: number, slice: number, clockwise: boolean) => {
+      this.getInternalMove(side, slice, clockwise).rotate(true);
+      this.getGraphicalMove(side, slice, clockwise).rotate(false);
 
       this.matrixHistory.push(this.deepCopyMatrix(this.matrix));
-      this.moveHistory.push(moveO);
+      this.moveHistory.push({ side, slice, clockwise, graphical: true });
       this.currentHistoryIndex += 1;
     };
 
     this.mu = new MoveActions();
-    this.mu.L = (slice = 0, clockwise = true) => userMoveOperation(this.moveOrientation[sides.l], slice, clockwise);
-    this.mu.R = (slice = 0, clockwise = true) => userMoveOperation(this.moveOrientation[sides.r], slice, clockwise);
-    this.mu.U = (slice = 0, clockwise = true) => userMoveOperation(this.moveOrientation[sides.u], slice, clockwise);
-    this.mu.D = (slice = 0, clockwise = true) => userMoveOperation(this.moveOrientation[sides.d], slice, clockwise);
-    this.mu.F = (slice = 0, clockwise = true) => userMoveOperation(this.moveOrientation[sides.f], slice, clockwise);
-    this.mu.B = (slice = 0, clockwise = true) => userMoveOperation(this.moveOrientation[sides.b], slice, clockwise);
+    this.mu.L = (slice = 0, clockwise = true) => userMoveOperation(sides.l, slice, clockwise);
+    this.mu.R = (slice = 0, clockwise = true) => userMoveOperation(sides.r, slice, clockwise);
+    this.mu.U = (slice = 0, clockwise = true) => userMoveOperation(sides.u, slice, clockwise);
+    this.mu.D = (slice = 0, clockwise = true) => userMoveOperation(sides.d, slice, clockwise);
+    this.mu.F = (slice = 0, clockwise = true) => userMoveOperation(sides.f, slice, clockwise);
+    this.mu.B = (slice = 0, clockwise = true) => userMoveOperation(sides.b, slice, clockwise);
   }
 
   public reset = () => {
@@ -209,7 +238,7 @@ class RubikModel {
 
   private rotateSOVer = (clockwise: boolean) => {
     const copySO = [...this.SO];
-    if (clockwise) {
+    if (!clockwise) {
       this.SO[sides.u] = copySO[sides.f];
       this.SO[sides.f] = copySO[sides.d];
       this.SO[sides.d] = copySO[sides.b];
@@ -224,7 +253,7 @@ class RubikModel {
 
   private rotateSOHor = (clockwise: boolean) => {
     const copySO = [...this.SO];
-    if (clockwise) {
+    if (!clockwise) {
       this.SO[sides.f] = copySO[sides.r];
       this.SO[sides.r] = copySO[sides.b];
       this.SO[sides.b] = copySO[sides.l];
@@ -239,7 +268,7 @@ class RubikModel {
 
   private rotateSODep = (clockwise: boolean) => {
     const copySO = [...this.SO];
-    if (clockwise) {
+    if (!clockwise) {
       this.SO[sides.u] = copySO[sides.l];
       this.SO[sides.r] = copySO[sides.u];
       this.SO[sides.d] = copySO[sides.r];
@@ -261,12 +290,20 @@ class RubikModel {
     console.log(this.currentHistoryIndex);
     if (this.currentHistoryIndex > 0) {
       const currentMove = this.moveHistory[this.currentHistoryIndex];
-      const oppositeMove = currentMove.getOpposite();
+      const iMove = this.getInternalMove(currentMove.side, currentMove.slice, currentMove.clockwise).getOpposite();
+      // const gMove = this.getGraphicalMove(currentMove.side, currentMove.slice, currentMove.clockwise).getOpposite();
 
-      oppositeMove.rotate(true);
+      iMove.rotate(true);
+      // gMove.rotate(false);
+
+      const side = currentMove.side;
+      const slice = currentMove.slice;
+      const clockwise = !currentMove.clockwise;
+
+      const mHistory: MoveHistory = { side, slice, clockwise, graphical: false };
 
       this.currentHistoryIndex -= 1;
-      this.currentMoves.push(oppositeMove);
+      this.currentMoves.push(mHistory);
     }
   }
 
@@ -274,14 +311,15 @@ class RubikModel {
     if (this.currentHistoryIndex + 1 < this.moveHistory.length) {
       this.currentHistoryIndex += 1;
       const currentMove = this.moveHistory[this.currentHistoryIndex];
-      currentMove.rotate(true);
+
+      const iMove = this.getInternalMove(currentMove.side, currentMove.slice, currentMove.clockwise);
+      // const gMove = this.getGraphicalMove(currentMove.side, currentMove.slice, currentMove.clockwise).getOpposite();
+
+      iMove.rotate(true);
+
+      currentMove.graphical = false;
       this.currentMoves.push(currentMove);
     }
-  }
-
-  public addMove = (move: Move, slice: number | number[], clockwise: boolean) => {
-    this.removeHistoryByCurrentIndex();
-    this.moveOperation(move, slice, clockwise);
   }
 
   public removeHistoryByCurrentIndex = () => {
@@ -291,7 +329,12 @@ class RubikModel {
     }
   }
 
-  public getNextMove = (): MoveOperation => this.currentMoves.shift();
+  public addMove = (side: number, slice: number | number[], clockwise: boolean) => {
+    this.removeHistoryByCurrentIndex();
+    this.moveOperation(side, slice, clockwise);
+  }
+
+  public getNextMove = (): MoveHistory => this.currentMoves.shift();
 
   public jumpToHistoryIndex = (historyIndex: number) => {
     this.update(this.matrixHistory[historyIndex]);
@@ -452,6 +495,7 @@ class RubikModel {
       this.rotations.push(new Array<Move[]>(6));
     }
 
+    // down clockwise
     this.rotations[sides.l][sides.u] = this.moveRotations[sides.l][0];
     this.rotations[sides.l][sides.f] = this.moveRotations[sides.l][1];
     this.rotations[sides.l][sides.d] = this.moveRotations[sides.l][2];
@@ -467,6 +511,7 @@ class RubikModel {
     this.rotations[sides.u][sides.f] = this.moveRotations[sides.u][2];
     this.rotations[sides.u][sides.l] = this.moveRotations[sides.u][3];
 
+    // good
     this.rotations[sides.d][sides.f] = this.moveRotations[sides.d][0];
     this.rotations[sides.d][sides.r] = this.moveRotations[sides.d][1];
     this.rotations[sides.d][sides.b] = this.moveRotations[sides.d][2];

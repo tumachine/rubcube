@@ -26,7 +26,6 @@ export class Move {
   public getSliceOriginal = (slice: number | number[]): number | number[] => slice;
 
   public getSliceOpposite = (slice: number | number[]): number | number[] => {
-    console.log('getting opposite slice');
     if (Array.isArray(slice)) {
       const slices = [];
       console.log(slice);

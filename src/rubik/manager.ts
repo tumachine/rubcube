@@ -7,7 +7,6 @@ import MainScene from '..';
 import * as THREE from '../../node_modules/three/src/Three';
 import { MathUtils } from '../../node_modules/three/src/Three';
 import { Move } from './move';
-import { threadId } from 'worker_threads';
 
 class RubikManager {
   private rubikModel: RubikModel
@@ -89,7 +88,7 @@ class RubikManager {
   }
 
   public scramble = () => {
-    this.rubikModel.scramble(50);
+    this.rubikModel.scramble(10);
     this.refreshHistoryButtons();
     this.rubikView.startNextMove();
   }
@@ -153,7 +152,7 @@ class RubikManager {
 
     const move = this.rubikModel.moveHistory[index];
     if (move !== null) {
-      button.innerHTML = `${move.side}${move.clockwise ? '' : "'"}${move.slice === 0 ? '' : move.slice}`;
+      button.innerHTML = `${sidesStr[move.side]}${move.clockwise ? '' : "'"}${move.slice === 0 ? '' : move.slice}`;
     }
 
     button.onclick = () => {
@@ -229,14 +228,14 @@ class RubikManager {
     this.movementDiv.appendChild(buttonCounter);
   }
 
-  private createMovementButton = (slice: number, clockwise: boolean, sideNum: number): HTMLButtonElement => {
+  private createMovementButton = (slice: number, clockwise: boolean, side: number): HTMLButtonElement => {
     const button = document.createElement('button');
-    button.innerHTML = `${sidesStr[sideNum]}${clockwise ? '' : "'"}${slice === 0 ? '' : slice + 1}`;
+    button.innerHTML = `${sidesStr[side]}${clockwise ? '' : "'"}${slice === 0 ? '' : slice + 1}`;
 
     button.onclick = () => {
       // this.moveOrientation[sideNum](slice, clockwise);
       // this.rubikModel.addMove(this.moveOrientation[sideNum], slice, clockwise);
-      this.rubikModel.addMove(this.rubikModel.moveOrientation[sideNum], slice, clockwise);
+      this.rubikModel.addMove(side, slice, clockwise);
 
       this.clearHistoryButtons();
       this.refreshHistoryButtons();

@@ -87038,8 +87038,6 @@ function () {
     };
 
     this.getSliceOpposite = function (slice) {
-      console.log('getting opposite slice');
-
       if (Array.isArray(slice)) {
         var slices = [];
         console.log(slice);
@@ -87162,6 +87160,7 @@ Object.defineProperty(exports, "__esModule", {
 /* eslint-disable max-len */
 
 /* eslint-disable no-param-reassign */
+// eslint-disable-next-line max-classes-per-file
 
 var utils_1 = require("./utils");
 
@@ -87170,6 +87169,23 @@ var face_1 = __importDefault(require("./face"));
 var moveActions_1 = require("./moveActions");
 
 var move_1 = require("./move");
+
+var MoveH =
+/** @class */
+function () {
+  function MoveH(side, slice, clockwise, graphical) {
+    if (graphical === void 0) {
+      graphical = true;
+    }
+
+    this.side = side;
+    this.slice = slice;
+    this.clockwise = clockwise;
+    this.graphical = graphical;
+  }
+
+  return MoveH;
+}();
 
 var RubikModel =
 /** @class */
@@ -87197,9 +87213,16 @@ function () {
     };
 
     this.rotateCube = function (side, sidesRotation, clockwise) {
-      var moveO = new move_1.MoveOperation(_this.moves[side], _this.slices, clockwise); // moveO.rotate(false);
+      // const moveO = new MoveOperation(this.moves[side], this.slices, clockwise);
+      // moveO.rotate(false);
+      _this.currentMoves.push({
+        side: side,
+        slice: _this.slices,
+        clockwise: clockwise,
+        graphical: true
+      }); // const gMove = this.getGraphicalMove(side, this.slices, clockwise);
+      // gMove.rotate(false);
 
-      _this.currentMoves.push(moveO);
 
       sidesRotation(clockwise);
 
@@ -87210,15 +87233,38 @@ function () {
       _this.moveOrientation = _this.rotations[_this.SO[utils_1.sides.f]][_this.SO[utils_1.sides.u]];
     };
 
-    this.moveOperation = function (move, slice, clockwise) {
-      var moveO = new move_1.MoveOperation(move, slice, clockwise);
-      moveO.rotate(true);
+    this.getOrientation = function (sideF, sideU) {
+      return _this.rotations[sideF][sideU];
+    };
+
+    this.getGraphicalMove = function (side, slice, clockwise) {
+      return new move_1.MoveOperation(_this.moves[side], slice, clockwise);
+    };
+
+    this.getInternalMove = function (side, slice, clockwise) {
+      return new move_1.MoveOperation(_this.moveOrientation[side], slice, clockwise);
+    };
+
+    this.moveOperation = function (side, slice, clockwise) {
+      var iMove = _this.getInternalMove(side, slice, clockwise);
+
+      iMove.rotate(true);
 
       _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
 
-      _this.moveHistory.push(moveO);
+      _this.moveHistory.push({
+        side: side,
+        slice: slice,
+        clockwise: clockwise,
+        graphical: true
+      });
 
-      _this.currentMoves.push(moveO);
+      _this.currentMoves.push({
+        side: side,
+        slice: slice,
+        clockwise: clockwise,
+        graphical: true
+      });
 
       _this.currentHistoryIndex += 1;
     };
@@ -87236,7 +87282,7 @@ function () {
           clockwise = true;
         }
 
-        return _this.moveOperation(_this.moveOrientation[utils_1.sides.l], slice, clockwise);
+        return _this.moveOperation(utils_1.sides.l, slice, clockwise);
       };
 
       _this.m.R = function (slice, clockwise) {
@@ -87248,7 +87294,7 @@ function () {
           clockwise = true;
         }
 
-        return _this.moveOperation(_this.moveOrientation[utils_1.sides.r], slice, clockwise);
+        return _this.moveOperation(utils_1.sides.r, slice, clockwise);
       };
 
       _this.m.U = function (slice, clockwise) {
@@ -87260,7 +87306,7 @@ function () {
           clockwise = true;
         }
 
-        return _this.moveOperation(_this.moveOrientation[utils_1.sides.u], slice, clockwise);
+        return _this.moveOperation(utils_1.sides.u, slice, clockwise);
       };
 
       _this.m.D = function (slice, clockwise) {
@@ -87272,7 +87318,7 @@ function () {
           clockwise = true;
         }
 
-        return _this.moveOperation(_this.moveOrientation[utils_1.sides.d], slice, clockwise);
+        return _this.moveOperation(utils_1.sides.d, slice, clockwise);
       };
 
       _this.m.F = function (slice, clockwise) {
@@ -87284,7 +87330,7 @@ function () {
           clockwise = true;
         }
 
-        return _this.moveOperation(_this.moveOrientation[utils_1.sides.f], slice, clockwise);
+        return _this.moveOperation(utils_1.sides.f, slice, clockwise);
       };
 
       _this.m.B = function (slice, clockwise) {
@@ -87296,19 +87342,24 @@ function () {
           clockwise = true;
         }
 
-        return _this.moveOperation(_this.moveOrientation[utils_1.sides.b], slice, clockwise);
+        return _this.moveOperation(utils_1.sides.b, slice, clockwise);
       };
     };
 
     this.generateUserMoves = function () {
-      var userMoveOperation = function userMoveOperation(move, slice, clockwise) {
-        var moveO = new move_1.MoveOperation(move, slice, clockwise);
-        moveO.rotate(true);
-        moveO.rotate(false);
+      var userMoveOperation = function userMoveOperation(side, slice, clockwise) {
+        _this.getInternalMove(side, slice, clockwise).rotate(true);
+
+        _this.getGraphicalMove(side, slice, clockwise).rotate(false);
 
         _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
 
-        _this.moveHistory.push(moveO);
+        _this.moveHistory.push({
+          side: side,
+          slice: slice,
+          clockwise: clockwise,
+          graphical: true
+        });
 
         _this.currentHistoryIndex += 1;
       };
@@ -87324,7 +87375,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(_this.moveOrientation[utils_1.sides.l], slice, clockwise);
+        return userMoveOperation(utils_1.sides.l, slice, clockwise);
       };
 
       _this.mu.R = function (slice, clockwise) {
@@ -87336,7 +87387,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(_this.moveOrientation[utils_1.sides.r], slice, clockwise);
+        return userMoveOperation(utils_1.sides.r, slice, clockwise);
       };
 
       _this.mu.U = function (slice, clockwise) {
@@ -87348,7 +87399,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(_this.moveOrientation[utils_1.sides.u], slice, clockwise);
+        return userMoveOperation(utils_1.sides.u, slice, clockwise);
       };
 
       _this.mu.D = function (slice, clockwise) {
@@ -87360,7 +87411,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(_this.moveOrientation[utils_1.sides.d], slice, clockwise);
+        return userMoveOperation(utils_1.sides.d, slice, clockwise);
       };
 
       _this.mu.F = function (slice, clockwise) {
@@ -87372,7 +87423,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(_this.moveOrientation[utils_1.sides.f], slice, clockwise);
+        return userMoveOperation(utils_1.sides.f, slice, clockwise);
       };
 
       _this.mu.B = function (slice, clockwise) {
@@ -87384,7 +87435,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(_this.moveOrientation[utils_1.sides.b], slice, clockwise);
+        return userMoveOperation(utils_1.sides.b, slice, clockwise);
       };
     };
 
@@ -87400,7 +87451,7 @@ function () {
     this.rotateSOVer = function (clockwise) {
       var copySO = __spreadArrays(_this.SO);
 
-      if (clockwise) {
+      if (!clockwise) {
         _this.SO[utils_1.sides.u] = copySO[utils_1.sides.f];
         _this.SO[utils_1.sides.f] = copySO[utils_1.sides.d];
         _this.SO[utils_1.sides.d] = copySO[utils_1.sides.b];
@@ -87416,7 +87467,7 @@ function () {
     this.rotateSOHor = function (clockwise) {
       var copySO = __spreadArrays(_this.SO);
 
-      if (clockwise) {
+      if (!clockwise) {
         _this.SO[utils_1.sides.f] = copySO[utils_1.sides.r];
         _this.SO[utils_1.sides.r] = copySO[utils_1.sides.b];
         _this.SO[utils_1.sides.b] = copySO[utils_1.sides.l];
@@ -87432,7 +87483,7 @@ function () {
     this.rotateSODep = function (clockwise) {
       var copySO = __spreadArrays(_this.SO);
 
-      if (clockwise) {
+      if (!clockwise) {
         _this.SO[utils_1.sides.u] = copySO[utils_1.sides.l];
         _this.SO[utils_1.sides.r] = copySO[utils_1.sides.u];
         _this.SO[utils_1.sides.d] = copySO[utils_1.sides.r];
@@ -87455,11 +87506,24 @@ function () {
 
       if (_this.currentHistoryIndex > 0) {
         var currentMove = _this.moveHistory[_this.currentHistoryIndex];
-        var oppositeMove = currentMove.getOpposite();
-        oppositeMove.rotate(true);
+
+        var iMove = _this.getInternalMove(currentMove.side, currentMove.slice, currentMove.clockwise).getOpposite(); // const gMove = this.getGraphicalMove(currentMove.side, currentMove.slice, currentMove.clockwise).getOpposite();
+
+
+        iMove.rotate(true); // gMove.rotate(false);
+
+        var side = currentMove.side;
+        var slice = currentMove.slice;
+        var clockwise = !currentMove.clockwise;
+        var mHistory = {
+          side: side,
+          slice: slice,
+          clockwise: clockwise,
+          graphical: false
+        };
         _this.currentHistoryIndex -= 1;
 
-        _this.currentMoves.push(oppositeMove);
+        _this.currentMoves.push(mHistory);
       }
     };
 
@@ -87467,16 +87531,15 @@ function () {
       if (_this.currentHistoryIndex + 1 < _this.moveHistory.length) {
         _this.currentHistoryIndex += 1;
         var currentMove = _this.moveHistory[_this.currentHistoryIndex];
-        currentMove.rotate(true);
+
+        var iMove = _this.getInternalMove(currentMove.side, currentMove.slice, currentMove.clockwise); // const gMove = this.getGraphicalMove(currentMove.side, currentMove.slice, currentMove.clockwise).getOpposite();
+
+
+        iMove.rotate(true);
+        currentMove.graphical = false;
 
         _this.currentMoves.push(currentMove);
       }
-    };
-
-    this.addMove = function (move, slice, clockwise) {
-      _this.removeHistoryByCurrentIndex();
-
-      _this.moveOperation(move, slice, clockwise);
     };
 
     this.removeHistoryByCurrentIndex = function () {
@@ -87484,6 +87547,12 @@ function () {
         _this.matrixHistory = _this.matrixHistory.slice(0, _this.currentHistoryIndex + 1);
         _this.moveHistory = _this.moveHistory.slice(0, _this.currentHistoryIndex + 1);
       }
+    };
+
+    this.addMove = function (side, slice, clockwise) {
+      _this.removeHistoryByCurrentIndex();
+
+      _this.moveOperation(side, slice, clockwise);
     };
 
     this.getNextMove = function () {
@@ -87631,7 +87700,8 @@ function () {
 
       for (var i = 0; i < 6; i += 1) {
         _this.rotations.push(new Array(6));
-      }
+      } // down clockwise
+
 
       _this.rotations[utils_1.sides.l][utils_1.sides.u] = _this.moveRotations[utils_1.sides.l][0];
       _this.rotations[utils_1.sides.l][utils_1.sides.f] = _this.moveRotations[utils_1.sides.l][1];
@@ -87644,7 +87714,8 @@ function () {
       _this.rotations[utils_1.sides.u][utils_1.sides.b] = _this.moveRotations[utils_1.sides.u][0];
       _this.rotations[utils_1.sides.u][utils_1.sides.r] = _this.moveRotations[utils_1.sides.u][1];
       _this.rotations[utils_1.sides.u][utils_1.sides.f] = _this.moveRotations[utils_1.sides.u][2];
-      _this.rotations[utils_1.sides.u][utils_1.sides.l] = _this.moveRotations[utils_1.sides.u][3];
+      _this.rotations[utils_1.sides.u][utils_1.sides.l] = _this.moveRotations[utils_1.sides.u][3]; // good
+
       _this.rotations[utils_1.sides.d][utils_1.sides.f] = _this.moveRotations[utils_1.sides.d][0];
       _this.rotations[utils_1.sides.d][utils_1.sides.r] = _this.moveRotations[utils_1.sides.d][1];
       _this.rotations[utils_1.sides.d][utils_1.sides.b] = _this.moveRotations[utils_1.sides.d][2];
@@ -88003,15 +88074,7 @@ function () {
     this.generateRotations();
     this.f = new face_1.default(sideLength);
     this.moves = [new move_1.Move('L', 'x', this.rotateVer, this.getCubesVer, this.sideLength, true), new move_1.Move('R', 'x', this.rotateVer, this.getCubesVer, this.sideLength, false), new move_1.Move('U', 'y', this.rotateHor, this.getCubesHor, this.sideLength, false), new move_1.Move('D', 'y', this.rotateHor, this.getCubesHor, this.sideLength, true), new move_1.Move('F', 'z', this.rotateDep, this.getCubesDep, this.sideLength, false), new move_1.Move('B', 'z', this.rotateDep, this.getCubesDep, this.sideLength, true)];
-    this.reset(); // this.interface = [
-    //   this.stRotations[0],
-    //   this.stRotations[0],
-    //   this.stRotations[0],
-    //   this.stRotations[0],
-    //   this.stRotations[0],
-    //   this.stRotations[0],
-    // ];
-
+    this.reset();
     this.generateMoves();
     this.generateUserMoves();
     this.generateMoveRotations();
@@ -88329,10 +88392,17 @@ function () {
         return;
       }
 
-      _this.currentMove = _this.rubikModel.getNextMove();
+      var nextMove = _this.rubikModel.getNextMove();
 
-      if (_this.currentMove) {
+      if (nextMove) {
         if (!_this.isMoving) {
+          if (nextMove.graphical) {
+            _this.currentMove = _this.rubikModel.getGraphicalMove(nextMove.side, nextMove.slice, nextMove.clockwise);
+          } else {
+            _this.currentMove = _this.rubikModel.getInternalMove(nextMove.side, nextMove.slice, nextMove.clockwise); // this.rubikModel.determineRotation(nextMove.frontSide, nextMove.upSide);
+          } // this.currentMove = this.rubikModel.getInternalMove(nextMove.side, nextMove.slice, nextMove.clockwise);
+
+
           _this.isMoving = true;
           _this.moveDirection = _this.currentMove.clockwise ? -1 : 1;
 
@@ -88792,7 +88862,7 @@ function () {
     this.historyButtonNotActiveColor = '#4CAF50';
 
     this.scramble = function () {
-      _this.rubikModel.scramble(50);
+      _this.rubikModel.scramble(10);
 
       _this.refreshHistoryButtons();
 
@@ -88875,7 +88945,7 @@ function () {
       var move = _this.rubikModel.moveHistory[index];
 
       if (move !== null) {
-        button.innerHTML = "" + move.side + (move.clockwise ? '' : "'") + (move.slice === 0 ? '' : move.slice);
+        button.innerHTML = "" + utils_1.sidesStr[move.side] + (move.clockwise ? '' : "'") + (move.slice === 0 ? '' : move.slice);
       }
 
       button.onclick = function () {
@@ -88968,14 +89038,14 @@ function () {
       _this.movementDiv.appendChild(buttonCounter);
     };
 
-    this.createMovementButton = function (slice, clockwise, sideNum) {
+    this.createMovementButton = function (slice, clockwise, side) {
       var button = document.createElement('button');
-      button.innerHTML = "" + utils_1.sidesStr[sideNum] + (clockwise ? '' : "'") + (slice === 0 ? '' : slice + 1);
+      button.innerHTML = "" + utils_1.sidesStr[side] + (clockwise ? '' : "'") + (slice === 0 ? '' : slice + 1);
 
       button.onclick = function () {
         // this.moveOrientation[sideNum](slice, clockwise);
         // this.rubikModel.addMove(this.moveOrientation[sideNum], slice, clockwise);
-        _this.rubikModel.addMove(_this.rubikModel.moveOrientation[sideNum], slice, clockwise);
+        _this.rubikModel.addMove(side, slice, clockwise);
 
         _this.clearHistoryButtons();
 
@@ -89247,7 +89317,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57360" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53753" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
