@@ -1,11 +1,13 @@
 import RubikSolver from './solver';
 import RubikModel from './model';
 import RubikView from './view';
-import { sides as s, sidesStr, sidesArr, createCamera } from './utils';
+import { sides as s, sidesStr, sidesArr, createCamera, sides } from './utils';
 import { MoveInterface } from './moveActions';
 import MainScene from '..';
 import * as THREE from '../../node_modules/three/src/Three';
 import { MathUtils } from '../../node_modules/three/src/Three';
+import { Move } from './move';
+import { threadId } from 'worker_threads';
 
 class RubikManager {
   private rubikModel: RubikModel
@@ -18,7 +20,7 @@ class RubikManager {
 
   private scene: MainScene
 
-  private moveOrientation: MoveInterface[]
+  // private moveOrientation: Move[]
 
   private moveRotation: number
 
@@ -47,8 +49,7 @@ class RubikManager {
 
     this.addRubik(3);
 
-    this.createOrientationButtons();
-    this.createRotationButtons();
+    // this.createOrientationButtons();
   }
 
   private drawNewRubik() {
@@ -76,7 +77,7 @@ class RubikManager {
     }, false);
 
     this.moveRotation = 0;
-    this.moveOrientation = this.rubikModel.moveRotations[s.f][this.moveRotation];
+    // this.moveOrientation = this.rubikModel.moveRotations[s.f][this.moveRotation];
     this.historyButtons = [];
     this.clearMoveButtons();
     this.clearHistoryButtons();
@@ -84,6 +85,7 @@ class RubikManager {
     this.createMovementButtons();
 
     this.drawNewRubik();
+    this.createCubeRotationButtons();
   }
 
   public scramble = () => {
@@ -151,7 +153,7 @@ class RubikManager {
 
     const move = this.rubikModel.moveHistory[index];
     if (move !== null) {
-      button.innerHTML = `${move.side}${move.clockwise ? '' : "'"}${move.slice === 0 ? '' : move.slice + 1}`;
+      button.innerHTML = `${move.side}${move.clockwise ? '' : "'"}${move.slice === 0 ? '' : move.slice}`;
     }
 
     button.onclick = () => {
@@ -176,6 +178,33 @@ class RubikManager {
   private clearHistoryButtons = () => {
     this.historyDiv.innerHTML = '';
     this.historyButtons = [];
+  }
+
+  private createCubeRotationButtons = () => {
+    const cubeRotationsDiv = document.getElementById('cube-rotations') as HTMLButtonElement;
+    cubeRotationsDiv.innerHTML = '';
+
+    const slices = [];
+    for (let i = 0; i < this.rubikModel.sideLength; i += 1) {
+      slices.push(i);
+    }
+    cubeRotationsDiv.appendChild(this.createCubeRotationButton('up', this.rubikModel.rotateOVer, false));
+    cubeRotationsDiv.appendChild(this.createCubeRotationButton('down', this.rubikModel.rotateOVer, true));
+    cubeRotationsDiv.appendChild(this.createCubeRotationButton('left', this.rubikModel.rotateOHor, false));
+    cubeRotationsDiv.appendChild(this.createCubeRotationButton('right', this.rubikModel.rotateOHor, true));
+    cubeRotationsDiv.appendChild(this.createCubeRotationButton('clockwise', this.rubikModel.rotateODep, false));
+    cubeRotationsDiv.appendChild(this.createCubeRotationButton('counter', this.rubikModel.rotateODep, true));
+  }
+
+  private createCubeRotationButton = (name: string, rotation: Function, clockwise: boolean): HTMLButtonElement => {
+    const button = document.createElement('button');
+    button.innerHTML = name;
+
+    button.onclick = () => {
+      rotation(clockwise);
+      this.rubikView.startNextMove();
+    };
+    return button;
   }
 
   private clearMoveButtons = () => {
@@ -206,7 +235,8 @@ class RubikManager {
 
     button.onclick = () => {
       // this.moveOrientation[sideNum](slice, clockwise);
-      this.rubikModel.addMove(this.moveOrientation[sideNum], slice, clockwise);
+      // this.rubikModel.addMove(this.moveOrientation[sideNum], slice, clockwise);
+      this.rubikModel.addMove(this.rubikModel.moveOrientation[sideNum], slice, clockwise);
 
       this.clearHistoryButtons();
       this.refreshHistoryButtons();
@@ -215,74 +245,53 @@ class RubikManager {
     return button;
   }
 
-  private rotateVer = (clockwise: boolean) => {
-    const mat = this.rubikModel.rotateOVer(clockwise);
-    this.moveOrientation = this.rubikModel.moveOrientation;
-    this.rubikView.colorizeRubik(mat);
-  }
+  // private rotateVer = (clockwise: boolean) => {
+  //   const mat = this.rubikModel.rotateOVer(clockwise);
+  //   this.moveOrientation = this.rubikModel.moveOrientation;
+  //   this.rubikView.colorizeRubik(mat);
+  // }
 
-  private rotateHor = (clockwise: boolean) => {
-    const mat = this.rubikModel.rotateOHor(clockwise);
-    this.moveOrientation = this.rubikModel.moveOrientation;
-    this.rubikView.colorizeRubik(mat);
-  }
+  // private rotateHor = (clockwise: boolean) => {
+  //   const mat = this.rubikModel.rotateOHor(clockwise);
+  //   this.moveOrientation = this.rubikModel.moveOrientation;
+  //   this.rubikView.colorizeRubik(mat);
+  // }
 
-  private rotateDep = (clockwise: boolean) => {
-    const mat = this.rubikModel.rotateODep(clockwise);
-    this.moveOrientation = this.rubikModel.moveOrientation;
-    this.rubikView.colorizeRubik(mat);
-  }
-
-  private createRotationButtons = () => {
-    this.createRotationButton('VER clockwise', this.rotateVer, true);
-    this.createRotationButton('VER counter', this.rotateVer, false);
-    this.createRotationButton('HOR clockwise', this.rotateHor, true);
-    this.createRotationButton('HOR counter', this.rotateHor, false);
-    this.createRotationButton('DEP clockwise', this.rotateDep, true);
-    this.createRotationButton('DEP counter', this.rotateDep, false);
-  }
-
-  private createRotationButton = (name: string, func: Function, clockwise: boolean) => {
-    const button = document.createElement('button');
-    button.innerHTML = name;
-    button.onclick = () => {
-      func(clockwise);
-      console.log(`clicked rotation button ${name}`);
-    };
-
-    const cubeRotationsDiv = document.getElementById('cube-rotations') as HTMLButtonElement;
-    cubeRotationsDiv.appendChild(button);
-  }
+  // private rotateDep = (clockwise: boolean) => {
+  //   const mat = this.rubikModel.rotateODep(clockwise);
+  //   this.moveOrientation = this.rubikModel.moveOrientation;
+  //   this.rubikView.colorizeRubik(mat);
+  // }
 
   // change orientation
   // with that change, update move
   // total possible orientations 6 sides * 4 rotations = 24
-  private createOrientationButtons = () => {
-    for (let i = 0; i < sidesArr.length; i += 1) {
-      const button = document.createElement('button');
-      button.innerHTML = sidesStr[i];
-      button.onclick = () => {
-        this.changeOrientation(i);
-        console.log('clicked orientation');
-        console.log(this.rubikView.rubik.rotation);
-      };
-      this.orientationDiv.appendChild(button);
-    }
-  }
+  // private createOrientationButtons = () => {
+  //   for (let i = 0; i < sidesArr.length; i += 1) {
+  //     const button = document.createElement('button');
+  //     button.innerHTML = sidesStr[i];
+  //     button.onclick = () => {
+  //       this.changeOrientation(i);
+  //       console.log('clicked orientation');
+  //       console.log(this.rubikView.rubik.rotation);
+  //     };
+  //     this.orientationDiv.appendChild(button);
+  //   }
+  // }
 
-  private changeOrientation = (side: number) => {
-    this.currentMoveRotations = this.rubikModel.moveRotations[side];
-    this.moveOrientation = this.currentMoveRotations[this.moveRotation];
-  }
+  // private changeOrientation = (side: number) => {
+  //   this.currentMoveRotations = this.rubikModel.moveRotations[side];
+  //   this.moveOrientation = this.currentMoveRotations[this.moveRotation];
+  // }
 
-  public rotateCurrentOrientation = (clockwise: boolean = true) => {
-    if (clockwise) {
-      this.moveRotation = (this.moveRotation + 1) % 4;
-    } else {
-      this.moveRotation = (Math.abs(this.moveRotation - 1)) % 4;
-    }
-    this.moveOrientation = this.currentMoveRotations[this.moveRotation];
-  }
+  // public rotateCurrentOrientation = (clockwise: boolean = true) => {
+  //   if (clockwise) {
+  //     this.moveRotation = (this.moveRotation + 1) % 4;
+  //   } else {
+  //     this.moveRotation = (Math.abs(this.moveRotation - 1)) % 4;
+  //   }
+  //   this.moveOrientation = this.currentMoveRotations[this.moveRotation];
+  // }
 }
 
 export default RubikManager;

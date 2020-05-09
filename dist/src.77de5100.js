@@ -87019,6 +87019,9 @@ function () {
 exports.default = RubikSolver;
 },{"./solutions/solveStandardRubik":"rubik/solutions/solveStandardRubik.ts","./solutions/solveWhiteCenterRubik":"rubik/solutions/solveWhiteCenterRubik.ts","./solutions/solveYellowCenterRubik":"rubik/solutions/solveYellowCenterRubik.ts","./solutions/solveBlueCenterRubik":"rubik/solutions/solveBlueCenterRubik.ts","./solutions/solveYellowMiddleLineRubik":"rubik/solutions/solveYellowMiddleLineRubik.ts","./solutions/solveRedCenterRubik":"rubik/solutions/solveRedCenterRubik.ts","./solutions/solveGreenOrangeCenterRubik":"rubik/solutions/solveGreenOrangeCenterRubik.ts","./solutions/solveEdgesRubik":"rubik/solutions/solveEdgesRubik.ts"}],"rubik/move.ts":[function(require,module,exports) {
 "use strict";
+/* eslint-disable max-classes-per-file */
+
+/* eslint-disable max-len */
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -87027,37 +87030,107 @@ Object.defineProperty(exports, "__esModule", {
 var Move =
 /** @class */
 function () {
-  function Move(side, slice, clockwise, axis, rotation, cubeGetter) {
+  function Move(side, axis, rotation, cubeGetter, length, original) {
     var _this = this;
 
-    this.toString = function () {
-      return "" + _this.side + (_this.clockwise ? '' : "'") + (_this.slice === 0 ? '' : _this.slice + 1);
+    this.getSliceOriginal = function (slice) {
+      return slice;
     };
 
-    this.side = side;
-    this.slice = slice;
-    this.clockwise = clockwise;
-    this.axis = axis;
+    this.getSliceOpposite = function (slice) {
+      console.log('getting opposite slice');
+
+      if (Array.isArray(slice)) {
+        var slices = [];
+        console.log(slice);
+
+        for (var i = 0; i < slice.length; i += 1) {
+          slices.push(_this.length - 1 - slice[i]);
+        }
+
+        return slices;
+      }
+
+      return _this.length - 1 - slice;
+    };
+
+    this.getClockwiseOriginal = function (clockwise) {
+      return clockwise;
+    };
+
+    this.getClockwiseOpposite = function (clockwise) {
+      return !clockwise;
+    };
+
     this.rotation = rotation;
     this.cubeGetter = cubeGetter;
+    this.side = side;
+    this.axis = axis;
+    this.length = length;
+    this.original = original;
   }
 
-  Move.getOpposite = function (m) {
-    return new Move(m.side, m.slice, !m.clockwise, m.axis, m.rotation, m.cubeGetter);
+  Move.prototype.rotate = function (slice, clockwise, realMatrix) {
+    if (Array.isArray(slice)) {
+      for (var i = 0; i < slice.length; i += 1) {
+        this.rotation(slice[i], clockwise, realMatrix);
+      }
+    } else {
+      this.rotation(slice, clockwise, realMatrix);
+    }
   };
 
-  Move.prototype.rotate = function (realMatrix) {
-    this.rotation(this.slice, this.clockwise, realMatrix);
-  };
+  Move.prototype.getCubes = function (slice) {
+    if (Array.isArray(slice)) {
+      var cubes_1 = [];
 
-  Move.prototype.getCubes = function () {
-    return this.cubeGetter(this.slice);
+      for (var i = 0; i < slice.length; i += 1) {
+        this.cubeGetter(slice[i]).forEach(function (cube) {
+          return cubes_1.push(cube);
+        });
+      }
+
+      return cubes_1;
+    }
+
+    return this.cubeGetter(slice);
   };
 
   return Move;
 }();
 
-exports.default = Move;
+exports.Move = Move;
+
+var MoveOperation =
+/** @class */
+function () {
+  function MoveOperation(move, slice, clockwise) {
+    this.move = move;
+    this.slice = this.move.original ? this.move.getSliceOriginal(slice) : this.move.getSliceOpposite(slice);
+    this.clockwise = this.move.original ? this.move.getClockwiseOpposite(clockwise) : this.move.getClockwiseOriginal(clockwise);
+    this.axis = this.move.axis;
+    this.side = this.move.side;
+  }
+
+  MoveOperation.prototype.getOpposite = function () {
+    var move = new MoveOperation(this.move, this.slice, !this.clockwise);
+    move.slice = this.slice;
+    move.clockwise = !this.clockwise;
+    return move;
+  };
+
+  MoveOperation.prototype.rotate = function (realMatrix) {
+    this.move.rotate(this.slice, this.clockwise, realMatrix);
+  };
+
+  MoveOperation.prototype.getCubes = function () {
+    return this.move.getCubes(this.slice);
+  };
+
+  return MoveOperation;
+}();
+
+exports.MoveOperation = MoveOperation;
 },{}],"rubik/model.ts":[function(require,module,exports) {
 "use strict";
 
@@ -87096,7 +87169,7 @@ var face_1 = __importDefault(require("./face"));
 
 var moveActions_1 = require("./moveActions");
 
-var move_1 = __importDefault(require("./move"));
+var move_1 = require("./move");
 
 var RubikModel =
 /** @class */
@@ -87110,114 +87183,132 @@ function () {
     this.sequenceHorRev = [utils_1.sides.r, utils_1.sides.b, utils_1.sides.l, utils_1.sides.f, utils_1.sides.r];
     this.sequenceVerRev = [utils_1.sides.f, utils_1.sides.d, utils_1.sides.b, utils_1.sides.u, utils_1.sides.f];
     this.sequenceDepRev = [utils_1.sides.d, utils_1.sides.r, utils_1.sides.u, utils_1.sides.l, utils_1.sides.d];
-    this.allMoves = new Array(6);
 
     this.rotateOVer = function (clockwise) {
-      var copyMatrix = _this.deepCopyMatrix(_this.matrix);
-
-      for (var i = 0; i < _this.sideLength; i += 1) {
-        _this.rotateVerMatrix(i, clockwise, copyMatrix);
-      }
-
-      _this.rotateSOVer(clockwise);
-
-      _this.determineRotation();
-
-      return copyMatrix;
+      _this.rotateCube(utils_1.sides.l, _this.rotateSOVer, clockwise);
     };
 
     this.rotateOHor = function (clockwise) {
-      var copyMatrix = _this.deepCopyMatrix(_this.matrix);
-
-      for (var i = 0; i < _this.sideLength; i += 1) {
-        _this.rotateHorMatrix(i, clockwise, copyMatrix);
-      }
-
-      _this.rotateSOHor(clockwise);
-
-      _this.determineRotation();
-
-      return copyMatrix;
+      _this.rotateCube(utils_1.sides.d, _this.rotateSOHor, clockwise);
     };
 
     this.rotateODep = function (clockwise) {
-      var copyMatrix = _this.deepCopyMatrix(_this.matrix);
+      _this.rotateCube(utils_1.sides.b, _this.rotateSODep, clockwise);
+    };
 
-      for (var i = 0; i < _this.sideLength; i += 1) {
-        _this.rotateDepMatrix(i, clockwise, copyMatrix);
-      }
+    this.rotateCube = function (side, sidesRotation, clockwise) {
+      var moveO = new move_1.MoveOperation(_this.moves[side], _this.slices, clockwise); // moveO.rotate(false);
 
-      _this.rotateSODep(clockwise);
+      _this.currentMoves.push(moveO);
+
+      sidesRotation(clockwise);
 
       _this.determineRotation();
-
-      return copyMatrix;
-    };
-
-    this.rotateSOVer = function (clockwise) {
-      var copySO = __spreadArrays(_this.sideO);
-
-      if (clockwise) {
-        _this.sideO[utils_1.sides.u] = copySO[utils_1.sides.b];
-        _this.sideO[utils_1.sides.f] = copySO[utils_1.sides.u];
-        _this.sideO[utils_1.sides.d] = copySO[utils_1.sides.f];
-        _this.sideO[utils_1.sides.b] = copySO[utils_1.sides.d];
-      } else {
-        _this.sideO[utils_1.sides.u] = copySO[utils_1.sides.f];
-        _this.sideO[utils_1.sides.f] = copySO[utils_1.sides.d];
-        _this.sideO[utils_1.sides.d] = copySO[utils_1.sides.b];
-        _this.sideO[utils_1.sides.b] = copySO[utils_1.sides.u];
-      }
-    };
-
-    this.rotateSOHor = function (clockwise) {
-      var copySO = __spreadArrays(_this.sideO);
-
-      if (clockwise) {
-        _this.sideO[utils_1.sides.f] = copySO[utils_1.sides.l];
-        _this.sideO[utils_1.sides.r] = copySO[utils_1.sides.f];
-        _this.sideO[utils_1.sides.b] = copySO[utils_1.sides.r];
-        _this.sideO[utils_1.sides.l] = copySO[utils_1.sides.b];
-      } else {
-        _this.sideO[utils_1.sides.f] = copySO[utils_1.sides.r];
-        _this.sideO[utils_1.sides.r] = copySO[utils_1.sides.b];
-        _this.sideO[utils_1.sides.b] = copySO[utils_1.sides.l];
-        _this.sideO[utils_1.sides.l] = copySO[utils_1.sides.f];
-      }
-    };
-
-    this.rotateSODep = function (clockwise) {
-      var copySO = __spreadArrays(_this.sideO);
-
-      if (clockwise) {
-        _this.sideO[utils_1.sides.u] = copySO[utils_1.sides.r];
-        _this.sideO[utils_1.sides.r] = copySO[utils_1.sides.d];
-        _this.sideO[utils_1.sides.d] = copySO[utils_1.sides.l];
-        _this.sideO[utils_1.sides.l] = copySO[utils_1.sides.u];
-      } else {
-        _this.sideO[utils_1.sides.u] = copySO[utils_1.sides.l];
-        _this.sideO[utils_1.sides.r] = copySO[utils_1.sides.u];
-        _this.sideO[utils_1.sides.d] = copySO[utils_1.sides.r];
-        _this.sideO[utils_1.sides.l] = copySO[utils_1.sides.d];
-      }
     };
 
     this.determineRotation = function () {
-      _this.moveOrientation = _this.rotations[_this.sideO[utils_1.sides.f]][_this.sideO[utils_1.sides.u]];
+      _this.moveOrientation = _this.rotations[_this.SO[utils_1.sides.f]][_this.SO[utils_1.sides.u]];
     };
 
-    this.getMove = function (side, slice, clockwise) {
-      return _this.allMoves[side][slice][clockwise ? 1 : 0];
+    this.moveOperation = function (move, slice, clockwise) {
+      var moveO = new move_1.MoveOperation(move, slice, clockwise);
+      moveO.rotate(true);
+
+      _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
+
+      _this.moveHistory.push(moveO);
+
+      _this.currentMoves.push(moveO);
+
+      _this.currentHistoryIndex += 1;
+    };
+
+    this.generateMoves = function () {
+      // option to push to matrix history or not
+      _this.m = new moveActions_1.MoveActions(); // this.m.L = (slice = 0, clockwise = true) => this.moveOperation(this.moves[sides.l], slice, clockwise);
+
+      _this.m.L = function (slice, clockwise) {
+        if (slice === void 0) {
+          slice = 0;
+        }
+
+        if (clockwise === void 0) {
+          clockwise = true;
+        }
+
+        return _this.moveOperation(_this.moveOrientation[utils_1.sides.l], slice, clockwise);
+      };
+
+      _this.m.R = function (slice, clockwise) {
+        if (slice === void 0) {
+          slice = 0;
+        }
+
+        if (clockwise === void 0) {
+          clockwise = true;
+        }
+
+        return _this.moveOperation(_this.moveOrientation[utils_1.sides.r], slice, clockwise);
+      };
+
+      _this.m.U = function (slice, clockwise) {
+        if (slice === void 0) {
+          slice = 0;
+        }
+
+        if (clockwise === void 0) {
+          clockwise = true;
+        }
+
+        return _this.moveOperation(_this.moveOrientation[utils_1.sides.u], slice, clockwise);
+      };
+
+      _this.m.D = function (slice, clockwise) {
+        if (slice === void 0) {
+          slice = 0;
+        }
+
+        if (clockwise === void 0) {
+          clockwise = true;
+        }
+
+        return _this.moveOperation(_this.moveOrientation[utils_1.sides.d], slice, clockwise);
+      };
+
+      _this.m.F = function (slice, clockwise) {
+        if (slice === void 0) {
+          slice = 0;
+        }
+
+        if (clockwise === void 0) {
+          clockwise = true;
+        }
+
+        return _this.moveOperation(_this.moveOrientation[utils_1.sides.f], slice, clockwise);
+      };
+
+      _this.m.B = function (slice, clockwise) {
+        if (slice === void 0) {
+          slice = 0;
+        }
+
+        if (clockwise === void 0) {
+          clockwise = true;
+        }
+
+        return _this.moveOperation(_this.moveOrientation[utils_1.sides.b], slice, clockwise);
+      };
     };
 
     this.generateUserMoves = function () {
-      var userMoveOperation = function userMoveOperation(move) {
-        move.rotate(true);
-        move.rotate(false);
+      var userMoveOperation = function userMoveOperation(move, slice, clockwise) {
+        var moveO = new move_1.MoveOperation(move, slice, clockwise);
+        moveO.rotate(true);
+        moveO.rotate(false);
 
         _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
 
-        _this.moveHistory.push(move);
+        _this.moveHistory.push(moveO);
 
         _this.currentHistoryIndex += 1;
       };
@@ -87233,7 +87324,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(_this.getMove(utils_1.sides.l, slice, clockwise));
+        return userMoveOperation(_this.moveOrientation[utils_1.sides.l], slice, clockwise);
       };
 
       _this.mu.R = function (slice, clockwise) {
@@ -87245,7 +87336,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(_this.getMove(utils_1.sides.r, slice, clockwise));
+        return userMoveOperation(_this.moveOrientation[utils_1.sides.r], slice, clockwise);
       };
 
       _this.mu.U = function (slice, clockwise) {
@@ -87257,7 +87348,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(_this.getMove(utils_1.sides.u, slice, clockwise));
+        return userMoveOperation(_this.moveOrientation[utils_1.sides.u], slice, clockwise);
       };
 
       _this.mu.D = function (slice, clockwise) {
@@ -87269,7 +87360,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(_this.getMove(utils_1.sides.d, slice, clockwise));
+        return userMoveOperation(_this.moveOrientation[utils_1.sides.d], slice, clockwise);
       };
 
       _this.mu.F = function (slice, clockwise) {
@@ -87281,7 +87372,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(_this.getMove(utils_1.sides.f, slice, clockwise));
+        return userMoveOperation(_this.moveOrientation[utils_1.sides.f], slice, clockwise);
       };
 
       _this.mu.B = function (slice, clockwise) {
@@ -87293,7 +87384,7 @@ function () {
           clockwise = true;
         }
 
-        return userMoveOperation(_this.getMove(utils_1.sides.b, slice, clockwise));
+        return userMoveOperation(_this.moveOrientation[utils_1.sides.b], slice, clockwise);
       };
     };
 
@@ -87306,22 +87397,57 @@ function () {
       _this.currentMoves = [];
     };
 
+    this.rotateSOVer = function (clockwise) {
+      var copySO = __spreadArrays(_this.SO);
+
+      if (clockwise) {
+        _this.SO[utils_1.sides.u] = copySO[utils_1.sides.f];
+        _this.SO[utils_1.sides.f] = copySO[utils_1.sides.d];
+        _this.SO[utils_1.sides.d] = copySO[utils_1.sides.b];
+        _this.SO[utils_1.sides.b] = copySO[utils_1.sides.u];
+      } else {
+        _this.SO[utils_1.sides.u] = copySO[utils_1.sides.b];
+        _this.SO[utils_1.sides.f] = copySO[utils_1.sides.u];
+        _this.SO[utils_1.sides.d] = copySO[utils_1.sides.f];
+        _this.SO[utils_1.sides.b] = copySO[utils_1.sides.d];
+      }
+    };
+
+    this.rotateSOHor = function (clockwise) {
+      var copySO = __spreadArrays(_this.SO);
+
+      if (clockwise) {
+        _this.SO[utils_1.sides.f] = copySO[utils_1.sides.r];
+        _this.SO[utils_1.sides.r] = copySO[utils_1.sides.b];
+        _this.SO[utils_1.sides.b] = copySO[utils_1.sides.l];
+        _this.SO[utils_1.sides.l] = copySO[utils_1.sides.f];
+      } else {
+        _this.SO[utils_1.sides.f] = copySO[utils_1.sides.l];
+        _this.SO[utils_1.sides.r] = copySO[utils_1.sides.f];
+        _this.SO[utils_1.sides.b] = copySO[utils_1.sides.r];
+        _this.SO[utils_1.sides.l] = copySO[utils_1.sides.b];
+      }
+    };
+
+    this.rotateSODep = function (clockwise) {
+      var copySO = __spreadArrays(_this.SO);
+
+      if (clockwise) {
+        _this.SO[utils_1.sides.u] = copySO[utils_1.sides.l];
+        _this.SO[utils_1.sides.r] = copySO[utils_1.sides.u];
+        _this.SO[utils_1.sides.d] = copySO[utils_1.sides.r];
+        _this.SO[utils_1.sides.l] = copySO[utils_1.sides.d];
+      } else {
+        _this.SO[utils_1.sides.u] = copySO[utils_1.sides.r];
+        _this.SO[utils_1.sides.r] = copySO[utils_1.sides.d];
+        _this.SO[utils_1.sides.d] = copySO[utils_1.sides.l];
+        _this.SO[utils_1.sides.l] = copySO[utils_1.sides.u];
+      }
+    };
+
     this.update = function (matrix) {
       _this.matrix = _this.deepCopyMatrix(matrix);
       _this.matrixReference = _this.createMatrixReference();
-    }; // option to push to matrix history or not
-
-
-    this.moveOperation = function (move) {
-      move.rotate(true);
-
-      _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
-
-      _this.moveHistory.push(move);
-
-      _this.currentMoves.push(move);
-
-      _this.currentHistoryIndex += 1;
     };
 
     this.moveBackward = function () {
@@ -87329,7 +87455,7 @@ function () {
 
       if (_this.currentHistoryIndex > 0) {
         var currentMove = _this.moveHistory[_this.currentHistoryIndex];
-        var oppositeMove = move_1.default.getOpposite(currentMove);
+        var oppositeMove = currentMove.getOpposite();
         oppositeMove.rotate(true);
         _this.currentHistoryIndex -= 1;
 
@@ -87350,7 +87476,7 @@ function () {
     this.addMove = function (move, slice, clockwise) {
       _this.removeHistoryByCurrentIndex();
 
-      move(slice, clockwise);
+      _this.moveOperation(move, slice, clockwise);
     };
 
     this.removeHistoryByCurrentIndex = function () {
@@ -87365,9 +87491,7 @@ function () {
     };
 
     this.jumpToHistoryIndex = function (historyIndex) {
-      _this.update(_this.matrixHistory[historyIndex]); // console.log(this.matrixHistory);
-      // this.currentHistoryIndex = historyIndex - 1;
-
+      _this.update(_this.matrixHistory[historyIndex]);
 
       _this.currentHistoryIndex = historyIndex;
     };
@@ -87414,39 +87538,8 @@ function () {
       }
     };
 
-    this.generateMoves = function () {
-      var t0 = performance.now();
-      _this.allMoves = new Array(6);
-
-      for (var i = 0; i < 6; i += 1) {
-        _this.allMoves[i] = new Array(_this.sideLength);
-
-        for (var j = 0; j < _this.sideLength; j += 1) {
-          _this.allMoves[i][j] = new Array(2);
-        }
-      }
-
-      for (var slice = 0; slice < _this.sideLength; slice += 1) {
-        _this.allMoves[utils_1.sides.l][slice][0] = new move_1.default('L', 0 + slice, true, 'x', _this.rotateVer, _this.getCubesVer);
-        _this.allMoves[utils_1.sides.l][slice][1] = new move_1.default('L', 0 + slice, false, 'x', _this.rotateVer, _this.getCubesVer);
-        _this.allMoves[utils_1.sides.r][slice][0] = new move_1.default('R', _this.sideLength - 1 - slice, false, 'x', _this.rotateVer, _this.getCubesVer);
-        _this.allMoves[utils_1.sides.r][slice][1] = new move_1.default('R', _this.sideLength - 1 - slice, true, 'x', _this.rotateVer, _this.getCubesVer);
-        _this.allMoves[utils_1.sides.u][slice][0] = new move_1.default('U', _this.sideLength - 1 - slice, false, 'y', _this.rotateHor, _this.getCubesHor);
-        _this.allMoves[utils_1.sides.u][slice][1] = new move_1.default('U', _this.sideLength - 1 - slice, true, 'y', _this.rotateHor, _this.getCubesHor);
-        _this.allMoves[utils_1.sides.d][slice][0] = new move_1.default('D', 0 + slice, true, 'y', _this.rotateHor, _this.getCubesHor);
-        _this.allMoves[utils_1.sides.d][slice][1] = new move_1.default('D', 0 + slice, false, 'y', _this.rotateHor, _this.getCubesHor);
-        _this.allMoves[utils_1.sides.f][slice][0] = new move_1.default('F', _this.sideLength - 1 - slice, false, 'z', _this.rotateDep, _this.getCubesDep);
-        _this.allMoves[utils_1.sides.f][slice][1] = new move_1.default('F', _this.sideLength - 1 - slice, true, 'z', _this.rotateDep, _this.getCubesDep);
-        _this.allMoves[utils_1.sides.b][slice][0] = new move_1.default('B', 0 + slice, true, 'z', _this.rotateDep, _this.getCubesDep);
-        _this.allMoves[utils_1.sides.b][slice][1] = new move_1.default('B', 0 + slice, false, 'z', _this.rotateDep, _this.getCubesDep);
-      }
-
-      var t1 = performance.now();
-      console.log('Took', (t1 - t0).toFixed(4), 'milliseconds to generate all moves');
-    };
-
     this.generateMoveRotations = function () {
-      var defMoves = [_this.m.L, _this.m.R, _this.m.U, _this.m.D, _this.m.F, _this.m.B];
+      var defMoves = [_this.moves[utils_1.sides.l], _this.moves[utils_1.sides.r], _this.moves[utils_1.sides.u], _this.moves[utils_1.sides.d], _this.moves[utils_1.sides.f], _this.moves[utils_1.sides.b]];
       _this.moveRotations = new Array(6);
       var verticalMoves = [];
       var verticalOppMoves = [];
@@ -87457,17 +87550,17 @@ function () {
 
       for (var i = 0; i < 4; i += 1) {
         // private sequenceVer: number[] = [s.u, s.b, s.d, s.f, s.u]
-        verticalMoves.push([_this.m.L, _this.m.R, defMoves[_this.sequenceVer[(0 + i) % 4]], defMoves[_this.sequenceVer[(2 + i) % 4]], defMoves[_this.sequenceVer[(3 + i) % 4]], defMoves[_this.sequenceVer[(1 + i) % 4]]]); // private sequenceVerRev: number[] = [s.f, s.d, s.b, s.u, s.f]
+        verticalMoves.push([_this.moves[utils_1.sides.l], _this.moves[utils_1.sides.r], defMoves[_this.sequenceVer[(0 + i) % 4]], defMoves[_this.sequenceVer[(2 + i) % 4]], defMoves[_this.sequenceVer[(3 + i) % 4]], defMoves[_this.sequenceVer[(1 + i) % 4]]]); // private sequenceVerRev: number[] = [s.f, s.d, s.b, s.u, s.f]
 
-        verticalOppMoves.push([_this.m.R, _this.m.L, defMoves[_this.sequenceVerRev[(1 + i) % 4]], defMoves[_this.sequenceVerRev[(3 + i) % 4]], defMoves[_this.sequenceVerRev[(0 + i) % 4]], defMoves[_this.sequenceVerRev[(2 + i) % 4]]]); // private sequenceHor: number[] = [s.f, s.l, s.b, s.r, s.f]
+        verticalOppMoves.push([_this.moves[utils_1.sides.r], _this.moves[utils_1.sides.l], defMoves[_this.sequenceVerRev[(1 + i) % 4]], defMoves[_this.sequenceVerRev[(3 + i) % 4]], defMoves[_this.sequenceVerRev[(0 + i) % 4]], defMoves[_this.sequenceVerRev[(2 + i) % 4]]]); // private sequenceHor: number[] = [s.f, s.l, s.b, s.r, s.f]
 
-        horizontalMoves.push([_this.m.D, _this.m.U, defMoves[_this.sequenceHor[(1 + i) % 4]], defMoves[_this.sequenceHor[(3 + i) % 4]], defMoves[_this.sequenceHor[(0 + i) % 4]], defMoves[_this.sequenceHor[(2 + i) % 4]]]); // private sequenceHorRev: number[] = [s.r, s.b, s.l, s.f, s.r]
+        horizontalMoves.push([_this.moves[utils_1.sides.d], _this.moves[utils_1.sides.u], defMoves[_this.sequenceHor[(1 + i) % 4]], defMoves[_this.sequenceHor[(3 + i) % 4]], defMoves[_this.sequenceHor[(0 + i) % 4]], defMoves[_this.sequenceHor[(2 + i) % 4]]]); // private sequenceHorRev: number[] = [s.r, s.b, s.l, s.f, s.r]
 
-        horizontalOppMoves.push([_this.m.U, _this.m.D, defMoves[_this.sequenceHorRev[(0 + i) % 4]], defMoves[_this.sequenceHorRev[(2 + i) % 4]], defMoves[_this.sequenceHorRev[(3 + i) % 4]], defMoves[_this.sequenceHorRev[(1 + i) % 4]]]); // private sequenceDep: number[] = [s.l, s.u, s.r, s.d, s.l]
+        horizontalOppMoves.push([_this.moves[utils_1.sides.u], _this.moves[utils_1.sides.d], defMoves[_this.sequenceHorRev[(0 + i) % 4]], defMoves[_this.sequenceHorRev[(2 + i) % 4]], defMoves[_this.sequenceHorRev[(3 + i) % 4]], defMoves[_this.sequenceHorRev[(1 + i) % 4]]]); // private sequenceDep: number[] = [s.l, s.u, s.r, s.d, s.l]
 
-        depthMoves.push([_this.m.B, _this.m.F, defMoves[_this.sequenceDep[(2 + i) % 4]], defMoves[_this.sequenceDep[(0 + i) % 4]], defMoves[_this.sequenceDep[(1 + i) % 4]], defMoves[_this.sequenceDep[(3 + i) % 4]]]); // private sequenceDepRev: number[] = [s.d, s.r, s.u, s.l, s.d]
+        depthMoves.push([_this.moves[utils_1.sides.b], _this.moves[utils_1.sides.f], defMoves[_this.sequenceDep[(2 + i) % 4]], defMoves[_this.sequenceDep[(0 + i) % 4]], defMoves[_this.sequenceDep[(1 + i) % 4]], defMoves[_this.sequenceDep[(3 + i) % 4]]]); // private sequenceDepRev: number[] = [s.d, s.r, s.u, s.l, s.d]
 
-        depthOppMoves.push([_this.m.F, _this.m.B, defMoves[_this.sequenceDepRev[(3 + i) % 4]], defMoves[_this.sequenceDepRev[(1 + i) % 4]], defMoves[_this.sequenceDepRev[(2 + i) % 4]], defMoves[_this.sequenceDepRev[(0 + i) % 4]]]);
+        depthOppMoves.push([_this.moves[utils_1.sides.f], _this.moves[utils_1.sides.b], defMoves[_this.sequenceDepRev[(3 + i) % 4]], defMoves[_this.sequenceDepRev[(1 + i) % 4]], defMoves[_this.sequenceDepRev[(2 + i) % 4]], defMoves[_this.sequenceDepRev[(0 + i) % 4]]]);
       }
 
       _this.moveRotations[utils_1.sides.f] = [];
@@ -87909,93 +88002,27 @@ function () {
     this.generatePositions();
     this.generateRotations();
     this.f = new face_1.default(sideLength);
-    this.m = new moveActions_1.MoveActions(); // this.m.L = (slice = 0, clockwise = true) => this.moveOperation(new Move('L', 0 + slice, !clockwise, 'x', this.rotateVer, this.getCubesVer));
-    // this.m.R = (slice = 0, clockwise = true) => this.moveOperation(new Move('R', this.sideLength - 1 - slice, clockwise, 'x', this.rotateVer, this.getCubesVer));
-    // this.m.U = (slice = 0, clockwise = true) => this.moveOperation(new Move('U', this.sideLength - 1 - slice, clockwise, 'y', this.rotateHor, this.getCubesHor));
-    // this.m.D = (slice = 0, clockwise = true) => this.moveOperation(new Move('D', 0 + slice, !clockwise, 'y', this.rotateHor, this.getCubesHor));
-    // this.m.F = (slice = 0, clockwise = true) => this.moveOperation(new Move('F', this.sideLength - 1 - slice, clockwise, 'z', this.rotateDep, this.getCubesDep));
-    // this.m.B = (slice = 0, clockwise = true) => this.moveOperation(new Move('B', 0 + slice, !clockwise, 'z', this.rotateDep, this.getCubesDep));
+    this.moves = [new move_1.Move('L', 'x', this.rotateVer, this.getCubesVer, this.sideLength, true), new move_1.Move('R', 'x', this.rotateVer, this.getCubesVer, this.sideLength, false), new move_1.Move('U', 'y', this.rotateHor, this.getCubesHor, this.sideLength, false), new move_1.Move('D', 'y', this.rotateHor, this.getCubesHor, this.sideLength, true), new move_1.Move('F', 'z', this.rotateDep, this.getCubesDep, this.sideLength, false), new move_1.Move('B', 'z', this.rotateDep, this.getCubesDep, this.sideLength, true)];
+    this.reset(); // this.interface = [
+    //   this.stRotations[0],
+    //   this.stRotations[0],
+    //   this.stRotations[0],
+    //   this.stRotations[0],
+    //   this.stRotations[0],
+    //   this.stRotations[0],
+    // ];
 
-    this.m.L = function (slice, clockwise) {
-      if (slice === void 0) {
-        slice = 0;
-      }
-
-      if (clockwise === void 0) {
-        clockwise = true;
-      }
-
-      return _this.moveOperation(_this.getMove(utils_1.sides.l, slice, clockwise));
-    };
-
-    this.m.R = function (slice, clockwise) {
-      if (slice === void 0) {
-        slice = 0;
-      }
-
-      if (clockwise === void 0) {
-        clockwise = true;
-      }
-
-      return _this.moveOperation(_this.getMove(utils_1.sides.r, slice, clockwise));
-    };
-
-    this.m.U = function (slice, clockwise) {
-      if (slice === void 0) {
-        slice = 0;
-      }
-
-      if (clockwise === void 0) {
-        clockwise = true;
-      }
-
-      return _this.moveOperation(_this.getMove(utils_1.sides.u, slice, clockwise));
-    };
-
-    this.m.D = function (slice, clockwise) {
-      if (slice === void 0) {
-        slice = 0;
-      }
-
-      if (clockwise === void 0) {
-        clockwise = true;
-      }
-
-      return _this.moveOperation(_this.getMove(utils_1.sides.d, slice, clockwise));
-    };
-
-    this.m.F = function (slice, clockwise) {
-      if (slice === void 0) {
-        slice = 0;
-      }
-
-      if (clockwise === void 0) {
-        clockwise = true;
-      }
-
-      return _this.moveOperation(_this.getMove(utils_1.sides.f, slice, clockwise));
-    };
-
-    this.m.B = function (slice, clockwise) {
-      if (slice === void 0) {
-        slice = 0;
-      }
-
-      if (clockwise === void 0) {
-        clockwise = true;
-      }
-
-      return _this.moveOperation(_this.getMove(utils_1.sides.b, slice, clockwise));
-    };
-
-    this.reset();
-    this.interface = [this.stRotations[0], this.stRotations[0], this.stRotations[0], this.stRotations[0], this.stRotations[0], this.stRotations[0]];
-    this.generateMoveRotations();
-    this.generateUserMoves();
     this.generateMoves();
+    this.generateUserMoves();
+    this.generateMoveRotations();
     this.generateOrientaionRotations();
-    this.sideO = [utils_1.sides.l, utils_1.sides.r, utils_1.sides.u, utils_1.sides.d, utils_1.sides.f, utils_1.sides.b];
+    this.SO = [utils_1.sides.l, utils_1.sides.r, utils_1.sides.u, utils_1.sides.d, utils_1.sides.f, utils_1.sides.b];
     this.moveOrientation = this.rotations[utils_1.sides.f][utils_1.sides.u];
+    this.slices = [];
+
+    for (var i = 0; i < this.sideLength; i += 1) {
+      this.slices.push(i);
+    }
   }
 
   RubikModel.prototype.createEmptySlices = function () {
@@ -88590,7 +88617,7 @@ function () {
     if (this.selectedFace === utils_1.sides.l) {
       if (largest === 'y') {
         rotation = direction.y < 0;
-        move = this.rubikModel.mu.B; // move = this.rubikModel.moveOrientation[sides.b];
+        move = this.rubikModel.mu.B; // move = this.rubikModel.moveOrientation[sides.b].getcu
 
         cubes = this.rubikModel.getCubesDep(col);
         slice = col;
@@ -88598,8 +88625,7 @@ function () {
         mRotation = true;
       } else if (largest === 'z') {
         rotation = direction.z > 0;
-        move = this.rubikModel.mu.D; // move = this.rubikModel.moveOrientation[sides.d];
-
+        move = this.rubikModel.mu.D;
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
@@ -88609,16 +88635,14 @@ function () {
       // D B
       if (largest === 'y') {
         rotation = direction.y > 0;
-        move = this.rubikModel.mu.B; // move = this.rubikModel.moveOrientation[sides.b];
-
+        move = this.rubikModel.mu.B;
         cubes = this.rubikModel.getCubesDep(col);
         slice = col;
         axis = 'z';
         mRotation = false;
       } else if (largest === 'z') {
         rotation = direction.z < 0;
-        move = this.rubikModel.mu.D; // move = this.rubikModel.moveOrientation[sides.d];
-
+        move = this.rubikModel.mu.D;
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
@@ -88628,16 +88652,14 @@ function () {
       // B L
       if (largest === 'x') {
         rotation = direction.x < 0;
-        move = this.rubikModel.mu.B; // move = this.rubikModel.moveOrientation[sides.b];
-
+        move = this.rubikModel.mu.B;
         cubes = this.rubikModel.getCubesDep(row);
         slice = row;
         axis = 'z';
         mRotation = true;
       } else if (largest === 'z') {
         rotation = direction.z > 0;
-        move = this.rubikModel.mu.L; // move = this.rubikModel.moveOrientation[sides.l];
-
+        move = this.rubikModel.mu.L;
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
@@ -88647,16 +88669,14 @@ function () {
       // B L
       if (largest === 'x') {
         rotation = direction.x > 0;
-        move = this.rubikModel.mu.B; // move = this.rubikModel.moveOrientation[sides.b];
-
+        move = this.rubikModel.mu.B;
         cubes = this.rubikModel.getCubesDep(row);
         slice = row;
         axis = 'z';
         mRotation = false;
       } else if (largest === 'z') {
         rotation = direction.z < 0;
-        move = this.rubikModel.mu.L; // move = this.rubikModel.moveOrientation[sides.l];
-
+        move = this.rubikModel.mu.L;
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
@@ -88666,16 +88686,14 @@ function () {
       // L D
       if (largest === 'x') {
         rotation = direction.x > 0;
-        move = this.rubikModel.mu.D; // move = this.rubikModel.moveOrientation[sides.d];
-
+        move = this.rubikModel.mu.D;
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
         mRotation = false;
       } else if (largest === 'y') {
         rotation = direction.y < 0;
-        move = this.rubikModel.mu.L; // move = this.rubikModel.moveOrientation[sides.l];
-
+        move = this.rubikModel.mu.L;
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
@@ -88685,16 +88703,14 @@ function () {
       // L D
       if (largest === 'x') {
         rotation = direction.x < 0;
-        move = this.rubikModel.mu.D; // move = this.rubikModel.moveOrientation[sides.d];
-
+        move = this.rubikModel.mu.D;
         cubes = this.rubikModel.getCubesHor(row);
         slice = row;
         axis = 'y';
         mRotation = true;
       } else if (largest === 'y') {
         rotation = direction.y > 0;
-        move = this.rubikModel.mu.L; // move = this.rubikModel.moveOrientation[sides.l];
-
+        move = this.rubikModel.mu.L;
         cubes = this.rubikModel.getCubesVer(col);
         slice = col;
         axis = 'x';
@@ -88859,7 +88875,7 @@ function () {
       var move = _this.rubikModel.moveHistory[index];
 
       if (move !== null) {
-        button.innerHTML = "" + move.side + (move.clockwise ? '' : "'") + (move.slice === 0 ? '' : move.slice + 1);
+        button.innerHTML = "" + move.side + (move.clockwise ? '' : "'") + (move.slice === 0 ? '' : move.slice);
       }
 
       button.onclick = function () {
@@ -88890,6 +88906,36 @@ function () {
     this.clearHistoryButtons = function () {
       _this.historyDiv.innerHTML = '';
       _this.historyButtons = [];
+    };
+
+    this.createCubeRotationButtons = function () {
+      var cubeRotationsDiv = document.getElementById('cube-rotations');
+      cubeRotationsDiv.innerHTML = '';
+      var slices = [];
+
+      for (var i = 0; i < _this.rubikModel.sideLength; i += 1) {
+        slices.push(i);
+      }
+
+      cubeRotationsDiv.appendChild(_this.createCubeRotationButton('up', _this.rubikModel.rotateOVer, false));
+      cubeRotationsDiv.appendChild(_this.createCubeRotationButton('down', _this.rubikModel.rotateOVer, true));
+      cubeRotationsDiv.appendChild(_this.createCubeRotationButton('left', _this.rubikModel.rotateOHor, false));
+      cubeRotationsDiv.appendChild(_this.createCubeRotationButton('right', _this.rubikModel.rotateOHor, true));
+      cubeRotationsDiv.appendChild(_this.createCubeRotationButton('clockwise', _this.rubikModel.rotateODep, false));
+      cubeRotationsDiv.appendChild(_this.createCubeRotationButton('counter', _this.rubikModel.rotateODep, true));
+    };
+
+    this.createCubeRotationButton = function (name, rotation, clockwise) {
+      var button = document.createElement('button');
+      button.innerHTML = name;
+
+      button.onclick = function () {
+        rotation(clockwise);
+
+        _this.rubikView.startNextMove();
+      };
+
+      return button;
     };
 
     this.clearMoveButtons = function () {
@@ -88928,7 +88974,8 @@ function () {
 
       button.onclick = function () {
         // this.moveOrientation[sideNum](slice, clockwise);
-        _this.rubikModel.addMove(_this.moveOrientation[sideNum], slice, clockwise);
+        // this.rubikModel.addMove(this.moveOrientation[sideNum], slice, clockwise);
+        _this.rubikModel.addMove(_this.rubikModel.moveOrientation[sideNum], slice, clockwise);
 
         _this.clearHistoryButtons();
 
@@ -88940,107 +88987,12 @@ function () {
       return button;
     };
 
-    this.rotateVer = function (clockwise) {
-      var mat = _this.rubikModel.rotateOVer(clockwise);
-
-      _this.moveOrientation = _this.rubikModel.moveOrientation;
-
-      _this.rubikView.colorizeRubik(mat);
-    };
-
-    this.rotateHor = function (clockwise) {
-      var mat = _this.rubikModel.rotateOHor(clockwise);
-
-      _this.moveOrientation = _this.rubikModel.moveOrientation;
-
-      _this.rubikView.colorizeRubik(mat);
-    };
-
-    this.rotateDep = function (clockwise) {
-      var mat = _this.rubikModel.rotateODep(clockwise);
-
-      _this.moveOrientation = _this.rubikModel.moveOrientation;
-
-      _this.rubikView.colorizeRubik(mat);
-    };
-
-    this.createRotationButtons = function () {
-      _this.createRotationButton('VER clockwise', _this.rotateVer, true);
-
-      _this.createRotationButton('VER counter', _this.rotateVer, false);
-
-      _this.createRotationButton('HOR clockwise', _this.rotateHor, true);
-
-      _this.createRotationButton('HOR counter', _this.rotateHor, false);
-
-      _this.createRotationButton('DEP clockwise', _this.rotateDep, true);
-
-      _this.createRotationButton('DEP counter', _this.rotateDep, false);
-    };
-
-    this.createRotationButton = function (name, func, clockwise) {
-      var button = document.createElement('button');
-      button.innerHTML = name;
-
-      button.onclick = function () {
-        func(clockwise);
-        console.log("clicked rotation button " + name);
-      };
-
-      var cubeRotationsDiv = document.getElementById('cube-rotations');
-      cubeRotationsDiv.appendChild(button);
-    }; // change orientation
-    // with that change, update move
-    // total possible orientations 6 sides * 4 rotations = 24
-
-
-    this.createOrientationButtons = function () {
-      var _loop_1 = function _loop_1(i) {
-        var button = document.createElement('button');
-        button.innerHTML = utils_1.sidesStr[i];
-
-        button.onclick = function () {
-          _this.changeOrientation(i);
-
-          console.log('clicked orientation');
-          console.log(_this.rubikView.rubik.rotation);
-        };
-
-        _this.orientationDiv.appendChild(button);
-      };
-
-      for (var i = 0; i < utils_1.sidesArr.length; i += 1) {
-        _loop_1(i);
-      }
-    };
-
-    this.changeOrientation = function (side) {
-      _this.currentMoveRotations = _this.rubikModel.moveRotations[side];
-      _this.moveOrientation = _this.currentMoveRotations[_this.moveRotation];
-    };
-
-    this.rotateCurrentOrientation = function (clockwise) {
-      if (clockwise === void 0) {
-        clockwise = true;
-      }
-
-      if (clockwise) {
-        _this.moveRotation = (_this.moveRotation + 1) % 4;
-      } else {
-        _this.moveRotation = Math.abs(_this.moveRotation - 1) % 4;
-      }
-
-      _this.moveOrientation = _this.currentMoveRotations[_this.moveRotation];
-    };
-
     this.scene = scene;
     this.historyDiv = historyDiv;
     this.movementDiv = movementDiv;
     this.orientationDiv = orientationDiv;
     this.renderOrder.set('rubik', 0);
-    this.addRubik(3);
-    this.createOrientationButtons();
-    this.createRotationButtons();
+    this.addRubik(3); // this.createOrientationButtons();
   }
 
   RubikManager.prototype.drawNewRubik = function () {
@@ -89069,13 +89021,14 @@ function () {
 
       _this.refreshHistoryButtons();
     }, false);
-    this.moveRotation = 0;
-    this.moveOrientation = this.rubikModel.moveRotations[utils_1.sides.f][this.moveRotation];
+    this.moveRotation = 0; // this.moveOrientation = this.rubikModel.moveRotations[s.f][this.moveRotation];
+
     this.historyButtons = [];
     this.clearMoveButtons();
     this.clearHistoryButtons();
     this.createMovementButtons();
     this.drawNewRubik();
+    this.createCubeRotationButtons();
   };
 
   return RubikManager;
@@ -89294,7 +89247,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52027" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57360" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
