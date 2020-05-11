@@ -148,11 +148,6 @@ window.onload = () => {
   const solve = document.getElementById('solve') as HTMLButtonElement;
   const prev = document.getElementById('prev') as HTMLButtonElement;
   const next = document.getElementById('next') as HTMLButtonElement;
-  const rotate = document.getElementById('rotate') as HTMLButtonElement;
-
-  rotate.onclick = () => {
-    rubikManager.rotateCurrentOrientation();
-  };
 
   sizeUp.onclick = () => {
     rubikManager.sizeUp();

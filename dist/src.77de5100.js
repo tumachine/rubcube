@@ -87110,13 +87110,6 @@ function () {
     this.side = this.move.side;
   }
 
-  MoveOperation.prototype.getOpposite = function () {
-    var move = new MoveOperation(this.move, this.slice, !this.clockwise);
-    move.slice = this.slice;
-    move.clockwise = !this.clockwise;
-    return move;
-  };
-
   MoveOperation.prototype.rotate = function (realMatrix) {
     this.move.rotate(this.slice, this.clockwise, realMatrix);
   };
@@ -87170,23 +87163,6 @@ var moveActions_1 = require("./moveActions");
 
 var move_1 = require("./move");
 
-var MoveH =
-/** @class */
-function () {
-  function MoveH(side, slice, clockwise, graphical) {
-    if (graphical === void 0) {
-      graphical = true;
-    }
-
-    this.side = side;
-    this.slice = slice;
-    this.clockwise = clockwise;
-    this.graphical = graphical;
-  }
-
-  return MoveH;
-}();
-
 var RubikModel =
 /** @class */
 function () {
@@ -87213,65 +87189,78 @@ function () {
     };
 
     this.rotateCube = function (side, sidesRotation, clockwise) {
-      // const moveO = new MoveOperation(this.moves[side], this.slices, clockwise);
-      // moveO.rotate(false);
       _this.currentMoves.push({
         side: side,
         slice: _this.slices,
         clockwise: clockwise,
-        graphical: true
-      }); // const gMove = this.getGraphicalMove(side, this.slices, clockwise);
-      // gMove.rotate(false);
-
+        rotation: true
+      });
 
       sidesRotation(clockwise);
-
-      _this.determineRotation();
-    };
-
-    this.determineRotation = function () {
-      _this.moveOrientation = _this.rotations[_this.SO[utils_1.sides.f]][_this.SO[utils_1.sides.u]];
     };
 
     this.getOrientation = function (sideF, sideU) {
       return _this.rotations[sideF][sideU];
     };
 
-    this.getGraphicalMove = function (side, slice, clockwise) {
-      return new move_1.MoveOperation(_this.moves[side], slice, clockwise);
+    this.getSideOrientation = function (sideF, sideU) {
+      return _this.moveSides[sideF][sideU];
     };
 
-    this.getInternalMove = function (side, slice, clockwise) {
-      return new move_1.MoveOperation(_this.moveOrientation[side], slice, clockwise);
+    this.getUserMove = function (moveH) {
+      return new move_1.MoveOperation(_this.moves[moveH.side], moveH.slice, moveH.clockwise);
+    };
+
+    this.getInternalMove = function (moveH) {
+      var iWhite = 0;
+      var iOrange = 0;
+
+      for (var i = 0; i < 6; i += 1) {
+        if (_this.SO[i] === utils_1.sides.f) {
+          iWhite = i;
+        } else if (_this.SO[i] === utils_1.sides.u) {
+          iOrange = i;
+        }
+      }
+
+      var orientation = _this.getOrientation(iWhite, iOrange);
+
+      return new move_1.MoveOperation(orientation[moveH.side], moveH.slice, moveH.clockwise);
+    };
+
+    this.createMove = function (side, slice, clockwise) {
+      var sideF = _this.SO[utils_1.sides.f];
+      var sideU = _this.SO[utils_1.sides.u];
+
+      var realSide = _this.getSideOrientation(sideF, sideU)[side];
+
+      return {
+        side: realSide,
+        slice: slice,
+        clockwise: clockwise,
+        rotation: false
+      };
     };
 
     this.moveOperation = function (side, slice, clockwise) {
-      var iMove = _this.getInternalMove(side, slice, clockwise);
+      var moveH = _this.createMove(side, slice, clockwise);
+
+      var iMove = _this.getUserMove(moveH);
 
       iMove.rotate(true);
 
       _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
 
-      _this.moveHistory.push({
-        side: side,
-        slice: slice,
-        clockwise: clockwise,
-        graphical: true
-      });
+      _this.moveHistory.push(moveH);
 
-      _this.currentMoves.push({
-        side: side,
-        slice: slice,
-        clockwise: clockwise,
-        graphical: true
-      });
+      _this.currentMoves.push(moveH);
 
       _this.currentHistoryIndex += 1;
     };
 
     this.generateMoves = function () {
       // option to push to matrix history or not
-      _this.m = new moveActions_1.MoveActions(); // this.m.L = (slice = 0, clockwise = true) => this.moveOperation(this.moves[sides.l], slice, clockwise);
+      _this.m = new moveActions_1.MoveActions();
 
       _this.m.L = function (slice, clockwise) {
         if (slice === void 0) {
@@ -87348,18 +87337,32 @@ function () {
 
     this.generateUserMoves = function () {
       var userMoveOperation = function userMoveOperation(side, slice, clockwise) {
-        _this.getInternalMove(side, slice, clockwise).rotate(true);
+        var moveH = _this.createMove(side, slice, clockwise); // this.getInternalMove(moveH).rotate(true);
+        // this.getUserMove({ side: moveH.side, slice, clockwise, rotation: false }).rotate(false);
+        // this.getInternalMove({ side, slice, clockwise, rotation: false }).rotate(true);
 
-        _this.getGraphicalMove(side, slice, clockwise).rotate(false);
 
-        _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
+        _this.getUserMove({
+          side: moveH.side,
+          slice: slice,
+          clockwise: clockwise,
+          rotation: false
+        }).rotate(true);
 
-        _this.moveHistory.push({
+        _this.getUserMove({
           side: side,
           slice: slice,
           clockwise: clockwise,
-          graphical: true
-        });
+          rotation: false
+        }).rotate(false); // this.getUserMove(moveH).rotate(false);
+
+
+        moveH.rotation = true; // this.getGraphicalMove(moveH).rotate(false);
+        // this.getGraphicalMove(moveH).rotate(false);
+
+        _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
+
+        _this.moveHistory.push(moveH);
 
         _this.currentHistoryIndex += 1;
       };
@@ -87451,48 +87454,48 @@ function () {
     this.rotateSOVer = function (clockwise) {
       var copySO = __spreadArrays(_this.SO);
 
-      if (!clockwise) {
-        _this.SO[utils_1.sides.u] = copySO[utils_1.sides.f];
-        _this.SO[utils_1.sides.f] = copySO[utils_1.sides.d];
-        _this.SO[utils_1.sides.d] = copySO[utils_1.sides.b];
-        _this.SO[utils_1.sides.b] = copySO[utils_1.sides.u];
-      } else {
+      if (clockwise) {
         _this.SO[utils_1.sides.u] = copySO[utils_1.sides.b];
         _this.SO[utils_1.sides.f] = copySO[utils_1.sides.u];
         _this.SO[utils_1.sides.d] = copySO[utils_1.sides.f];
         _this.SO[utils_1.sides.b] = copySO[utils_1.sides.d];
+      } else {
+        _this.SO[utils_1.sides.u] = copySO[utils_1.sides.f];
+        _this.SO[utils_1.sides.f] = copySO[utils_1.sides.d];
+        _this.SO[utils_1.sides.d] = copySO[utils_1.sides.b];
+        _this.SO[utils_1.sides.b] = copySO[utils_1.sides.u];
       }
     };
 
     this.rotateSOHor = function (clockwise) {
       var copySO = __spreadArrays(_this.SO);
 
-      if (!clockwise) {
-        _this.SO[utils_1.sides.f] = copySO[utils_1.sides.r];
-        _this.SO[utils_1.sides.r] = copySO[utils_1.sides.b];
-        _this.SO[utils_1.sides.b] = copySO[utils_1.sides.l];
-        _this.SO[utils_1.sides.l] = copySO[utils_1.sides.f];
-      } else {
+      if (clockwise) {
         _this.SO[utils_1.sides.f] = copySO[utils_1.sides.l];
         _this.SO[utils_1.sides.r] = copySO[utils_1.sides.f];
         _this.SO[utils_1.sides.b] = copySO[utils_1.sides.r];
         _this.SO[utils_1.sides.l] = copySO[utils_1.sides.b];
+      } else {
+        _this.SO[utils_1.sides.f] = copySO[utils_1.sides.r];
+        _this.SO[utils_1.sides.r] = copySO[utils_1.sides.b];
+        _this.SO[utils_1.sides.b] = copySO[utils_1.sides.l];
+        _this.SO[utils_1.sides.l] = copySO[utils_1.sides.f];
       }
     };
 
     this.rotateSODep = function (clockwise) {
       var copySO = __spreadArrays(_this.SO);
 
-      if (!clockwise) {
-        _this.SO[utils_1.sides.u] = copySO[utils_1.sides.l];
-        _this.SO[utils_1.sides.r] = copySO[utils_1.sides.u];
-        _this.SO[utils_1.sides.d] = copySO[utils_1.sides.r];
-        _this.SO[utils_1.sides.l] = copySO[utils_1.sides.d];
-      } else {
+      if (clockwise) {
         _this.SO[utils_1.sides.u] = copySO[utils_1.sides.r];
         _this.SO[utils_1.sides.r] = copySO[utils_1.sides.d];
         _this.SO[utils_1.sides.d] = copySO[utils_1.sides.l];
         _this.SO[utils_1.sides.l] = copySO[utils_1.sides.u];
+      } else {
+        _this.SO[utils_1.sides.u] = copySO[utils_1.sides.l];
+        _this.SO[utils_1.sides.r] = copySO[utils_1.sides.u];
+        _this.SO[utils_1.sides.d] = copySO[utils_1.sides.r];
+        _this.SO[utils_1.sides.l] = copySO[utils_1.sides.d];
       }
     };
 
@@ -87502,28 +87505,21 @@ function () {
     };
 
     this.moveBackward = function () {
-      console.log(_this.currentHistoryIndex);
-
       if (_this.currentHistoryIndex > 0) {
         var currentMove = _this.moveHistory[_this.currentHistoryIndex];
 
-        var iMove = _this.getInternalMove(currentMove.side, currentMove.slice, currentMove.clockwise).getOpposite(); // const gMove = this.getGraphicalMove(currentMove.side, currentMove.slice, currentMove.clockwise).getOpposite();
+        var iMove = _this.getUserMove(currentMove);
 
-
-        iMove.rotate(true); // gMove.rotate(false);
-
-        var side = currentMove.side;
-        var slice = currentMove.slice;
-        var clockwise = !currentMove.clockwise;
-        var mHistory = {
-          side: side,
-          slice: slice,
-          clockwise: clockwise,
-          graphical: false
-        };
+        iMove.clockwise = !iMove.clockwise;
+        iMove.rotate(true);
         _this.currentHistoryIndex -= 1;
 
-        _this.currentMoves.push(mHistory);
+        _this.currentMoves.push({
+          side: currentMove.side,
+          slice: currentMove.slice,
+          clockwise: !currentMove.clockwise,
+          rotation: false
+        });
       }
     };
 
@@ -87532,11 +87528,9 @@ function () {
         _this.currentHistoryIndex += 1;
         var currentMove = _this.moveHistory[_this.currentHistoryIndex];
 
-        var iMove = _this.getInternalMove(currentMove.side, currentMove.slice, currentMove.clockwise); // const gMove = this.getGraphicalMove(currentMove.side, currentMove.slice, currentMove.clockwise).getOpposite();
-
+        var iMove = _this.getUserMove(currentMove);
 
         iMove.rotate(true);
-        currentMove.graphical = false;
 
         _this.currentMoves.push(currentMove);
       }
@@ -87607,127 +87601,104 @@ function () {
       }
     };
 
-    this.generateMoveRotations = function () {
-      var defMoves = [_this.moves[utils_1.sides.l], _this.moves[utils_1.sides.r], _this.moves[utils_1.sides.u], _this.moves[utils_1.sides.d], _this.moves[utils_1.sides.f], _this.moves[utils_1.sides.b]];
-      _this.moveRotations = new Array(6);
-      var verticalMoves = [];
-      var verticalOppMoves = [];
-      var horizontalMoves = [];
-      var horizontalOppMoves = [];
-      var depthMoves = [];
-      var depthOppMoves = [];
+    this.generateSideRotations = function () {
+      var verticalSides = [];
+      var verticalOppSides = [];
+      var horizontalSides = [];
+      var horizontalOppSides = [];
+      var depthSides = [];
+      var depthOppSides = [];
 
       for (var i = 0; i < 4; i += 1) {
         // private sequenceVer: number[] = [s.u, s.b, s.d, s.f, s.u]
-        verticalMoves.push([_this.moves[utils_1.sides.l], _this.moves[utils_1.sides.r], defMoves[_this.sequenceVer[(0 + i) % 4]], defMoves[_this.sequenceVer[(2 + i) % 4]], defMoves[_this.sequenceVer[(3 + i) % 4]], defMoves[_this.sequenceVer[(1 + i) % 4]]]); // private sequenceVerRev: number[] = [s.f, s.d, s.b, s.u, s.f]
+        verticalSides.push([utils_1.sides.l, utils_1.sides.r, _this.sequenceVer[(0 + i) % 4], _this.sequenceVer[(2 + i) % 4], _this.sequenceVer[(3 + i) % 4], _this.sequenceVer[(1 + i) % 4]]); // private sequenceVerRev: number[] = [s.f, s.d, s.b, s.u, s.f]
 
-        verticalOppMoves.push([_this.moves[utils_1.sides.r], _this.moves[utils_1.sides.l], defMoves[_this.sequenceVerRev[(1 + i) % 4]], defMoves[_this.sequenceVerRev[(3 + i) % 4]], defMoves[_this.sequenceVerRev[(0 + i) % 4]], defMoves[_this.sequenceVerRev[(2 + i) % 4]]]); // private sequenceHor: number[] = [s.f, s.l, s.b, s.r, s.f]
+        verticalOppSides.push([utils_1.sides.r, utils_1.sides.l, _this.sequenceVerRev[(1 + i) % 4], _this.sequenceVerRev[(3 + i) % 4], _this.sequenceVerRev[(0 + i) % 4], _this.sequenceVerRev[(2 + i) % 4]]); // private sequenceHor: number[] = [s.f, s.l, s.b, s.r, s.f]
 
-        horizontalMoves.push([_this.moves[utils_1.sides.d], _this.moves[utils_1.sides.u], defMoves[_this.sequenceHor[(1 + i) % 4]], defMoves[_this.sequenceHor[(3 + i) % 4]], defMoves[_this.sequenceHor[(0 + i) % 4]], defMoves[_this.sequenceHor[(2 + i) % 4]]]); // private sequenceHorRev: number[] = [s.r, s.b, s.l, s.f, s.r]
+        horizontalSides.push([utils_1.sides.d, utils_1.sides.u, _this.sequenceHor[(1 + i) % 4], _this.sequenceHor[(3 + i) % 4], _this.sequenceHor[(0 + i) % 4], _this.sequenceHor[(2 + i) % 4]]); // private sequenceHorRev: number[] = [s.r, s.b, s.l, s.f, s.r]
 
-        horizontalOppMoves.push([_this.moves[utils_1.sides.u], _this.moves[utils_1.sides.d], defMoves[_this.sequenceHorRev[(0 + i) % 4]], defMoves[_this.sequenceHorRev[(2 + i) % 4]], defMoves[_this.sequenceHorRev[(3 + i) % 4]], defMoves[_this.sequenceHorRev[(1 + i) % 4]]]); // private sequenceDep: number[] = [s.l, s.u, s.r, s.d, s.l]
+        horizontalOppSides.push([utils_1.sides.u, utils_1.sides.d, _this.sequenceHorRev[(0 + i) % 4], _this.sequenceHorRev[(2 + i) % 4], _this.sequenceHorRev[(3 + i) % 4], _this.sequenceHorRev[(1 + i) % 4]]); // private sequenceDep: number[] = [s.l, s.u, s.r, s.d, s.l]
 
-        depthMoves.push([_this.moves[utils_1.sides.b], _this.moves[utils_1.sides.f], defMoves[_this.sequenceDep[(2 + i) % 4]], defMoves[_this.sequenceDep[(0 + i) % 4]], defMoves[_this.sequenceDep[(1 + i) % 4]], defMoves[_this.sequenceDep[(3 + i) % 4]]]); // private sequenceDepRev: number[] = [s.d, s.r, s.u, s.l, s.d]
+        depthSides.push([utils_1.sides.b, utils_1.sides.f, _this.sequenceDep[(2 + i) % 4], _this.sequenceDep[(0 + i) % 4], _this.sequenceDep[(1 + i) % 4], _this.sequenceDep[(3 + i) % 4]]); // private sequenceDepRev: number[] = [s.d, s.r, s.u, s.l, s.d]
 
-        depthOppMoves.push([_this.moves[utils_1.sides.f], _this.moves[utils_1.sides.b], defMoves[_this.sequenceDepRev[(3 + i) % 4]], defMoves[_this.sequenceDepRev[(1 + i) % 4]], defMoves[_this.sequenceDepRev[(2 + i) % 4]], defMoves[_this.sequenceDepRev[(0 + i) % 4]]]);
+        depthOppSides.push([utils_1.sides.f, utils_1.sides.b, _this.sequenceDepRev[(3 + i) % 4], _this.sequenceDepRev[(1 + i) % 4], _this.sequenceDepRev[(2 + i) % 4], _this.sequenceDepRev[(0 + i) % 4]]);
       }
 
-      _this.moveRotations[utils_1.sides.f] = [];
+      _this.moveSides = new Array(6);
 
-      _this.moveRotations[utils_1.sides.f].push(verticalMoves[0]);
+      for (var i = 0; i < _this.moveSides.length; i += 1) {
+        _this.moveSides[i] = new Array(6);
+      }
 
-      _this.moveRotations[utils_1.sides.f].push(horizontalOppMoves[0]);
+      _this.moveSides[utils_1.sides.f][utils_1.sides.u] = verticalSides[0];
+      _this.moveSides[utils_1.sides.u][utils_1.sides.b] = verticalSides[1];
+      _this.moveSides[utils_1.sides.b][utils_1.sides.d] = verticalSides[2];
+      _this.moveSides[utils_1.sides.d][utils_1.sides.f] = verticalSides[3];
+      _this.moveSides[utils_1.sides.f][utils_1.sides.r] = horizontalOppSides[0];
+      _this.moveSides[utils_1.sides.r][utils_1.sides.b] = horizontalOppSides[1];
+      _this.moveSides[utils_1.sides.b][utils_1.sides.l] = horizontalOppSides[2];
+      _this.moveSides[utils_1.sides.l][utils_1.sides.f] = horizontalOppSides[3];
+      _this.moveSides[utils_1.sides.f][utils_1.sides.d] = verticalOppSides[0];
+      _this.moveSides[utils_1.sides.d][utils_1.sides.b] = verticalOppSides[1];
+      _this.moveSides[utils_1.sides.b][utils_1.sides.u] = verticalOppSides[2];
+      _this.moveSides[utils_1.sides.u][utils_1.sides.f] = verticalOppSides[3];
+      _this.moveSides[utils_1.sides.f][utils_1.sides.l] = horizontalSides[0];
+      _this.moveSides[utils_1.sides.l][utils_1.sides.b] = horizontalSides[1];
+      _this.moveSides[utils_1.sides.b][utils_1.sides.r] = horizontalSides[2];
+      _this.moveSides[utils_1.sides.r][utils_1.sides.f] = horizontalSides[3];
+      _this.moveSides[utils_1.sides.u][utils_1.sides.r] = depthSides[0];
+      _this.moveSides[utils_1.sides.r][utils_1.sides.d] = depthSides[1];
+      _this.moveSides[utils_1.sides.d][utils_1.sides.l] = depthSides[2];
+      _this.moveSides[utils_1.sides.l][utils_1.sides.u] = depthSides[3];
+      _this.moveSides[utils_1.sides.u][utils_1.sides.l] = depthOppSides[0];
+      _this.moveSides[utils_1.sides.l][utils_1.sides.d] = depthOppSides[1];
+      _this.moveSides[utils_1.sides.d][utils_1.sides.r] = depthOppSides[2];
+      _this.moveSides[utils_1.sides.r][utils_1.sides.u] = depthOppSides[3];
+      var ms = new Array(6);
 
-      _this.moveRotations[utils_1.sides.f].push(verticalOppMoves[0]);
+      for (var i = 0; i < ms.length; i += 1) {
+        ms[i] = new Array(6);
+      } // 0 l  1 r  2 u  3 d  4 f  5 b
+      // l u
+      // l f   r b   u u   d d   f r   b l
+      // 0 4   1 5   2 2   3 3   4 1   5 0
+      // 5 4 2 3 0 1
+      // depthOpp 3
+      // l d
+      // l b   r f   u u   d d   f l   b r
+      // 0 5   1 4   2 2   3 3   4 0   5 1
+      // depth 3
 
-      _this.moveRotations[utils_1.sides.f].push(horizontalMoves[0]);
-
-      _this.moveRotations[utils_1.sides.u] = [];
-
-      _this.moveRotations[utils_1.sides.u].push(verticalMoves[1]);
-
-      _this.moveRotations[utils_1.sides.u].push(depthMoves[0]);
-
-      _this.moveRotations[utils_1.sides.u].push(verticalOppMoves[3]);
-
-      _this.moveRotations[utils_1.sides.u].push(depthOppMoves[0]);
-
-      _this.moveRotations[utils_1.sides.b] = [];
-
-      _this.moveRotations[utils_1.sides.b].push(verticalOppMoves[2]);
-
-      _this.moveRotations[utils_1.sides.b].push(horizontalOppMoves[2]);
-
-      _this.moveRotations[utils_1.sides.b].push(verticalMoves[2]);
-
-      _this.moveRotations[utils_1.sides.b].push(horizontalMoves[2]);
-
-      _this.moveRotations[utils_1.sides.d] = [];
-
-      _this.moveRotations[utils_1.sides.d].push(verticalMoves[3]);
-
-      _this.moveRotations[utils_1.sides.d].push(depthOppMoves[2]);
-
-      _this.moveRotations[utils_1.sides.d].push(verticalOppMoves[1]);
-
-      _this.moveRotations[utils_1.sides.d].push(depthMoves[2]);
-
-      _this.moveRotations[utils_1.sides.l] = [];
-
-      _this.moveRotations[utils_1.sides.l].push(depthMoves[3]);
-
-      _this.moveRotations[utils_1.sides.l].push(horizontalOppMoves[3]);
-
-      _this.moveRotations[utils_1.sides.l].push(depthOppMoves[1]);
-
-      _this.moveRotations[utils_1.sides.l].push(horizontalMoves[1]);
-
-      _this.moveRotations[utils_1.sides.r] = [];
-
-      _this.moveRotations[utils_1.sides.r].push(depthOppMoves[3]);
-
-      _this.moveRotations[utils_1.sides.r].push(horizontalOppMoves[1]);
-
-      _this.moveRotations[utils_1.sides.r].push(depthMoves[1]);
-
-      _this.moveRotations[utils_1.sides.r].push(horizontalMoves[3]);
     };
 
-    this.generateOrientaionRotations = function () {
+    this.generateOrientationSides = function () {
       // check front and top color
       // 24 possible rotations
       _this.rotations = [];
 
       for (var i = 0; i < 6; i += 1) {
         _this.rotations.push(new Array(6));
-      } // down clockwise
+      }
 
+      var createOrientationMove = function createOrientationMove(sidesS) {
+        var moveRotations = [];
 
-      _this.rotations[utils_1.sides.l][utils_1.sides.u] = _this.moveRotations[utils_1.sides.l][0];
-      _this.rotations[utils_1.sides.l][utils_1.sides.f] = _this.moveRotations[utils_1.sides.l][1];
-      _this.rotations[utils_1.sides.l][utils_1.sides.d] = _this.moveRotations[utils_1.sides.l][2];
-      _this.rotations[utils_1.sides.l][utils_1.sides.b] = _this.moveRotations[utils_1.sides.l][3];
-      _this.rotations[utils_1.sides.r][utils_1.sides.u] = _this.moveRotations[utils_1.sides.r][0];
-      _this.rotations[utils_1.sides.r][utils_1.sides.b] = _this.moveRotations[utils_1.sides.r][1];
-      _this.rotations[utils_1.sides.r][utils_1.sides.d] = _this.moveRotations[utils_1.sides.r][2];
-      _this.rotations[utils_1.sides.r][utils_1.sides.f] = _this.moveRotations[utils_1.sides.r][3];
-      _this.rotations[utils_1.sides.u][utils_1.sides.b] = _this.moveRotations[utils_1.sides.u][0];
-      _this.rotations[utils_1.sides.u][utils_1.sides.r] = _this.moveRotations[utils_1.sides.u][1];
-      _this.rotations[utils_1.sides.u][utils_1.sides.f] = _this.moveRotations[utils_1.sides.u][2];
-      _this.rotations[utils_1.sides.u][utils_1.sides.l] = _this.moveRotations[utils_1.sides.u][3]; // good
+        for (var i = 0; i < sidesS.length; i += 1) {
+          moveRotations.push(_this.moves[sidesS[i]]);
+        }
 
-      _this.rotations[utils_1.sides.d][utils_1.sides.f] = _this.moveRotations[utils_1.sides.d][0];
-      _this.rotations[utils_1.sides.d][utils_1.sides.r] = _this.moveRotations[utils_1.sides.d][1];
-      _this.rotations[utils_1.sides.d][utils_1.sides.b] = _this.moveRotations[utils_1.sides.d][2];
-      _this.rotations[utils_1.sides.d][utils_1.sides.l] = _this.moveRotations[utils_1.sides.d][3];
-      _this.rotations[utils_1.sides.f][utils_1.sides.u] = _this.moveRotations[utils_1.sides.f][0];
-      _this.rotations[utils_1.sides.f][utils_1.sides.r] = _this.moveRotations[utils_1.sides.f][1];
-      _this.rotations[utils_1.sides.f][utils_1.sides.d] = _this.moveRotations[utils_1.sides.f][2];
-      _this.rotations[utils_1.sides.f][utils_1.sides.l] = _this.moveRotations[utils_1.sides.f][3];
-      _this.rotations[utils_1.sides.b][utils_1.sides.u] = _this.moveRotations[utils_1.sides.b][0];
-      _this.rotations[utils_1.sides.b][utils_1.sides.l] = _this.moveRotations[utils_1.sides.b][1];
-      _this.rotations[utils_1.sides.b][utils_1.sides.d] = _this.moveRotations[utils_1.sides.b][2];
-      _this.rotations[utils_1.sides.b][utils_1.sides.r] = _this.moveRotations[utils_1.sides.b][3];
+        return moveRotations;
+      };
+
+      for (var i = 0; i < 6; i += 1) {
+        for (var j = 0; j < 6; j += 1) {
+          if (_this.moveSides[i][j] !== undefined) {
+            _this.rotations[i][j] = createOrientationMove(_this.moveSides[i][j]);
+          }
+        }
+      }
+
+      for (var i = 0; i < 6; i += 1) {}
     };
 
     this.doRandomMoves = function (num, randomSlices) {
@@ -88077,10 +88048,9 @@ function () {
     this.reset();
     this.generateMoves();
     this.generateUserMoves();
-    this.generateMoveRotations();
-    this.generateOrientaionRotations();
+    this.generateSideRotations();
+    this.generateOrientationSides();
     this.SO = [utils_1.sides.l, utils_1.sides.r, utils_1.sides.u, utils_1.sides.d, utils_1.sides.f, utils_1.sides.b];
-    this.moveOrientation = this.rotations[utils_1.sides.f][utils_1.sides.u];
     this.slices = [];
 
     for (var i = 0; i < this.sideLength; i += 1) {
@@ -88396,12 +88366,11 @@ function () {
 
       if (nextMove) {
         if (!_this.isMoving) {
-          if (nextMove.graphical) {
-            _this.currentMove = _this.rubikModel.getGraphicalMove(nextMove.side, nextMove.slice, nextMove.clockwise);
+          if (nextMove.rotation) {
+            _this.currentMove = _this.rubikModel.getUserMove(nextMove);
           } else {
-            _this.currentMove = _this.rubikModel.getInternalMove(nextMove.side, nextMove.slice, nextMove.clockwise); // this.rubikModel.determineRotation(nextMove.frontSide, nextMove.upSide);
-          } // this.currentMove = this.rubikModel.getInternalMove(nextMove.side, nextMove.slice, nextMove.clockwise);
-
+            _this.currentMove = _this.rubikModel.getInternalMove(nextMove);
+          }
 
           _this.isMoving = true;
           _this.moveDirection = _this.currentMove.clockwise ? -1 : 1;
@@ -88410,8 +88379,7 @@ function () {
         } else {
           console.log('Already moving!');
         }
-      } else {
-        console.log('NOTHING');
+      } else {// console.log('NOTHING');
       }
     };
 
@@ -88862,7 +88830,7 @@ function () {
     this.historyButtonNotActiveColor = '#4CAF50';
 
     this.scramble = function () {
-      _this.rubikModel.scramble(10);
+      _this.rubikModel.scramble(5);
 
       _this.refreshHistoryButtons();
 
@@ -88960,6 +88928,7 @@ function () {
         _this.switchButtonBackgroundColor(button, true);
 
         _this.historyButtonPrevActive = button;
+        _this.rubikModel.SO = [utils_1.sides.l, utils_1.sides.r, utils_1.sides.u, utils_1.sides.d, utils_1.sides.f, utils_1.sides.b];
       };
 
       _this.historyButtons.push(button);
@@ -89060,7 +89029,6 @@ function () {
     this.scene = scene;
     this.historyDiv = historyDiv;
     this.movementDiv = movementDiv;
-    this.orientationDiv = orientationDiv;
     this.renderOrder.set('rubik', 0);
     this.addRubik(3); // this.createOrientationButtons();
   }
@@ -89090,8 +89058,7 @@ function () {
       _this.clearHistoryButtons();
 
       _this.refreshHistoryButtons();
-    }, false);
-    this.moveRotation = 0; // this.moveOrientation = this.rubikModel.moveRotations[s.f][this.moveRotation];
+    }, false); // this.moveOrientation = this.rubikModel.moveRotations[s.f][this.moveRotation];
 
     this.historyButtons = [];
     this.clearMoveButtons();
@@ -89255,11 +89222,6 @@ window.onload = function () {
   var solve = document.getElementById('solve');
   var prev = document.getElementById('prev');
   var next = document.getElementById('next');
-  var rotate = document.getElementById('rotate');
-
-  rotate.onclick = function () {
-    rubikManager.rotateCurrentOrientation();
-  };
 
   sizeUp.onclick = function () {
     rubikManager.sizeUp();
@@ -89317,7 +89279,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53753" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50287" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

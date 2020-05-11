@@ -19,17 +19,9 @@ class RubikManager {
 
   private scene: MainScene
 
-  // private moveOrientation: Move[]
-
-  private moveRotation: number
-
-  private currentMoveRotations: MoveInterface[][]
-
   private historyDiv: HTMLDivElement
 
   private movementDiv: HTMLDivElement
-
-  private orientationDiv: HTMLDivElement
 
   private historyButtons: HTMLButtonElement[]
 
@@ -43,7 +35,6 @@ class RubikManager {
     this.scene = scene;
     this.historyDiv = historyDiv;
     this.movementDiv = movementDiv;
-    this.orientationDiv = orientationDiv;
     this.renderOrder.set('rubik', 0);
 
     this.addRubik(3);
@@ -75,7 +66,6 @@ class RubikManager {
       this.refreshHistoryButtons();
     }, false);
 
-    this.moveRotation = 0;
     // this.moveOrientation = this.rubikModel.moveRotations[s.f][this.moveRotation];
     this.historyButtons = [];
     this.clearMoveButtons();
@@ -88,7 +78,7 @@ class RubikManager {
   }
 
   public scramble = () => {
-    this.rubikModel.scramble(10);
+    this.rubikModel.scramble(5);
     this.refreshHistoryButtons();
     this.rubikView.startNextMove();
   }
@@ -162,6 +152,14 @@ class RubikManager {
       this.switchButtonBackgroundColor(this.historyButtonPrevActive, false);
       this.switchButtonBackgroundColor(button, true);
       this.historyButtonPrevActive = button;
+      this.rubikModel.SO = [
+        sides.l,
+        sides.r,
+        sides.u,
+        sides.d,
+        sides.f,
+        sides.b,
+      ];
     };
     this.historyButtons.push(button);
   }
@@ -243,54 +241,6 @@ class RubikManager {
     };
     return button;
   }
-
-  // private rotateVer = (clockwise: boolean) => {
-  //   const mat = this.rubikModel.rotateOVer(clockwise);
-  //   this.moveOrientation = this.rubikModel.moveOrientation;
-  //   this.rubikView.colorizeRubik(mat);
-  // }
-
-  // private rotateHor = (clockwise: boolean) => {
-  //   const mat = this.rubikModel.rotateOHor(clockwise);
-  //   this.moveOrientation = this.rubikModel.moveOrientation;
-  //   this.rubikView.colorizeRubik(mat);
-  // }
-
-  // private rotateDep = (clockwise: boolean) => {
-  //   const mat = this.rubikModel.rotateODep(clockwise);
-  //   this.moveOrientation = this.rubikModel.moveOrientation;
-  //   this.rubikView.colorizeRubik(mat);
-  // }
-
-  // change orientation
-  // with that change, update move
-  // total possible orientations 6 sides * 4 rotations = 24
-  // private createOrientationButtons = () => {
-  //   for (let i = 0; i < sidesArr.length; i += 1) {
-  //     const button = document.createElement('button');
-  //     button.innerHTML = sidesStr[i];
-  //     button.onclick = () => {
-  //       this.changeOrientation(i);
-  //       console.log('clicked orientation');
-  //       console.log(this.rubikView.rubik.rotation);
-  //     };
-  //     this.orientationDiv.appendChild(button);
-  //   }
-  // }
-
-  // private changeOrientation = (side: number) => {
-  //   this.currentMoveRotations = this.rubikModel.moveRotations[side];
-  //   this.moveOrientation = this.currentMoveRotations[this.moveRotation];
-  // }
-
-  // public rotateCurrentOrientation = (clockwise: boolean = true) => {
-  //   if (clockwise) {
-  //     this.moveRotation = (this.moveRotation + 1) % 4;
-  //   } else {
-  //     this.moveRotation = (Math.abs(this.moveRotation - 1)) % 4;
-  //   }
-  //   this.moveOrientation = this.currentMoveRotations[this.moveRotation];
-  // }
 }
 
 export default RubikManager;

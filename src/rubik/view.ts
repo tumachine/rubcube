@@ -476,13 +476,12 @@ class RubikView implements RenderInterface, MouseInterface {
 
     if (nextMove) {
       if (!this.isMoving) {
-        if (nextMove.graphical) {
-          this.currentMove = this.rubikModel.getGraphicalMove(nextMove.side, nextMove.slice, nextMove.clockwise);
+        if (nextMove.rotation) {
+          this.currentMove = this.rubikModel.getUserMove(nextMove);
         } else {
-          this.currentMove = this.rubikModel.getInternalMove(nextMove.side, nextMove.slice, nextMove.clockwise);
-          // this.rubikModel.determineRotation(nextMove.frontSide, nextMove.upSide);
+          this.currentMove = this.rubikModel.getInternalMove(nextMove);
         }
-        // this.currentMove = this.rubikModel.getInternalMove(nextMove.side, nextMove.slice, nextMove.clockwise);
+
         this.isMoving = true;
         this.moveDirection = this.currentMove.clockwise ? -1 : 1;
 
@@ -491,7 +490,7 @@ class RubikView implements RenderInterface, MouseInterface {
         console.log('Already moving!');
       }
     } else {
-      console.log('NOTHING');
+      // console.log('NOTHING');
     }
   }
 

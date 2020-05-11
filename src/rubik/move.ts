@@ -108,13 +108,6 @@ export class MoveOperation {
     this.side = this.move.side;
   }
 
-  public getOpposite(): MoveOperation {
-    const move = new MoveOperation(this.move, this.slice, !this.clockwise);
-    move.slice = this.slice;
-    move.clockwise = !this.clockwise;
-    return move;
-  }
-
   public rotate(realMatrix: boolean) {
     this.move.rotate(this.slice, this.clockwise, realMatrix);
   }
