@@ -1,17 +1,29 @@
+/* eslint-disable max-len */
+import { sides } from './utils';
+
 export class MoveActions {
-    L: MoveInterface
+  private operation;
 
-    R: MoveInterface
+  public constructor(operation: MoveOperation) {
+    this.operation = operation;
+  }
 
-    U: MoveInterface
+  public L: MoveInterface = (slice = 0, clockwise = true) => this.operation(sides.l, slice, clockwise);
 
-    D: MoveInterface
+  public R: MoveInterface = (slice = 0, clockwise = true) => this.operation(sides.r, slice, clockwise);
 
-    F: MoveInterface
+  public U: MoveInterface = (slice = 0, clockwise = true) => this.operation(sides.u, slice, clockwise);
 
-    B: MoveInterface
+  public D: MoveInterface = (slice = 0, clockwise = true) => this.operation(sides.d, slice, clockwise);
+
+  public F: MoveInterface = (slice = 0, clockwise = true) => this.operation(sides.f, slice, clockwise);
+
+  public B: MoveInterface = (slice = 0, clockwise = true) => this.operation(sides.b, slice, clockwise);
 }
 
+interface MoveOperation {
+  (side?: number, slice?: number, clockwise?: boolean): void
+}
 
 export interface MoveInterface {
   (slice?: number, clockwise?: boolean): void

@@ -61,32 +61,6 @@ export class Move {
     }
     return this.cubeGetter(slice);
   }
-
-  // public rotate(slice: number | number[], clockwise: boolean, realMatrix: boolean) {
-  //   const clock = this.getClockwise(clockwise);
-  //   if (Array.isArray(slice)) {
-  //     for (let i = 0; i < slice.length; i += 1) {
-  //       const sliceN = this.getSlice(slice[i]);
-  //       this.rotation(sliceN, clock, realMatrix);
-  //     }
-  //   } else {
-  //     const sliceN = this.getSlice(slice);
-  //     this.rotation(sliceN, clock, realMatrix);
-  //   }
-  // }
-
-  // public getCubes(slice: number | number[]): number[] {
-  //   if (Array.isArray(slice)) {
-  //     const cubes = [];
-  //     for (let i = 0; i < slice.length; i += 1) {
-  //       const sliceN = this.getSlice(slice[i]);
-  //       cubes.push(this.cubeGetter[sliceN]);
-  //     }
-  //     return cubes;
-  //   }
-  //   const sliceN = this.getSlice(slice);
-  //   return this.cubeGetter(sliceN);
-  // }
 }
 
 export class MoveOperation {

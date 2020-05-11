@@ -136,11 +136,7 @@ class MainScene {
 window.onload = () => {
   const main = new MainScene();
 
-  const historyButtons = document.getElementById('buttonHistory') as HTMLDivElement;
-  const moves = document.getElementById('moves') as HTMLDivElement;
-  const rotation = document.getElementById('rotation') as HTMLDivElement;
-
-  const rubikManager = new RubikManager(main, historyButtons, moves, rotation);
+  const rubikManager = new RubikManager(main);
 
   const sizeUp = document.getElementById('sizeUp') as HTMLButtonElement;
   const sizeDown = document.getElementById('sizeDown') as HTMLButtonElement;

@@ -83313,18 +83313,97 @@ exports.colorHashes = [1, 10, 100, 1000, 10000, 100000];
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+/* eslint-disable max-len */
+
+var utils_1 = require("./utils");
 
 var MoveActions =
 /** @class */
 function () {
-  function MoveActions() {}
+  function MoveActions(operation) {
+    var _this = this;
+
+    this.L = function (slice, clockwise) {
+      if (slice === void 0) {
+        slice = 0;
+      }
+
+      if (clockwise === void 0) {
+        clockwise = true;
+      }
+
+      return _this.operation(utils_1.sides.l, slice, clockwise);
+    };
+
+    this.R = function (slice, clockwise) {
+      if (slice === void 0) {
+        slice = 0;
+      }
+
+      if (clockwise === void 0) {
+        clockwise = true;
+      }
+
+      return _this.operation(utils_1.sides.r, slice, clockwise);
+    };
+
+    this.U = function (slice, clockwise) {
+      if (slice === void 0) {
+        slice = 0;
+      }
+
+      if (clockwise === void 0) {
+        clockwise = true;
+      }
+
+      return _this.operation(utils_1.sides.u, slice, clockwise);
+    };
+
+    this.D = function (slice, clockwise) {
+      if (slice === void 0) {
+        slice = 0;
+      }
+
+      if (clockwise === void 0) {
+        clockwise = true;
+      }
+
+      return _this.operation(utils_1.sides.d, slice, clockwise);
+    };
+
+    this.F = function (slice, clockwise) {
+      if (slice === void 0) {
+        slice = 0;
+      }
+
+      if (clockwise === void 0) {
+        clockwise = true;
+      }
+
+      return _this.operation(utils_1.sides.f, slice, clockwise);
+    };
+
+    this.B = function (slice, clockwise) {
+      if (slice === void 0) {
+        slice = 0;
+      }
+
+      if (clockwise === void 0) {
+        clockwise = true;
+      }
+
+      return _this.operation(utils_1.sides.b, slice, clockwise);
+    };
+
+    this.operation = operation;
+  }
 
   return MoveActions;
 }();
 
 exports.MoveActions = MoveActions;
 exports.default = MoveActions;
-},{}],"rubik/solutions/rubikSolutionBase.ts":[function(require,module,exports) {
+},{"./utils":"rubik/utils.ts"}],"rubik/solutions/rubikSolutionBase.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {
@@ -87212,8 +87291,8 @@ function () {
     };
 
     this.getInternalMove = function (moveH) {
-      var iWhite = 0;
-      var iOrange = 0;
+      var iWhite;
+      var iOrange;
 
       for (var i = 0; i < 6; i += 1) {
         if (_this.SO[i] === utils_1.sides.f) {
@@ -87245,9 +87324,7 @@ function () {
     this.moveOperation = function (side, slice, clockwise) {
       var moveH = _this.createMove(side, slice, clockwise);
 
-      var iMove = _this.getUserMove(moveH);
-
-      iMove.rotate(true);
+      _this.getUserMove(moveH).rotate(true);
 
       _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
 
@@ -87258,188 +87335,30 @@ function () {
       _this.currentHistoryIndex += 1;
     };
 
-    this.generateMoves = function () {
-      // option to push to matrix history or not
-      _this.m = new moveActions_1.MoveActions();
+    this.userMoveOperation = function (side, slice, clockwise) {
+      var moveH = _this.createMove(side, slice, clockwise);
 
-      _this.m.L = function (slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
+      _this.getUserMove({
+        side: moveH.side,
+        slice: slice,
+        clockwise: clockwise,
+        rotation: false
+      }).rotate(true);
 
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
+      _this.getUserMove({
+        side: side,
+        slice: slice,
+        clockwise: clockwise,
+        rotation: false
+      }).rotate(false);
 
-        return _this.moveOperation(utils_1.sides.l, slice, clockwise);
-      };
+      moveH.rotation = true;
 
-      _this.m.R = function (slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
+      _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
 
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
+      _this.moveHistory.push(moveH);
 
-        return _this.moveOperation(utils_1.sides.r, slice, clockwise);
-      };
-
-      _this.m.U = function (slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moveOperation(utils_1.sides.u, slice, clockwise);
-      };
-
-      _this.m.D = function (slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moveOperation(utils_1.sides.d, slice, clockwise);
-      };
-
-      _this.m.F = function (slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moveOperation(utils_1.sides.f, slice, clockwise);
-      };
-
-      _this.m.B = function (slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return _this.moveOperation(utils_1.sides.b, slice, clockwise);
-      };
-    };
-
-    this.generateUserMoves = function () {
-      var userMoveOperation = function userMoveOperation(side, slice, clockwise) {
-        var moveH = _this.createMove(side, slice, clockwise); // this.getInternalMove(moveH).rotate(true);
-        // this.getUserMove({ side: moveH.side, slice, clockwise, rotation: false }).rotate(false);
-        // this.getInternalMove({ side, slice, clockwise, rotation: false }).rotate(true);
-
-
-        _this.getUserMove({
-          side: moveH.side,
-          slice: slice,
-          clockwise: clockwise,
-          rotation: false
-        }).rotate(true);
-
-        _this.getUserMove({
-          side: side,
-          slice: slice,
-          clockwise: clockwise,
-          rotation: false
-        }).rotate(false); // this.getUserMove(moveH).rotate(false);
-
-
-        moveH.rotation = true; // this.getGraphicalMove(moveH).rotate(false);
-        // this.getGraphicalMove(moveH).rotate(false);
-
-        _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
-
-        _this.moveHistory.push(moveH);
-
-        _this.currentHistoryIndex += 1;
-      };
-
-      _this.mu = new moveActions_1.MoveActions();
-
-      _this.mu.L = function (slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return userMoveOperation(utils_1.sides.l, slice, clockwise);
-      };
-
-      _this.mu.R = function (slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return userMoveOperation(utils_1.sides.r, slice, clockwise);
-      };
-
-      _this.mu.U = function (slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return userMoveOperation(utils_1.sides.u, slice, clockwise);
-      };
-
-      _this.mu.D = function (slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return userMoveOperation(utils_1.sides.d, slice, clockwise);
-      };
-
-      _this.mu.F = function (slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return userMoveOperation(utils_1.sides.f, slice, clockwise);
-      };
-
-      _this.mu.B = function (slice, clockwise) {
-        if (slice === void 0) {
-          slice = 0;
-        }
-
-        if (clockwise === void 0) {
-          clockwise = true;
-        }
-
-        return userMoveOperation(utils_1.sides.b, slice, clockwise);
-      };
+      _this.currentHistoryIndex += 1;
     };
 
     this.reset = function () {
@@ -87658,17 +87577,7 @@ function () {
 
       for (var i = 0; i < ms.length; i += 1) {
         ms[i] = new Array(6);
-      } // 0 l  1 r  2 u  3 d  4 f  5 b
-      // l u
-      // l f   r b   u u   d d   f r   b l
-      // 0 4   1 5   2 2   3 3   4 1   5 0
-      // 5 4 2 3 0 1
-      // depthOpp 3
-      // l d
-      // l b   r f   u u   d d   f l   b r
-      // 0 5   1 4   2 2   3 3   4 0   5 1
-      // depth 3
-
+      }
     };
 
     this.generateOrientationSides = function () {
@@ -87697,8 +87606,6 @@ function () {
           }
         }
       }
-
-      for (var i = 0; i < 6; i += 1) {}
     };
 
     this.doRandomMoves = function (num, randomSlices) {
@@ -87727,16 +87634,11 @@ function () {
       }
 
       console.log('Generated random moves'); // console.log(this.moveHistory);
-    }; //   private register = (m: Move) => {
-    //     this.history.push(m);
-    //     // should separate rotations
-    //     // m.rotate(true);
-    //   }
-
+    };
 
     this.createMatrix = function () {
       var totalColors = _this.sideLength * _this.sideLength;
-      var matrixRubic = []; // 6 rubik has sides
+      var matrixRubic = [];
 
       for (var i = 0; i < 6; i += 1) {
         var tempArr = [];
@@ -88045,9 +87947,10 @@ function () {
     this.generateRotations();
     this.f = new face_1.default(sideLength);
     this.moves = [new move_1.Move('L', 'x', this.rotateVer, this.getCubesVer, this.sideLength, true), new move_1.Move('R', 'x', this.rotateVer, this.getCubesVer, this.sideLength, false), new move_1.Move('U', 'y', this.rotateHor, this.getCubesHor, this.sideLength, false), new move_1.Move('D', 'y', this.rotateHor, this.getCubesHor, this.sideLength, true), new move_1.Move('F', 'z', this.rotateDep, this.getCubesDep, this.sideLength, false), new move_1.Move('B', 'z', this.rotateDep, this.getCubesDep, this.sideLength, true)];
-    this.reset();
-    this.generateMoves();
-    this.generateUserMoves();
+    this.reset(); // option to push to matrix history or not
+
+    this.m = new moveActions_1.MoveActions(this.moveOperation);
+    this.mu = new moveActions_1.MoveActions(this.userMoveOperation);
     this.generateSideRotations();
     this.generateOrientationSides();
     this.SO = [utils_1.sides.l, utils_1.sides.r, utils_1.sides.u, utils_1.sides.d, utils_1.sides.f, utils_1.sides.b];
@@ -88628,6 +88531,10 @@ function () {
     this.completingMouseMove = false;
     this.deactivateSlice();
 
+    if (Math.abs(rotations) > 0) {
+      this.rubikModel.removeHistoryByCurrentIndex();
+    }
+
     for (var i = 0; i < Math.abs(rotations); i += 1) {
       this.mouseMoveAction(this.mouseSlice, rotations > 0);
     }
@@ -88644,7 +88551,6 @@ function () {
     var row = Math.floor(this.selectedCube / this.rubikModel.sideLength); // determine what kind of move is to be performed
 
     var largest = utils_1.getLargestValue(direction);
-    console.log(this.rubikModel.moveOrientation);
     var move = null;
     var rotation;
     var cubes;
@@ -88822,7 +88728,7 @@ var utils_1 = require("./utils");
 var RubikManager =
 /** @class */
 function () {
-  function RubikManager(scene, historyDiv, movementDiv, orientationDiv) {
+  function RubikManager(scene) {
     var _this = this;
 
     this.renderOrder = new Map();
@@ -88830,7 +88736,11 @@ function () {
     this.historyButtonNotActiveColor = '#4CAF50';
 
     this.scramble = function () {
+      _this.rubikModel.removeHistoryByCurrentIndex();
+
       _this.rubikModel.scramble(5);
+
+      _this.clearHistoryButtons();
 
       _this.refreshHistoryButtons();
 
@@ -89026,11 +88936,11 @@ function () {
       return button;
     };
 
+    this.historyDiv = document.getElementById('buttonHistory');
+    this.movementDiv = document.getElementById('moves');
     this.scene = scene;
-    this.historyDiv = historyDiv;
-    this.movementDiv = movementDiv;
     this.renderOrder.set('rubik', 0);
-    this.addRubik(3); // this.createOrientationButtons();
+    this.addRubik(3);
   }
 
   RubikManager.prototype.drawNewRubik = function () {
@@ -89052,8 +88962,6 @@ function () {
     this.rubikSolver = new solver_1.default(this.rubikModel);
     window.addEventListener('moveComplete', function (e) {
       console.log('event happened');
-
-      _this.rubikModel.removeHistoryByCurrentIndex();
 
       _this.clearHistoryButtons();
 
@@ -89212,10 +89120,7 @@ function () {
 
 window.onload = function () {
   var main = new MainScene();
-  var historyButtons = document.getElementById('buttonHistory');
-  var moves = document.getElementById('moves');
-  var rotation = document.getElementById('rotation');
-  var rubikManager = new manager_1.default(main, historyButtons, moves, rotation);
+  var rubikManager = new manager_1.default(main);
   var sizeUp = document.getElementById('sizeUp');
   var sizeDown = document.getElementById('sizeDown');
   var scramble = document.getElementById('scramble');
@@ -89279,7 +89184,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50287" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56822" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

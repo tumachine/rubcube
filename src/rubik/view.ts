@@ -300,6 +300,10 @@ class RubikView implements RenderInterface, MouseInterface {
 
     this.deactivateSlice();
 
+    if (Math.abs(rotations) > 0) {
+      this.rubikModel.removeHistoryByCurrentIndex();
+    }
+
     for (let i = 0; i < Math.abs(rotations); i += 1) {
       this.mouseMoveAction(this.mouseSlice, rotations > 0);
     }
@@ -317,7 +321,6 @@ class RubikView implements RenderInterface, MouseInterface {
 
     // determine what kind of move is to be performed
     const largest = getLargestValue(direction);
-    console.log(this.rubikModel.moveOrientation);
 
     let move: MoveInterface = null;
     let rotation: boolean;

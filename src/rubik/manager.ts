@@ -31,15 +31,14 @@ class RubikManager {
 
   private historyButtonNotActiveColor: string = '#4CAF50';
 
-  public constructor(scene: MainScene, historyDiv: HTMLDivElement, movementDiv: HTMLDivElement, orientationDiv: HTMLDivElement) {
+  public constructor(scene: MainScene) {
+    this.historyDiv = document.getElementById('buttonHistory') as HTMLDivElement;
+    this.movementDiv = document.getElementById('moves') as HTMLDivElement;
+
     this.scene = scene;
-    this.historyDiv = historyDiv;
-    this.movementDiv = movementDiv;
     this.renderOrder.set('rubik', 0);
 
     this.addRubik(3);
-
-    // this.createOrientationButtons();
   }
 
   private drawNewRubik() {
@@ -61,7 +60,6 @@ class RubikManager {
 
     window.addEventListener('moveComplete', (e) => {
       console.log('event happened');
-      this.rubikModel.removeHistoryByCurrentIndex();
       this.clearHistoryButtons();
       this.refreshHistoryButtons();
     }, false);
@@ -78,7 +76,9 @@ class RubikManager {
   }
 
   public scramble = () => {
+    this.rubikModel.removeHistoryByCurrentIndex();
     this.rubikModel.scramble(5);
+    this.clearHistoryButtons();
     this.refreshHistoryButtons();
     this.rubikView.startNextMove();
   }
