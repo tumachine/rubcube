@@ -47,6 +47,8 @@ export enum colors {
   yellow = 5,
 }
 
+export type Matrix = Array<Array<number>>;
+
 export const createCamera = () => {
   const fov = 75;
   const aspect = 2;

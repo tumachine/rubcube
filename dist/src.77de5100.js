@@ -87147,13 +87147,13 @@ function () {
     this.original = original;
   }
 
-  Move.prototype.rotate = function (slice, clockwise, realMatrix) {
+  Move.prototype.rotate = function (slice, clockwise, matrix) {
     if (Array.isArray(slice)) {
       for (var i = 0; i < slice.length; i += 1) {
-        this.rotation(slice[i], clockwise, realMatrix);
+        this.rotation(slice[i], clockwise, matrix);
       }
     } else {
-      this.rotation(slice, clockwise, realMatrix);
+      this.rotation(slice, clockwise, matrix);
     }
   };
 
@@ -87189,8 +87189,8 @@ function () {
     this.side = this.move.side;
   }
 
-  MoveOperation.prototype.rotate = function (realMatrix) {
-    this.move.rotate(this.slice, this.clockwise, realMatrix);
+  MoveOperation.prototype.rotate = function (matrix) {
+    this.move.rotate(this.slice, this.clockwise, matrix);
   };
 
   MoveOperation.prototype.getCubes = function () {
@@ -87329,7 +87329,7 @@ function () {
       var moveH = _this.createMoveBasedOnOrientation(side, slice, clockwise); // rotate real matrix, with correct orientation
 
 
-      _this.getUserMove(moveH).rotate(true);
+      _this.getUserMove(moveH).rotate(_this.matrix);
 
       _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
 
@@ -87341,8 +87341,7 @@ function () {
     };
 
     this.userMoveOperation = function (side, slice, clockwise) {
-      var moveH = _this.createMoveBasedOnOrientation(side, slice, clockwise); // this.getInternalMove({ side, slice, clockwise, rotation: false }).rotate(true);
-      // rotate real matrix based on a limited user input
+      var moveH = _this.createMoveBasedOnOrientation(side, slice, clockwise); // rotate real matrix based on a limited user input
 
 
       _this.getUserMove({
@@ -87350,7 +87349,7 @@ function () {
         slice: slice,
         clockwise: clockwise,
         rotation: false
-      }).rotate(true); // rotate ref matrix 
+      }).rotate(_this.matrix); // rotate ref matrix 
 
 
       _this.getUserMove({
@@ -87358,7 +87357,7 @@ function () {
         slice: slice,
         clockwise: clockwise,
         rotation: false
-      }).rotate(false);
+      }).rotate(_this.matrixReference);
 
       moveH.rotation = true;
 
@@ -87438,7 +87437,7 @@ function () {
         var iMove = _this.getUserMove(currentMove);
 
         iMove.clockwise = !iMove.clockwise;
-        iMove.rotate(true);
+        iMove.rotate(_this.matrix);
         _this.currentHistoryIndex -= 1;
 
         _this.currentMoves.push({
@@ -87457,7 +87456,7 @@ function () {
 
         var iMove = _this.getUserMove(currentMove);
 
-        iMove.rotate(true);
+        iMove.rotate(_this.matrix);
 
         _this.currentMoves.push(currentMove);
       }
@@ -87702,76 +87701,22 @@ function () {
       return matrixRubic;
     };
 
-    this.rotateVerMatrix = function (slice, clockwise, matrix, bottom, top) {
-      if (bottom === void 0) {
-        bottom = utils_1.sides.l;
-      }
-
-      if (top === void 0) {
-        top = utils_1.sides.r;
-      }
-
+    this.rotateVer = function (slice, clockwise, matrix) {
       _this.rotate(_this.posVer, clockwise ? _this.sequenceVerRev : _this.sequenceVer, slice, matrix);
 
-      _this.rotateFaceReal(slice, bottom, top, clockwise ? _this.posCounter : _this.posClockwise, matrix);
+      _this.rotateFaceReal(slice, utils_1.sides.l, utils_1.sides.r, clockwise ? _this.posCounter : _this.posClockwise, matrix);
     };
 
-    this.rotateHorMatrix = function (slice, clockwise, matrix, bottom, top) {
-      if (bottom === void 0) {
-        bottom = utils_1.sides.d;
-      }
-
-      if (top === void 0) {
-        top = utils_1.sides.u;
-      }
-
+    this.rotateHor = function (slice, clockwise, matrix) {
       _this.rotate(_this.posHor, clockwise ? _this.sequenceHorRev : _this.sequenceHor, slice, matrix);
 
-      _this.rotateFaceReal(slice, bottom, top, clockwise ? _this.posCounter : _this.posClockwise, matrix);
+      _this.rotateFaceReal(slice, utils_1.sides.d, utils_1.sides.u, clockwise ? _this.posCounter : _this.posClockwise, matrix);
     };
 
-    this.rotateDepMatrix = function (slice, clockwise, matrix, bottom, top) {
-      if (bottom === void 0) {
-        bottom = utils_1.sides.b;
-      }
-
-      if (top === void 0) {
-        top = utils_1.sides.f;
-      }
-
+    this.rotateDep = function (slice, clockwise, matrix) {
       _this.rotate(clockwise ? _this.posDepRev : _this.posDep, clockwise ? _this.sequenceDepRev : _this.sequenceDep, slice, matrix);
 
-      _this.rotateFaceReal(slice, bottom, top, clockwise ? _this.posClockwise : _this.posCounter, matrix);
-    };
-
-    this.rotateVer = function (slice, clockwise, realMatrix) {
-      if (realMatrix === void 0) {
-        realMatrix = true;
-      }
-
-      var matrix = realMatrix ? _this.matrix : _this.matrixReference;
-
-      _this.rotateVerMatrix(slice, clockwise, matrix);
-    };
-
-    this.rotateHor = function (slice, clockwise, realMatrix) {
-      if (realMatrix === void 0) {
-        realMatrix = true;
-      }
-
-      var matrix = realMatrix ? _this.matrix : _this.matrixReference;
-
-      _this.rotateHorMatrix(slice, clockwise, matrix);
-    };
-
-    this.rotateDep = function (slice, clockwise, realMatrix) {
-      if (realMatrix === void 0) {
-        realMatrix = true;
-      }
-
-      var matrix = realMatrix ? _this.matrix : _this.matrixReference;
-
-      _this.rotateDepMatrix(slice, clockwise, matrix);
+      _this.rotateFaceReal(slice, utils_1.sides.b, utils_1.sides.f, clockwise ? _this.posClockwise : _this.posCounter, matrix);
     };
 
     this.getCubesHor = function (slice) {
@@ -88332,7 +88277,7 @@ function () {
       _this.deactivateSlice(); // update matrix reference
 
 
-      _this.currentMove.rotate(false);
+      _this.currentMove.rotate(_this.rubikModel.matrixReference);
 
       _this.moveDirection = undefined;
 
@@ -88438,7 +88383,7 @@ function () {
       _this.forEveryCube(_this.colorizeBaseCube);
     };
 
-    this.disableBase = function () {
+    this.disposeBase = function () {
       _this.forEveryCube(_this.disposeBaseMeshes);
     };
 
@@ -88448,7 +88393,11 @@ function () {
       _this.forEveryCube(_this.colorizeOuterCube);
     };
 
-    this.disableOuter = function () {
+    this.colorizeOuter = function () {
+      _this.forEveryCube(_this.colorizeOuterCube);
+    };
+
+    this.disposeOuter = function () {
       _this.forEveryCube(_this.disposeOuterMeshes);
     };
 
@@ -88458,24 +88407,19 @@ function () {
       _this.forEveryCube(_this.placeTextOnCube);
     };
 
-    this.disableText = function () {
+    this.disposeText = function () {
       _this.forEveryCube(_this.disposeTextMeshes);
+    };
+
+    this.placeText = function () {
+      _this.forEveryCube(_this.placeTextOnCube);
     };
 
     this.resetCubePositions = function () {
       _this.forEveryCube(_this.resetCubePosition);
-    }; // recolorize based on rotation
-
-
-    this.colorizeBaseForSO = function () {
-      for (var cube = 0; cube < _this.rubikModel.totalColors; cube += 1) {
-        for (var side = 0; side < 6; side += 1) {
-          _this.cubes[_this.rubikModel.getCube(_this.rubikModel.SO[side], cube)].setColor(_this.rubikModel.SO[side], _this.rubikModel.getColor(_this.rubikModel.SO[side], cube, _this.rubikModel.matrix));
-        }
-      }
     };
 
-    this.disableAll = function () {
+    this.disposeAll = function () {
       _this.forEveryCube(_this.dispose);
     };
 
@@ -88769,56 +88713,7 @@ function () {
     this.scene.camera.position.set(length * 1.5, length * 1.2, length * 2);
     this.scene.camera.far = length * 4;
     this.scene.camera.updateProjectionMatrix();
-  }; // public createOuterMeshes = () => {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createOuterMeshes(sidesArr[s], this.rubikModel.sideLength);
-  //     }
-  //   }
-  // }
-  // public createTextMeshes = () => {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createTextMeshes(sidesArr[s]);
-  //     }
-  //   }
-  // }
-  // public resetCubePositions = () => {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].resetPosition();
-  //     }
-  //   }
-  // }
-  // public colorizeBaseRubik = (matrix: Matrix = this.rubikModel.matrix) => {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube, matrix));
-  //     }
-  //   }
-  // }
-  // public colorizeOuterRubik = (matrix: Matrix = this.rubikModel.matrix) => {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setOuterColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube, matrix));
-  //     }
-  //   }
-  // }
-  // public placeTextOnRubik = (inter: number[][]) => {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setText(sidesArr[s], cube.toString());
-  //     }
-  //   }
-  // }
-  // public dispose() {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].dispose();
-  //     }
-  //   }
-  // }
-
+  };
 
   RubikView.prototype.addToScene = function () {
     var rubik3DObject = this.scene.scene.getObjectByName('rubik');
@@ -88891,14 +88786,14 @@ function () {
     };
 
     this.sizeUp = function () {
-      _this.rubikView.disableAll();
+      _this.rubikView.disposeAll();
 
       _this.addRubik(_this.rubikModel.sideLength + 1);
     };
 
     this.sizeDown = function () {
       if (_this.rubikModel.sideLength > 3) {
-        _this.rubikView.disableAll();
+        _this.rubikView.disposeAll();
 
         _this.addRubik(_this.rubikModel.sideLength - 1);
       }
@@ -88959,15 +88854,11 @@ function () {
       }
 
       button.onclick = function () {
-        _this.rubikModel.jumpToHistoryIndex(index);
+        _this.reset(index);
 
-        _this.rubikModel.resetSO();
-
-        _this.rubikView.resetCubePositions();
-
-        _this.rubikView.colorizeBase();
-
-        _this.rubikView.colorizeBaseForSO();
+        if (_this.outerMeshesCheckbox.checked) {
+          _this.rubikView.colorizeOuter();
+        }
 
         _this.switchButtonBackgroundColor(_this.historyButtonPrevActive, false);
 
@@ -88979,10 +88870,18 @@ function () {
       _this.historyButtons.push(button);
     };
 
+    this.reset = function (historyIndex) {
+      _this.rubikModel.jumpToHistoryIndex(historyIndex);
+
+      _this.rubikModel.resetSO();
+
+      _this.rubikView.resetCubePositions();
+
+      _this.rubikView.colorizeBase();
+    };
+
     this.addAllHistoryButtons = function () {
-      // console.log('History');
       for (var i = 0; i < _this.rubikModel.moveHistory.length; i += 1) {
-        // console.log(`Adding history: ${i}`);
         _this.addHistoryButton(i);
       }
     };
@@ -89057,8 +88956,6 @@ function () {
       button.innerHTML = "" + utils_1.sidesStr[side] + (clockwise ? '' : "'") + (slice === 0 ? '' : slice + 1);
 
       button.onclick = function () {
-        // this.moveOrientation[sideNum](slice, clockwise);
-        // this.rubikModel.addMove(this.moveOrientation[sideNum], slice, clockwise);
         _this.rubikModel.addMove(side, slice, clockwise);
 
         _this.clearHistoryButtons();
@@ -89109,22 +89006,26 @@ function () {
 
     this.historyDiv = document.getElementById('buttonHistory');
     this.movementDiv = document.getElementById('moves');
-    var outerMeshesCheckbox = document.getElementById('outerMeshes');
-    var numbersCheckbox = document.getElementById('numbers');
+    this.outerMeshesCheckbox = document.getElementById('outerMeshes');
+    this.numbersCheckbox = document.getElementById('numbers');
 
-    outerMeshesCheckbox.onchange = function (e) {
-      if (outerMeshesCheckbox.checked) {
+    this.outerMeshesCheckbox.onchange = function (e) {
+      if (_this.outerMeshesCheckbox.checked) {
+        _this.reset(_this.rubikModel.currentHistoryIndex);
+
         _this.rubikView.enableOuter();
       } else {
-        _this.rubikView.disableOuter();
+        _this.rubikView.disposeOuter();
       }
     };
 
-    numbersCheckbox.onchange = function (e) {
-      if (numbersCheckbox.checked) {
+    this.numbersCheckbox.onchange = function (e) {
+      if (_this.numbersCheckbox.checked) {
+        _this.reset(_this.rubikModel.currentHistoryIndex);
+
         _this.rubikView.enableText();
       } else {
-        _this.rubikView.disableText();
+        _this.rubikView.disposeText();
       }
     };
 
@@ -89137,10 +89038,7 @@ function () {
     this.scene.renderObjects[0] = this.rubikView;
     this.scene.mouseObjects[0] = this.rubikView;
     this.rubikView.addToScene();
-    this.rubikView.enableBase(); // this.rubikView.createBaseMeshes();
-    // this.rubikView.colorizeBaseRubik();
-    // this.rubikView.placeTextOnRubik(null);
-
+    this.rubikView.enableBase();
     this.rubikView.changeCamera();
   };
 
@@ -89341,7 +89239,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51796" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53632" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

@@ -524,7 +524,7 @@ class RubikView implements RenderInterface, MouseInterface {
     this.deactivateSlice();
 
     // update matrix reference
-    this.currentMove.rotate(false);
+    this.currentMove.rotate(this.rubikModel.matrixReference);
 
     this.moveDirection = undefined;
 
@@ -635,7 +635,7 @@ class RubikView implements RenderInterface, MouseInterface {
     this.forEveryCube(this.colorizeBaseCube);
   }
 
-  public disableBase = () => {
+  public disposeBase = () => {
     this.forEveryCube(this.disposeBaseMeshes);
   }
 
@@ -644,7 +644,11 @@ class RubikView implements RenderInterface, MouseInterface {
     this.forEveryCube(this.colorizeOuterCube);
   }
 
-  public disableOuter = () => {
+  public colorizeOuter = () => {
+    this.forEveryCube(this.colorizeOuterCube);
+  }
+
+  public disposeOuter = () => {
     this.forEveryCube(this.disposeOuterMeshes);
   }
 
@@ -653,82 +657,21 @@ class RubikView implements RenderInterface, MouseInterface {
     this.forEveryCube(this.placeTextOnCube);
   }
 
-  public disableText = () => {
+  public disposeText = () => {
     this.forEveryCube(this.disposeTextMeshes);
+  }
+
+  public placeText = () => {
+    this.forEveryCube(this.placeTextOnCube);
   }
 
   public resetCubePositions = () => {
     this.forEveryCube(this.resetCubePosition);
   }
 
-  // recolorize based on rotation
-  public colorizeBaseForSO = () => {
-    for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-      for (let side = 0; side < 6; side += 1) {
-        this.cubes[this.rubikModel.getCube(this.rubikModel.SO[side], cube)].setColor(this.rubikModel.SO[side], this.rubikModel.getColor(this.rubikModel.SO[side], cube, this.rubikModel.matrix));
-      }
-    }
-  }
-
-  public disableAll = () => {
+  public disposeAll = () => {
     this.forEveryCube(this.dispose);
   }
-  // public createOuterMeshes = () => {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createOuterMeshes(sidesArr[s], this.rubikModel.sideLength);
-  //     }
-  //   }
-  // }
-
-  // public createTextMeshes = () => {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createTextMeshes(sidesArr[s]);
-  //     }
-  //   }
-  // }
-
-  // public resetCubePositions = () => {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].resetPosition();
-  //     }
-  //   }
-  // }
-
-  // public colorizeBaseRubik = (matrix: Matrix = this.rubikModel.matrix) => {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube, matrix));
-  //     }
-  //   }
-  // }
-
-  // public colorizeOuterRubik = (matrix: Matrix = this.rubikModel.matrix) => {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setOuterColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube, matrix));
-  //     }
-  //   }
-  // }
-
-  // public placeTextOnRubik = (inter: number[][]) => {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setText(sidesArr[s], cube.toString());
-  //     }
-  //   }
-  // }
-
-
-  // public dispose() {
-  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-  //     for (let s = 0; s < sidesArr.length; s += 1) {
-  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].dispose();
-  //     }
-  //   }
-  // }
 
   public addToScene() {
     const rubik3DObject = this.scene.scene.getObjectByName('rubik');

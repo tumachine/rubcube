@@ -2,12 +2,11 @@
 /* eslint-disable max-len */
 /* eslint-disable no-param-reassign */
 // eslint-disable-next-line max-classes-per-file
-import { sides as s, sides, getLargestValue, sidesStr, sidesMap } from './utils';
+import { sides as s, sides, getLargestValue, sidesStr, sidesMap, Matrix } from './utils';
 import Face from './face';
 import { MoveActions, MoveInterface } from './moveActions';
 import { Move, MoveOperation } from './move';
 
-type Matrix = Array<Array<number>>;
 type Slices = Array<Array<Array<number>>>;
 
 interface MoveHistory {
@@ -56,7 +55,7 @@ class RubikModel {
 
   public matrix: Matrix
 
-  private matrixReference: Matrix
+  public matrixReference: Matrix
 
   public stRotations: number[][]
 
@@ -79,9 +78,7 @@ class RubikModel {
   private slices: number[]
 
   // side orientation
-  public SO: number[]
-
-  public matrixForRotations: Matrix
+  private SO: number[]
 
   public constructor(sideLength: number) {
     this.sideLength = sideLength;
@@ -184,7 +181,7 @@ class RubikModel {
     const moveH = this.createMoveBasedOnOrientation(side, slice, clockwise);
 
     // rotate real matrix, with correct orientation
-    this.getUserMove(moveH).rotate(true);
+    this.getUserMove(moveH).rotate(this.matrix);
 
     this.matrixHistory.push(this.deepCopyMatrix(this.matrix));
 
@@ -196,12 +193,10 @@ class RubikModel {
   private userMoveOperation = (side: number, slice: number, clockwise: boolean) => {
     const moveH = this.createMoveBasedOnOrientation(side, slice, clockwise);
 
-    // this.getInternalMove({ side, slice, clockwise, rotation: false }).rotate(true);
-
     // rotate real matrix based on a limited user input
-    this.getUserMove({ side: moveH.side, slice, clockwise, rotation: false }).rotate(true);
+    this.getUserMove({ side: moveH.side, slice, clockwise, rotation: false }).rotate(this.matrix);
     // rotate ref matrix 
-    this.getUserMove({ side, slice, clockwise, rotation: false }).rotate(false);
+    this.getUserMove({ side, slice, clockwise, rotation: false }).rotate(this.matrixReference);
     moveH.rotation = true;
 
     this.matrixHistory.push(this.deepCopyMatrix(this.matrix));
@@ -277,7 +272,7 @@ class RubikModel {
       const iMove = this.getUserMove(currentMove);
       iMove.clockwise = !iMove.clockwise;
 
-      iMove.rotate(true);
+      iMove.rotate(this.matrix);
 
       this.currentHistoryIndex -= 1;
 
@@ -291,7 +286,7 @@ class RubikModel {
       const currentMove = this.moveHistory[this.currentHistoryIndex];
 
       const iMove = this.getUserMove(currentMove);
-      iMove.rotate(true);
+      iMove.rotate(this.matrix);
 
       this.currentMoves.push(currentMove);
     }
@@ -571,34 +566,19 @@ class RubikModel {
     return matrixRubic;
   }
 
-  private rotateVerMatrix = (slice: number, clockwise: boolean, matrix: Matrix, bottom: number = s.l, top: number = s.r) => {
+  private rotateVer = (slice: number, clockwise: boolean, matrix: Matrix) => {
     this.rotate(this.posVer, clockwise ? this.sequenceVerRev : this.sequenceVer, slice, matrix);
-    this.rotateFaceReal(slice, bottom, top, clockwise ? this.posCounter : this.posClockwise, matrix);
+    this.rotateFaceReal(slice, s.l, s.r, clockwise ? this.posCounter : this.posClockwise, matrix);
   }
 
-  private rotateHorMatrix = (slice: number, clockwise: boolean, matrix: Matrix, bottom: number = s.d, top: number = s.u) => {
+  private rotateHor = (slice: number, clockwise: boolean, matrix: Matrix) => {
     this.rotate(this.posHor, clockwise ? this.sequenceHorRev : this.sequenceHor, slice, matrix);
-    this.rotateFaceReal(slice, bottom, top, clockwise ? this.posCounter : this.posClockwise, matrix);
+    this.rotateFaceReal(slice, s.d, s.u, clockwise ? this.posCounter : this.posClockwise, matrix);
   }
 
-  private rotateDepMatrix = (slice: number, clockwise: boolean, matrix: Matrix, bottom: number = s.b, top: number = s.f) => {
+  private rotateDep = (slice: number, clockwise: boolean, matrix: Matrix) => {
     this.rotate(clockwise ? this.posDepRev : this.posDep, clockwise ? this.sequenceDepRev : this.sequenceDep, slice, matrix);
-    this.rotateFaceReal(slice, bottom, top, clockwise ? this.posClockwise : this.posCounter, matrix);
-  }
-
-  private rotateVer = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
-    const matrix = realMatrix ? this.matrix : this.matrixReference;
-    this.rotateVerMatrix(slice, clockwise, matrix);
-  }
-
-  private rotateHor = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
-    const matrix = realMatrix ? this.matrix : this.matrixReference;
-    this.rotateHorMatrix(slice, clockwise, matrix);
-  }
-
-  private rotateDep = (slice: number, clockwise: boolean, realMatrix: boolean = true) => {
-    const matrix = realMatrix ? this.matrix : this.matrixReference;
-    this.rotateDepMatrix(slice, clockwise, matrix);
+    this.rotateFaceReal(slice, s.b, s.f, clockwise ? this.posClockwise : this.posCounter, matrix);
   }
 
   public getCubesHor = (slice: number): number[] => this.getCubes(this.posHor, this.sequenceHor, slice, s.d, s.u);

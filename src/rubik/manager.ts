@@ -31,6 +31,10 @@ class RubikManager {
 
   private historyButtonNotActiveColor: string = '#4CAF50';
 
+  private outerMeshesCheckbox: HTMLInputElement;
+
+  private numbersCheckbox: HTMLInputElement;
+
   public constructor(scene: MainScene) {
     const sizeUp = document.getElementById('sizeUp') as HTMLButtonElement;
     sizeUp.onclick = () => this.sizeUp();
@@ -52,25 +56,26 @@ class RubikManager {
 
     this.historyDiv = document.getElementById('buttonHistory') as HTMLDivElement;
     this.movementDiv = document.getElementById('moves') as HTMLDivElement;
-    const outerMeshesCheckbox = document.getElementById('outerMeshes') as HTMLInputElement;
-    const numbersCheckbox = document.getElementById('numbers') as HTMLInputElement;
+    this.outerMeshesCheckbox = document.getElementById('outerMeshes') as HTMLInputElement;
+    this.numbersCheckbox = document.getElementById('numbers') as HTMLInputElement;
 
-    outerMeshesCheckbox.onchange = (e: Event) => {
-      if (outerMeshesCheckbox.checked) {
+    this.outerMeshesCheckbox.onchange = (e: Event) => {
+      if (this.outerMeshesCheckbox.checked) {
+        this.reset(this.rubikModel.currentHistoryIndex);
         this.rubikView.enableOuter();
       } else {
-        this.rubikView.disableOuter();
+        this.rubikView.disposeOuter();
       }
     };
 
-    numbersCheckbox.onchange = (e: Event) => {
-      if (numbersCheckbox.checked) {
+    this.numbersCheckbox.onchange = (e: Event) => {
+      if (this.numbersCheckbox.checked) {
+        this.reset(this.rubikModel.currentHistoryIndex);
         this.rubikView.enableText();
       } else {
-        this.rubikView.disableText();
+        this.rubikView.disposeText();
       }
     };
-
 
     this.scene = scene;
     this.renderOrder.set('rubik', 0);
@@ -84,9 +89,6 @@ class RubikManager {
     this.rubikView.addToScene();
 
     this.rubikView.enableBase();
-    // this.rubikView.createBaseMeshes();
-    // this.rubikView.colorizeBaseRubik();
-    // this.rubikView.placeTextOnRubik(null);
     this.rubikView.changeCamera();
   }
 
@@ -128,13 +130,13 @@ class RubikManager {
   }
 
   public sizeUp = () => {
-    this.rubikView.disableAll();
+    this.rubikView.disposeAll();
     this.addRubik(this.rubikModel.sideLength + 1);
   }
 
   public sizeDown = () => {
     if (this.rubikModel.sideLength > 3) {
-      this.rubikView.disableAll();
+      this.rubikView.disposeAll();
       this.addRubik(this.rubikModel.sideLength - 1);
     }
   }
@@ -182,12 +184,10 @@ class RubikManager {
     }
 
     button.onclick = () => {
-      this.rubikModel.jumpToHistoryIndex(index);
-      this.rubikModel.resetSO();
-
-      this.rubikView.resetCubePositions();
-      this.rubikView.colorizeBase();
-      this.rubikView.colorizeBaseForSO();
+      this.reset(index);
+      if (this.outerMeshesCheckbox.checked) {
+        this.rubikView.colorizeOuter();
+      }
       this.switchButtonBackgroundColor(this.historyButtonPrevActive, false);
       this.switchButtonBackgroundColor(button, true);
       this.historyButtonPrevActive = button;
@@ -195,10 +195,15 @@ class RubikManager {
     this.historyButtons.push(button);
   }
 
+  private reset = (historyIndex: number) => {
+    this.rubikModel.jumpToHistoryIndex(historyIndex);
+    this.rubikModel.resetSO();
+    this.rubikView.resetCubePositions();
+    this.rubikView.colorizeBase();
+  }
+
   private addAllHistoryButtons = () => {
-    // console.log('History');
     for (let i = 0; i < this.rubikModel.moveHistory.length; i += 1) {
-      // console.log(`Adding history: ${i}`);
       this.addHistoryButton(i);
     }
   }
@@ -262,8 +267,6 @@ class RubikManager {
     button.innerHTML = `${sidesStr[side]}${clockwise ? '' : "'"}${slice === 0 ? '' : slice + 1}`;
 
     button.onclick = () => {
-      // this.moveOrientation[sideNum](slice, clockwise);
-      // this.rubikModel.addMove(this.moveOrientation[sideNum], slice, clockwise);
       this.rubikModel.addMove(side, slice, clockwise);
 
       this.clearHistoryButtons();

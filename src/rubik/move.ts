@@ -1,6 +1,8 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable max-len */
 
+import { Matrix } from './utils';
+
 export class Move {
   public rotation: RotateInterface
 
@@ -41,13 +43,13 @@ export class Move {
 
   public getClockwiseOpposite = (clockwise: boolean) => !clockwise;
 
-  public rotate(slice: number | number[], clockwise: boolean, realMatrix: boolean) {
+  public rotate(slice: number | number[], clockwise: boolean, matrix: Matrix) {
     if (Array.isArray(slice)) {
       for (let i = 0; i < slice.length; i += 1) {
-        this.rotation(slice[i], clockwise, realMatrix);
+        this.rotation(slice[i], clockwise, matrix);
       }
     } else {
-      this.rotation(slice, clockwise, realMatrix);
+      this.rotation(slice, clockwise, matrix);
     }
   }
 
@@ -82,8 +84,8 @@ export class MoveOperation {
     this.side = this.move.side;
   }
 
-  public rotate(realMatrix: boolean) {
-    this.move.rotate(this.slice, this.clockwise, realMatrix);
+  public rotate(matrix: Matrix) {
+    this.move.rotate(this.slice, this.clockwise, matrix);
   }
 
   public getCubes(): number[] {
@@ -92,4 +94,4 @@ export class MoveOperation {
 }
 
 type CubeGetter = (slice: number) => number[];
-type RotateInterface = (slice: number, clockwise: boolean, realMatrix: boolean) => void;
+type RotateInterface = (slice: number, clockwise: boolean, matrix: Matrix) => void;
