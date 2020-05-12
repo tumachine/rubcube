@@ -46,9 +46,7 @@ class MainScene {
 
     this.camera = createCamera();
 
-    // this.controls = new CameraControls(this.camera, this.renderer.domElement, this);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-
     // this.controls.update();
 
     // this.scene.background = new THREE.Color(0x3399ff);
@@ -137,37 +135,6 @@ window.onload = () => {
   const main = new MainScene();
 
   const rubikManager = new RubikManager(main);
-
-  const sizeUp = document.getElementById('sizeUp') as HTMLButtonElement;
-  const sizeDown = document.getElementById('sizeDown') as HTMLButtonElement;
-  const scramble = document.getElementById('scramble') as HTMLButtonElement;
-  const solve = document.getElementById('solve') as HTMLButtonElement;
-  const prev = document.getElementById('prev') as HTMLButtonElement;
-  const next = document.getElementById('next') as HTMLButtonElement;
-
-  sizeUp.onclick = () => {
-    rubikManager.sizeUp();
-  };
-
-  sizeDown.onclick = () => {
-    rubikManager.sizeDown();
-  };
-
-  scramble.onclick = () => {
-    rubikManager.scramble();
-  };
-
-  solve.onclick = () => {
-    rubikManager.solve();
-  };
-
-  prev.onclick = () => {
-    rubikManager.prev();
-  };
-
-  next.onclick = () => {
-    rubikManager.next();
-  };
 
   main.render();
 };

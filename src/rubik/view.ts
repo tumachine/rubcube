@@ -11,12 +11,17 @@ import { MoveInterface } from './moveActions';
 import MainScene from '..';
 import { MathUtils } from '../../node_modules/three/src/Three';
 
+interface CubeOperation {
+  (side: number, cube?: number): void;
+}
+
+
 class RubikView implements RenderInterface, MouseInterface {
   private rubikModel: RubikModel
 
   private scene: MainScene
 
-  public rubik: THREE.Object3D
+  private rubik: THREE.Object3D
 
   private cubes: Array<Cube>
 
@@ -32,25 +37,25 @@ class RubikView implements RenderInterface, MouseInterface {
 
   private activeGroup: THREE.Object3D[]
 
-  public drawCube: boolean = true
+  private drawCube: boolean = true
 
-  public drawOuterCube: boolean = false
+  private drawOuterCube: boolean = false
 
-  public drawText: boolean = false
+  private drawText: boolean = false
 
-  public name: string
+  private name: string
 
-  public raycastMeshes: THREE.Mesh[]
+  private raycastMeshes: THREE.Mesh[]
 
-  public selectedFace: number
+  private selectedFace: number
 
-  public selectedCube: number
+  private selectedCube: number
 
-  public selectedOrientation: planeOrientation
+  private selectedOrientation: planeOrientation
 
   private mouseAxis: string
 
-  public mouseLargest: string
+  private mouseLargest: string
 
   private mouseClockwise: number
 
@@ -78,7 +83,7 @@ class RubikView implements RenderInterface, MouseInterface {
 
   private raycaster: THREE.Raycaster
 
-  public eventMoveComplete: CustomEvent
+  private eventMoveComplete: CustomEvent
 
   constructor(rubikModel: RubikModel, scene: MainScene) {
     this.name = 'rubik';
@@ -123,6 +128,7 @@ class RubikView implements RenderInterface, MouseInterface {
 
   public mouseUp(position: THREE.Vector3) {
     this.mouseIsDown = false;
+    this.clickedOnFace = false;
 
     if (this.rotating) {
       this.stopRotation();
@@ -189,7 +195,7 @@ class RubikView implements RenderInterface, MouseInterface {
     }
   }
 
-  public calculateCubeOnFace = (side: string, point: THREE.Vector3) => {
+  private calculateCubeOnFace = (side: string, point: THREE.Vector3) => {
     const vector = this.get2DVector(sidesMap[side], point);
 
     const cubeNum = vector.y * this.rubikModel.sideLength + vector.x;
@@ -287,11 +293,13 @@ class RubikView implements RenderInterface, MouseInterface {
       }
     }
 
-    const completion = Math.abs((this.pivot.rotation[this.mouseAxis] % (Math.PI * 2)) - this.targetRotation);
+    // const completion = Math.abs((this.pivot.rotation[this.mouseAxis] % (Math.PI * 2)) - this.targetRotation);
+    const completion = Math.abs((this.pivot.rotation[this.mouseAxis] - this.targetRotation));
     const degrees = THREE.MathUtils.degToRad(5);
     if (completion <= degrees) {
       this.pivot.rotation[this.mouseAxis] = this.targetRotation;
-      this.finishMouseMove(this.pivot.rotation[this.mouseAxis] / rotation);
+      const rotations = (this.pivot.rotation[this.mouseAxis] / rotation) % 4;
+      this.finishMouseMove(rotations);
     }
   }
 
@@ -524,7 +532,7 @@ class RubikView implements RenderInterface, MouseInterface {
   }
 
 
-  render = () => {
+  public render = () => {
     if (this.isMoving) {
       this.doMove();
     }
@@ -534,7 +542,7 @@ class RubikView implements RenderInterface, MouseInterface {
     }
   }
 
-  createGraphicRubik = () => {
+  private createGraphicRubik = () => {
     const cubes = [];
     // draw rubic
     // depend on a side length
@@ -559,58 +567,170 @@ class RubikView implements RenderInterface, MouseInterface {
     return cubes;
   }
 
-  changeCamera() {
+  public changeCamera() {
     const length = this.rubikModel.sideLength;
     this.scene.camera.position.set(length * 1.5, length * 1.2, length * 2);
     this.scene.camera.far = length * 4;
     this.scene.camera.updateProjectionMatrix();
   }
 
-  placeTextOnRubik = (inter: number[][]) => {
+  private forEveryCube = (func: CubeOperation) => {
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-      for (let s = 0; s < sidesArr.length; s += 1) {
-        this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setText(sidesArr[s], cube.toString());
+      for (let s = 0; s < 6; s += 1) {
+        func(s, cube);
       }
     }
   }
 
-  createMeshes = () => {
-    for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-      for (let s = 0; s < sidesArr.length; s += 1) {
-        this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createMeshes(sidesArr[s]);
-        // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createOuterMeshes(sidesArr[s], this.rubikModel.sideLength);
-        // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createTextMeshes(sidesArr[s]);
-      }
-    }
-    // this.baseMeshes = this.getAllMeshes();
+  private createBaseMesh = (side: number, cube: number) => {
+    this.cubes[this.rubikModel.getCube(side, cube)].createMeshes(side);
   }
 
-  resetCubePositions = () => {
+  private createOuterMesh = (side: number, cube: number) => {
+    this.cubes[this.rubikModel.getCube(side, cube)].createOuterMeshes(side, this.rubikModel.sideLength);
+  }
+
+  private createTextMesh = (side: number, cube: number) => {
+    this.cubes[this.rubikModel.getCube(side, cube)].createTextMeshes(side);
+  }
+
+  private resetCubePosition = (side: number, cube: number) => {
+    this.cubes[this.rubikModel.getCube(side, cube)].resetPosition();
+  }
+
+  private colorizeBaseCube = (side: number, cube: number) => {
+    this.cubes[this.rubikModel.getCube(side, cube)].setColor(side, this.rubikModel.getColor(side, cube, this.rubikModel.matrix));
+  }
+
+  private colorizeOuterCube = (side: number, cube: number) => {
+    this.cubes[this.rubikModel.getCube(side, cube)].setOuterColor(side, this.rubikModel.getColor(side, cube, this.rubikModel.matrix));
+  }
+
+  private placeTextOnCube = (side: number, cube: number) => {
+    this.cubes[this.rubikModel.getCube(side, cube)].setText(side, cube.toString());
+  }
+
+  private dispose = (side: number, cube: number) => {
+    this.cubes[this.rubikModel.getCube(side, cube)].dispose();
+  }
+
+  private disposeOuterMeshes = (side: number, cube: number) => {
+    this.cubes[this.rubikModel.getCube(side, cube)].disposeOuter();
+  }
+
+  private disposeTextMeshes = (side: number, cube: number) => {
+    this.cubes[this.rubikModel.getCube(side, cube)].disposeText();
+  }
+
+  private disposeBaseMeshes = (side: number, cube: number) => {
+    this.cubes[this.rubikModel.getCube(side, cube)].disposeBase();
+  }
+
+  public enableBase = () => {
+    this.forEveryCube(this.createBaseMesh);
+    this.forEveryCube(this.colorizeBaseCube);
+  }
+
+  public colorizeBase = () => {
+    this.forEveryCube(this.colorizeBaseCube);
+  }
+
+  public disableBase = () => {
+    this.forEveryCube(this.disposeBaseMeshes);
+  }
+
+  public enableOuter = () => {
+    this.forEveryCube(this.createOuterMesh);
+    this.forEveryCube(this.colorizeOuterCube);
+  }
+
+  public disableOuter = () => {
+    this.forEveryCube(this.disposeOuterMeshes);
+  }
+
+  public enableText = () => {
+    this.forEveryCube(this.createTextMesh);
+    this.forEveryCube(this.placeTextOnCube);
+  }
+
+  public disableText = () => {
+    this.forEveryCube(this.disposeTextMeshes);
+  }
+
+  public resetCubePositions = () => {
+    this.forEveryCube(this.resetCubePosition);
+  }
+
+  // recolorize based on rotation
+  public colorizeBaseForSO = () => {
     for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-      for (let s = 0; s < sidesArr.length; s += 1) {
-        this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].resetPosition();
+      for (let side = 0; side < 6; side += 1) {
+        this.cubes[this.rubikModel.getCube(this.rubikModel.SO[side], cube)].setColor(this.rubikModel.SO[side], this.rubikModel.getColor(this.rubikModel.SO[side], cube, this.rubikModel.matrix));
       }
     }
   }
 
-  colorizeRubik = (matrix: Matrix = this.rubikModel.matrix) => {
-    for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-      for (let s = 0; s < sidesArr.length; s += 1) {
-        this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube, matrix));
-        // this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setOuterColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube));
-      }
-    }
+  public disableAll = () => {
+    this.forEveryCube(this.dispose);
   }
+  // public createOuterMeshes = () => {
+  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
+  //     for (let s = 0; s < sidesArr.length; s += 1) {
+  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createOuterMeshes(sidesArr[s], this.rubikModel.sideLength);
+  //     }
+  //   }
+  // }
 
-  dispose() {
-    for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
-      for (let s = 0; s < sidesArr.length; s += 1) {
-        this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].dispose();
-      }
-    }
-  }
+  // public createTextMeshes = () => {
+  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
+  //     for (let s = 0; s < sidesArr.length; s += 1) {
+  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].createTextMeshes(sidesArr[s]);
+  //     }
+  //   }
+  // }
 
-  addToScene() {
+  // public resetCubePositions = () => {
+  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
+  //     for (let s = 0; s < sidesArr.length; s += 1) {
+  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].resetPosition();
+  //     }
+  //   }
+  // }
+
+  // public colorizeBaseRubik = (matrix: Matrix = this.rubikModel.matrix) => {
+  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
+  //     for (let s = 0; s < sidesArr.length; s += 1) {
+  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube, matrix));
+  //     }
+  //   }
+  // }
+
+  // public colorizeOuterRubik = (matrix: Matrix = this.rubikModel.matrix) => {
+  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
+  //     for (let s = 0; s < sidesArr.length; s += 1) {
+  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setOuterColor(sidesArr[s], this.rubikModel.getColor(sidesArr[s], cube, matrix));
+  //     }
+  //   }
+  // }
+
+  // public placeTextOnRubik = (inter: number[][]) => {
+  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
+  //     for (let s = 0; s < sidesArr.length; s += 1) {
+  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].setText(sidesArr[s], cube.toString());
+  //     }
+  //   }
+  // }
+
+
+  // public dispose() {
+  //   for (let cube = 0; cube < this.rubikModel.totalColors; cube += 1) {
+  //     for (let s = 0; s < sidesArr.length; s += 1) {
+  //       this.cubes[this.rubikModel.getCube(sidesArr[s], cube)].dispose();
+  //     }
+  //   }
+  // }
+
+  public addToScene() {
     const rubik3DObject = this.scene.scene.getObjectByName('rubik');
     if (rubik3DObject !== undefined) {
       this.scene.scene.remove(rubik3DObject);

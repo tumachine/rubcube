@@ -74,12 +74,14 @@ class RubikModel {
 
   private rotations: Move[][][]
 
-  // side orientation
-  public SO: number[]
-
   private moves: Move[]
 
   private slices: number[]
+
+  // side orientation
+  public SO: number[]
+
+  public matrixForRotations: Matrix
 
   public constructor(sideLength: number) {
     this.sideLength = sideLength;
@@ -101,6 +103,7 @@ class RubikModel {
     ];
 
     this.reset();
+    this.resetSO();
 
     // option to push to matrix history or not
     this.m = new MoveActions(this.moveOperation);
@@ -109,6 +112,14 @@ class RubikModel {
     this.generateSideRotations();
     this.generateOrientationSides();
 
+
+    this.slices = [];
+    for (let i = 0; i < this.sideLength; i += 1) {
+      this.slices.push(i);
+    }
+  }
+
+  public resetSO = () => {
     this.SO = [
       sides.l,
       sides.r,
@@ -117,11 +128,6 @@ class RubikModel {
       sides.f,
       sides.b,
     ];
-
-    this.slices = [];
-    for (let i = 0; i < this.sideLength; i += 1) {
-      this.slices.push(i);
-    }
   }
 
   public rotateOVer = (clockwise: boolean) => {
@@ -163,7 +169,7 @@ class RubikModel {
     return new MoveOperation(orientation[moveH.side], moveH.slice, moveH.clockwise);
   }
 
-  private createMove = (side: number, slice: number | number[], clockwise: boolean): MoveHistory => {
+  private createMoveBasedOnOrientation = (side: number, slice: number | number[], clockwise: boolean): MoveHistory => {
     const sideF = this.SO[s.f];
     const sideU = this.SO[s.u];
 
@@ -175,8 +181,9 @@ class RubikModel {
   }
 
   private moveOperation = (side: number, slice: number | number[], clockwise: boolean) => {
-    const moveH = this.createMove(side, slice, clockwise);
+    const moveH = this.createMoveBasedOnOrientation(side, slice, clockwise);
 
+    // rotate real matrix, with correct orientation
     this.getUserMove(moveH).rotate(true);
 
     this.matrixHistory.push(this.deepCopyMatrix(this.matrix));
@@ -187,9 +194,13 @@ class RubikModel {
   };
 
   private userMoveOperation = (side: number, slice: number, clockwise: boolean) => {
-    const moveH = this.createMove(side, slice, clockwise);
+    const moveH = this.createMoveBasedOnOrientation(side, slice, clockwise);
 
+    // this.getInternalMove({ side, slice, clockwise, rotation: false }).rotate(true);
+
+    // rotate real matrix based on a limited user input
     this.getUserMove({ side: moveH.side, slice, clockwise, rotation: false }).rotate(true);
+    // rotate ref matrix 
     this.getUserMove({ side, slice, clockwise, rotation: false }).rotate(false);
     moveH.rotation = true;
 
@@ -604,7 +615,6 @@ class RubikModel {
     if (slice === this.sideLength - 1) {
       return this.matrixReference[top];
     }
-
 
     const cubes = [];
     const layer = slices[slice];

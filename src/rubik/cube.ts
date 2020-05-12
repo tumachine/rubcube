@@ -84,22 +84,41 @@ export default class Cube {
     (mesh.material as THREE.MeshBasicMaterial).map = texture;
   }
 
-  dispose() {
+  disposeBase() {
     for (let i = 0; i < 6; i += 1) {
       if (this.baseMeshes[i] !== undefined) {
         (this.baseMeshes[i].material as THREE.MeshBasicMaterial).dispose();
         this.baseMeshes[i].geometry.dispose();
+        this.cube.remove(this.baseMeshes[i]);
       }
+    }
+  }
+
+  disposeOuter() {
+    for (let i = 0; i < 6; i += 1) {
       if (this.outerMeshes[i] !== undefined) {
         (this.outerMeshes[i].material as THREE.MeshBasicMaterial).dispose();
         this.outerMeshes[i].geometry.dispose();
+        this.cube.remove(this.outerMeshes[i]);
       }
+    }
+  }
+
+  disposeText() {
+    for (let i = 0; i < 6; i += 1) {
       if (this.textMeshes[i] !== undefined) {
         (this.textMeshes[i].material as THREE.MeshBasicMaterial).map.dispose();
         (this.textMeshes[i].material as THREE.MeshBasicMaterial).dispose();
         this.textMeshes[i].geometry.dispose();
+        this.cube.remove(this.textMeshes[i]);
       }
     }
+  }
+
+  dispose() {
+    this.disposeBase();
+    this.disposeOuter();
+    this.disposeText();
   }
 
   getCube() {
