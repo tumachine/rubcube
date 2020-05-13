@@ -4,7 +4,7 @@
 import * as THREE from '../../node_modules/three/src/Three';
 import Cube from './cube';
 import { Move, MoveOperation } from './move';
-import { sides, sidesArr, createMesh, sidesOrientaion, sidesStr, sidesMap, planeOrientation, getLargestValue } from './utils';
+import { sides, sidesArr, sidesOrientaion, sidesStr, sidesMap, getLargestValue } from './utils';
 import RubikModel from './model';
 import { RenderInterface, MouseInterface } from '../d';
 import { MoveInterface } from './moveActions';
@@ -15,6 +15,11 @@ interface CubeOperation {
   (side: number, cube?: number): void;
 }
 
+enum planeOrientation {
+  XY = 'z',
+  ZY = 'x',
+  XZ = 'y',
+}
 
 class RubikView implements RenderInterface, MouseInterface {
   private rubikModel: RubikModel
@@ -36,12 +41,6 @@ class RubikView implements RenderInterface, MouseInterface {
   private pivot: THREE.Object3D
 
   private activeGroup: THREE.Object3D[]
-
-  private drawCube: boolean = true
-
-  private drawOuterCube: boolean = false
-
-  private drawText: boolean = false
 
   private name: string
 
@@ -156,7 +155,6 @@ class RubikView implements RenderInterface, MouseInterface {
       const { point } = intersection;
       this.calculateCubeOnFace(obj.name, point);
 
-
       // console.log(`Point: ${intersects[0].point.x} ${intersects[0].point.y} ${intersects[0].point.z}`);
     }
   }
@@ -195,13 +193,14 @@ class RubikView implements RenderInterface, MouseInterface {
     }
   }
 
-  private calculateCubeOnFace = (side: string, point: THREE.Vector3) => {
-    const vector = this.get2DVector(sidesMap[side], point);
+  private calculateCubeOnFace = (sideString: string, point: THREE.Vector3) => {
+    const side = sidesMap[sideString];
+    const vector = this.get2DVector(side, point);
 
     const cubeNum = vector.y * this.rubikModel.sideLength + vector.x;
     this.selectedCube = cubeNum;
-    this.selectedFace = sidesMap[side];
-    console.log(`${side}: ${cubeNum}`);
+    this.selectedFace = side;
+    console.log(`${sideString}: ${cubeNum}`);
     // this.cubes[this.rubikModel.getCube(sidesArr[sidesMap[side]], cubeNum)].setColor(sidesMap[side], 2);
     // this.cubes[this.rubikModel.getCubeFromInterface(sidesArr[sidesMap[side]], cubeNum, this.rubikModel.interface)].setColor(sidesMap[side], 2);
   }
@@ -239,8 +238,19 @@ class RubikView implements RenderInterface, MouseInterface {
 
     const length = this.rubikModel.sideLength;
 
+    const material = new THREE.MeshBasicMaterial();
+    const geometry = new THREE.PlaneBufferGeometry(length, length);
+
+    const createMesh = () => {
+      const mesh = new THREE.Mesh(
+        geometry,
+        material.clone(),
+      );
+      return mesh;
+    };
+
     for (let i = 0; i < sidesArr.length; i += 1) {
-      const mesh = createMesh(length, length);
+      const mesh = createMesh();
       // (mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00);
       sidesOrientaion[i](mesh, limit, 0);
       mesh.name = sidesStr[i];
@@ -535,9 +545,7 @@ class RubikView implements RenderInterface, MouseInterface {
   public render = () => {
     if (this.isMoving) {
       this.doMove();
-    }
-
-    if (this.completingMouseMove) {
+    } else if (this.completingMouseMove) {
       this.completeMouseMove();
     }
   }

@@ -63,8 +63,6 @@ class RubikModel {
 
   public moveHistory: MoveHistory[]
 
-  private matrixHistory: Matrix[]
-
   public currentHistoryIndex: number
 
   private currentMoves: MoveHistory[]
@@ -183,8 +181,6 @@ class RubikModel {
     // rotate real matrix, with correct orientation
     this.getUserMove(moveH).rotate(this.matrix);
 
-    this.matrixHistory.push(this.deepCopyMatrix(this.matrix));
-
     this.moveHistory.push(moveH);
     this.currentMoves.push(moveH);
     this.currentHistoryIndex += 1;
@@ -199,8 +195,6 @@ class RubikModel {
     this.getUserMove({ side, slice, clockwise, rotation: false }).rotate(this.matrixReference);
     moveH.rotation = true;
 
-    this.matrixHistory.push(this.deepCopyMatrix(this.matrix));
-
     this.moveHistory.push(moveH);
     this.currentHistoryIndex += 1;
   };
@@ -211,7 +205,6 @@ class RubikModel {
     this.currentHistoryIndex = 0;
 
     this.moveHistory = [null];
-    this.matrixHistory = [this.deepCopyMatrix(this.matrix)];
     this.currentMoves = [];
   }
 
@@ -294,7 +287,6 @@ class RubikModel {
 
   public removeHistoryByCurrentIndex = () => {
     if (this.currentHistoryIndex < this.moveHistory.length) {
-      this.matrixHistory = this.matrixHistory.slice(0, this.currentHistoryIndex + 1);
       this.moveHistory = this.moveHistory.slice(0, this.currentHistoryIndex + 1);
     }
   }
@@ -307,8 +299,28 @@ class RubikModel {
   public getNextMove = (): MoveHistory => this.currentMoves.shift();
 
   public jumpToHistoryIndex = (historyIndex: number) => {
-    this.update(this.matrixHistory[historyIndex]);
-    this.currentHistoryIndex = historyIndex;
+    const steps = historyIndex - this.currentHistoryIndex;
+    if (steps > 0) {
+      // move forward
+      for (let i = 0; i < steps; i += 1) {
+        this.currentHistoryIndex += 1;
+        const currentMove = this.moveHistory[this.currentHistoryIndex];
+        const iMove = this.getUserMove(currentMove);
+        iMove.rotate(this.matrix);
+      }
+    } else if (steps < 0) {
+      // move backwards
+      const absSteps = Math.abs(steps);
+      for (let i = 0; i < absSteps; i += 1) {
+        const currentMove = this.moveHistory[this.currentHistoryIndex];
+        const iMove = this.getUserMove(currentMove);
+        iMove.clockwise = !iMove.clockwise;
+        iMove.rotate(this.matrix);
+        this.currentHistoryIndex -= 1;
+      }
+    }
+
+    this.matrixReference = this.createMatrixReference();
   }
 
   private deepCopyMatrix = (matrix: Matrix) => {
@@ -504,7 +516,6 @@ class RubikModel {
       }
     }
     console.log('Generated random moves');
-    // console.log(this.moveHistory);
   }
 
   private createMatrix = (): Matrix => {

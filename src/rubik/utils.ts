@@ -19,12 +19,6 @@ export const sidesArr = [sides.l, sides.r, sides.u, sides.d, sides.f, sides.b];
 
 export const sidesStr = ['L', 'R', 'U', 'D', 'F', 'B'];
 
-export enum planeOrientation {
-  XY = 'z',
-  ZY = 'x',
-  XZ = 'y',
-}
-
 export const sidesMap: { [side: string]: number } = {};
 sidesMap.L = sides.l;
 sidesMap.R = sides.r;

@@ -83083,14 +83083,6 @@ var sides;
 
 exports.sidesArr = [sides.l, sides.r, sides.u, sides.d, sides.f, sides.b];
 exports.sidesStr = ['L', 'R', 'U', 'D', 'F', 'B'];
-var planeOrientation;
-
-(function (planeOrientation) {
-  planeOrientation["XY"] = "z";
-  planeOrientation["ZY"] = "x";
-  planeOrientation["XZ"] = "y";
-})(planeOrientation = exports.planeOrientation || (exports.planeOrientation = {}));
-
 exports.sidesMap = {};
 exports.sidesMap.L = sides.l;
 exports.sidesMap.R = sides.r;
@@ -87322,8 +87314,6 @@ function () {
 
       _this.getUserMove(moveH).rotate(_this.matrix);
 
-      _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
-
       _this.moveHistory.push(moveH);
 
       _this.currentMoves.push(moveH);
@@ -87352,8 +87342,6 @@ function () {
 
       moveH.rotation = true;
 
-      _this.matrixHistory.push(_this.deepCopyMatrix(_this.matrix));
-
       _this.moveHistory.push(moveH);
 
       _this.currentHistoryIndex += 1;
@@ -87364,7 +87352,6 @@ function () {
       _this.matrixReference = _this.createMatrixReference();
       _this.currentHistoryIndex = 0;
       _this.moveHistory = [null];
-      _this.matrixHistory = [_this.deepCopyMatrix(_this.matrix)];
       _this.currentMoves = [];
     };
 
@@ -87455,7 +87442,6 @@ function () {
 
     this.removeHistoryByCurrentIndex = function () {
       if (_this.currentHistoryIndex < _this.moveHistory.length) {
-        _this.matrixHistory = _this.matrixHistory.slice(0, _this.currentHistoryIndex + 1);
         _this.moveHistory = _this.moveHistory.slice(0, _this.currentHistoryIndex + 1);
       }
     };
@@ -87471,9 +87457,34 @@ function () {
     };
 
     this.jumpToHistoryIndex = function (historyIndex) {
-      _this.update(_this.matrixHistory[historyIndex]);
+      var steps = historyIndex - _this.currentHistoryIndex;
 
-      _this.currentHistoryIndex = historyIndex;
+      if (steps > 0) {
+        // move forward
+        for (var i = 0; i < steps; i += 1) {
+          _this.currentHistoryIndex += 1;
+          var currentMove = _this.moveHistory[_this.currentHistoryIndex];
+
+          var iMove = _this.getUserMove(currentMove);
+
+          iMove.rotate(_this.matrix);
+        }
+      } else if (steps < 0) {
+        // move backwards
+        var absSteps = Math.abs(steps);
+
+        for (var i = 0; i < absSteps; i += 1) {
+          var currentMove = _this.moveHistory[_this.currentHistoryIndex];
+
+          var iMove = _this.getUserMove(currentMove);
+
+          iMove.clockwise = !iMove.clockwise;
+          iMove.rotate(_this.matrix);
+          _this.currentHistoryIndex -= 1;
+        }
+      }
+
+      _this.matrixReference = _this.createMatrixReference();
     };
 
     this.deepCopyMatrix = function (matrix) {
@@ -87631,7 +87642,7 @@ function () {
         }
       }
 
-      console.log('Generated random moves'); // console.log(this.moveHistory);
+      console.log('Generated random moves');
     };
 
     this.createMatrix = function () {
@@ -88127,21 +88138,26 @@ var cube_1 = __importDefault(require("./cube"));
 
 var utils_1 = require("./utils");
 
+var planeOrientation;
+
+(function (planeOrientation) {
+  planeOrientation["XY"] = "z";
+  planeOrientation["ZY"] = "x";
+  planeOrientation["XZ"] = "y";
+})(planeOrientation || (planeOrientation = {}));
+
 var RubikView =
 /** @class */
 function () {
   function RubikView(rubikModel, scene) {
     var _this = this;
 
-    this.drawCube = true;
-    this.drawOuterCube = false;
-    this.drawText = false;
     this.completingMouseMove = false;
     this.distanceTrigger = 0.2;
 
     this.getMousePosition = function (mouse, plane) {
       if (plane === void 0) {
-        plane = utils_1.planeOrientation.XY;
+        plane = planeOrientation.XY;
       }
 
       var vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
@@ -88154,13 +88170,15 @@ function () {
       return pos;
     };
 
-    this.calculateCubeOnFace = function (side, point) {
-      var vector = _this.get2DVector(utils_1.sidesMap[side], point);
+    this.calculateCubeOnFace = function (sideString, point) {
+      var side = utils_1.sidesMap[sideString];
+
+      var vector = _this.get2DVector(side, point);
 
       var cubeNum = vector.y * _this.rubikModel.sideLength + vector.x;
       _this.selectedCube = cubeNum;
-      _this.selectedFace = utils_1.sidesMap[side];
-      console.log(side + ": " + cubeNum); // this.cubes[this.rubikModel.getCube(sidesArr[sidesMap[side]], cubeNum)].setColor(sidesMap[side], 2);
+      _this.selectedFace = side;
+      console.log(sideString + ": " + cubeNum); // this.cubes[this.rubikModel.getCube(sidesArr[sidesMap[side]], cubeNum)].setColor(sidesMap[side], 2);
       // this.cubes[this.rubikModel.getCubeFromInterface(sidesArr[sidesMap[side]], cubeNum, this.rubikModel.interface)].setColor(sidesMap[side], 2);
     };
 
@@ -88173,13 +88191,13 @@ function () {
 
       if (side === utils_1.sides.l || side === utils_1.sides.r) {
         vector = new THREE.Vector2(z, y);
-        _this.selectedOrientation = utils_1.planeOrientation.ZY;
+        _this.selectedOrientation = planeOrientation.ZY;
       } else if (side === utils_1.sides.u || side === utils_1.sides.d) {
         vector = new THREE.Vector2(x, z);
-        _this.selectedOrientation = utils_1.planeOrientation.XZ;
+        _this.selectedOrientation = planeOrientation.XZ;
       } else if (side === utils_1.sides.f || side === utils_1.sides.b) {
         vector = new THREE.Vector2(x, y);
-        _this.selectedOrientation = utils_1.planeOrientation.XY;
+        _this.selectedOrientation = planeOrientation.XY;
       }
 
       return vector;
@@ -88196,9 +88214,16 @@ function () {
       var percentBigger = 1;
       limit = limit / 100 * percentBigger + limit;
       var length = _this.rubikModel.sideLength;
+      var material = new THREE.MeshBasicMaterial();
+      var geometry = new THREE.PlaneBufferGeometry(length, length);
+
+      var createMesh = function createMesh() {
+        var mesh = new THREE.Mesh(geometry, material.clone());
+        return mesh;
+      };
 
       for (var i = 0; i < utils_1.sidesArr.length; i += 1) {
-        var mesh = utils_1.createMesh(length, length); // (mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00);
+        var mesh = createMesh(); // (mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00);
 
         utils_1.sidesOrientaion[i](mesh, limit, 0);
         mesh.name = utils_1.sidesStr[i];
@@ -88296,9 +88321,7 @@ function () {
     this.render = function () {
       if (_this.isMoving) {
         _this.doMove();
-      }
-
-      if (_this.completingMouseMove) {
+      } else if (_this.completingMouseMove) {
         _this.completeMouseMove();
       }
     };
@@ -88773,7 +88796,7 @@ function () {
     this.scramble = function () {
       _this.rubikModel.removeHistoryByCurrentIndex();
 
-      _this.rubikModel.scramble(50);
+      _this.rubikModel.scramble(3);
 
       _this.clearHistoryButtons();
 
@@ -89039,7 +89062,7 @@ function () {
 
     this.scene = scene;
     this.renderOrder.set('rubik', 0);
-    this.addRubik(20);
+    this.addRubik(5);
   }
 
   RubikManager.prototype.drawNewRubik = function () {
@@ -89253,7 +89276,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57564" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54786" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

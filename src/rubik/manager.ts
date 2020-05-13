@@ -80,7 +80,7 @@ class RubikManager {
     this.scene = scene;
     this.renderOrder.set('rubik', 0);
 
-    this.addRubik(20);
+    this.addRubik(5);
   }
 
   private drawNewRubik() {
@@ -116,7 +116,7 @@ class RubikManager {
 
   public scramble = () => {
     this.rubikModel.removeHistoryByCurrentIndex();
-    this.rubikModel.scramble(50);
+    this.rubikModel.scramble(3);
     this.clearHistoryButtons();
     this.refreshHistoryButtons();
     this.rubikView.startNextMove();
