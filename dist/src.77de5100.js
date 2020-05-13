@@ -83236,8 +83236,7 @@ exports.sidesOrientaion[sides.d] = function (object, detach, rotation) {
 };
 
 exports.createMesh = function (boxWidth, boxHeight) {
-  var material = new THREE.MeshBasicMaterial();
-  var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(boxWidth, boxHeight), material);
+  var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(boxWidth, boxHeight), new THREE.MeshBasicMaterial());
   return mesh;
 };
 
@@ -83254,16 +83253,6 @@ exports.getTextTexture = function (text) {
   var texture = new THREE.Texture(canvas);
   texture.needsUpdate = true;
   return texture;
-};
-
-exports.getTextMesh = function () {
-  // const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
-  var material = new THREE.MeshBasicMaterial({
-    side: THREE.DoubleSide
-  });
-  material.transparent = true;
-  var mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
-  return mesh;
 };
 
 exports.getLargestValue = function (vec) {
@@ -87090,6 +87079,8 @@ function () {
       this.solveEdgesRubik.solve();
       this.solveStandardRubik.solve();
     }
+
+    console.log("Generated history moves: " + this.rubikModel.currentHistoryIndex);
   };
 
   return RubikSolver;
@@ -87972,6 +87963,24 @@ var green = 0x008000;
 var white = 0xFFFFFF;
 var orange = 0xFFA500;
 var colors = [green, blue, orange, red, white, yellow];
+var planeMaterial = new THREE.MeshLambertMaterial();
+var planeGeometry = new THREE.PlaneBufferGeometry(boxWidth, boxHeight);
+
+var createPlaneMesh = function createPlaneMesh() {
+  var mesh = new THREE.Mesh(planeGeometry, planeMaterial.clone());
+  return mesh;
+};
+
+var textMaterial = new THREE.MeshBasicMaterial({
+  side: THREE.DoubleSide
+});
+textMaterial.transparent = true;
+var textGeometry = new THREE.PlaneGeometry(1, 1);
+
+var getTextMesh = function getTextMesh() {
+  var mesh = new THREE.Mesh(textGeometry, textMaterial.clone());
+  return mesh;
+};
 
 var Cube =
 /** @class */
@@ -87999,14 +88008,14 @@ function () {
       detach = 0;
     }
 
-    var baseMesh = utils_1.createMesh(boxWidth, boxHeight);
+    var baseMesh = createPlaneMesh();
     utils_1.sidesOrientaion[faceSide](baseMesh, detach, 0);
     this.baseMeshes[faceSide] = baseMesh;
     this.cube.add(baseMesh);
   };
 
   Cube.prototype.createOuterMeshes = function (faceSide, detach) {
-    var outerMesh = utils_1.createMesh(boxWidth, boxHeight);
+    var outerMesh = createPlaneMesh();
     utils_1.sidesOrientaion[faceSide](outerMesh, detach, 180);
     this.outerMeshes[faceSide] = outerMesh;
     this.cube.add(outerMesh);
@@ -88017,7 +88026,7 @@ function () {
       detach = 0.05;
     }
 
-    var mesh = utils_1.getTextMesh();
+    var mesh = getTextMesh();
     utils_1.sidesOrientaion[faceSide](mesh, detach, 0);
     this.textMeshes[faceSide] = mesh;
     this.cube.add(mesh);
@@ -88445,7 +88454,6 @@ function () {
     this.activeGroup = [];
     this.clickedOnFace = false;
     this.eventMoveComplete = new CustomEvent('moveComplete');
-    console.log(scene.renderer.info.memory);
   }
 
   RubikView.prototype.mouseUp = function (position) {
@@ -88765,7 +88773,7 @@ function () {
     this.scramble = function () {
       _this.rubikModel.removeHistoryByCurrentIndex();
 
-      _this.rubikModel.scramble(5);
+      _this.rubikModel.scramble(50);
 
       _this.clearHistoryButtons();
 
@@ -89031,7 +89039,7 @@ function () {
 
     this.scene = scene;
     this.renderOrder.set('rubik', 0);
-    this.addRubik(3);
+    this.addRubik(20);
   }
 
   RubikManager.prototype.drawNewRubik = function () {
@@ -89040,6 +89048,7 @@ function () {
     this.rubikView.addToScene();
     this.rubikView.enableBase();
     this.rubikView.changeCamera();
+    console.log(this.scene.renderer.info.memory);
   };
 
   RubikManager.prototype.addRubik = function (length) {
@@ -89145,23 +89154,28 @@ function () {
         }
       }
 
-      _this.controls.update();
+      _this.controls.update(); // this.light.position.copy(this.camera.getWorldPosition(new THREE.Vector3()));
 
-      _this.light.position.copy(_this.camera.getWorldPosition(new THREE.Vector3()));
 
       _this.renderer.render(_this.scene, _this.camera);
 
       requestAnimationFrame(_this.render);
     };
 
-    this.light = createLight();
+    this.scene = new THREE.Scene();
+    this.camera = utils_1.createCamera();
+    var downLight = new THREE.HemisphereLight(0xffffff, 0x000088);
+    downLight.position.set(-1, 1, 1);
+    downLight.add(new THREE.AxesHelper(3));
+    this.scene.add(downLight);
+    var upLight = new THREE.HemisphereLight(0xffffff, 0x880000);
+    upLight.position.set(1, -1, -1);
+    upLight.add(new THREE.AxesHelper(3));
+    this.scene.add(upLight);
     this.canvas = document.querySelector('#c');
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas
     });
-    this.scene = new THREE.Scene();
-    this.scene.add(this.light);
-    this.camera = utils_1.createCamera();
     this.controls = new OrbitControls_1.OrbitControls(this.camera, this.renderer.domElement); // this.controls.update();
     // this.scene.background = new THREE.Color(0x3399ff);
 
@@ -89239,7 +89253,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53632" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57564" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

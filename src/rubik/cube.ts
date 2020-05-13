@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import * as THREE from '../../node_modules/three/src/Three';
-import { sides, sidesOrientaion, getTextTexture, getTextMesh, createMesh } from './utils';
+import { sides, sidesOrientaion, getTextTexture } from './utils';
 import { Vector3, Euler } from '../../node_modules/three/src/Three';
 // import { makeTextSprite } from './utils';
 // import * as THREE from 'three';
@@ -17,6 +17,30 @@ const white = 0xFFFFFF;
 const orange = 0xFFA500;
 
 const colors = [green, blue, orange, red, white, yellow];
+
+const planeMaterial = new THREE.MeshLambertMaterial();
+const planeGeometry = new THREE.PlaneBufferGeometry(boxWidth, boxHeight);
+
+const createPlaneMesh = () => {
+  const mesh = new THREE.Mesh(
+    planeGeometry,
+    planeMaterial.clone(),
+  );
+  return mesh;
+};
+
+const textMaterial = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+textMaterial.transparent = true;
+const textGeometry = new THREE.PlaneGeometry(1, 1);
+
+const getTextMesh = (): THREE.Mesh => {
+  const mesh = new THREE.Mesh(
+    textGeometry,
+    textMaterial.clone(),
+  );
+  return mesh;
+};
+
 
 export default class Cube {
   cube: THREE.Object3D
@@ -43,14 +67,14 @@ export default class Cube {
   }
 
   createMeshes(faceSide: number, detach: number = 0) {
-    const baseMesh = createMesh(boxWidth, boxHeight);
+    const baseMesh = createPlaneMesh();
     sidesOrientaion[faceSide](baseMesh, detach, 0);
     this.baseMeshes[faceSide] = baseMesh;
     this.cube.add(baseMesh);
   }
 
   createOuterMeshes(faceSide: number, detach: number) {
-    const outerMesh = createMesh(boxWidth, boxHeight);
+    const outerMesh = createPlaneMesh();
     sidesOrientaion[faceSide](outerMesh, detach, 180);
     this.outerMeshes[faceSide] = outerMesh;
     this.cube.add(outerMesh);
@@ -70,12 +94,12 @@ export default class Cube {
 
   setColor(faceSide: number, color: number) {
     const mesh = this.baseMeshes[faceSide];
-    (mesh.material as THREE.MeshBasicMaterial).color.set(colors[color]);
+    (mesh.material as THREE.MeshLambertMaterial).color.set(colors[color]);
   }
 
   setOuterColor(faceSide: number, color: number) {
     const mesh = this.outerMeshes[faceSide];
-    (mesh.material as THREE.MeshBasicMaterial).color.set(colors[color]);
+    (mesh.material as THREE.MeshLambertMaterial).color.set(colors[color]);
   }
 
   setText(faceSide: number, text: string) {
@@ -87,7 +111,7 @@ export default class Cube {
   disposeBase() {
     for (let i = 0; i < 6; i += 1) {
       if (this.baseMeshes[i] !== undefined) {
-        (this.baseMeshes[i].material as THREE.MeshBasicMaterial).dispose();
+        (this.baseMeshes[i].material as THREE.MeshLambertMaterial).dispose();
         this.baseMeshes[i].geometry.dispose();
         this.cube.remove(this.baseMeshes[i]);
       }
@@ -97,7 +121,7 @@ export default class Cube {
   disposeOuter() {
     for (let i = 0; i < 6; i += 1) {
       if (this.outerMeshes[i] !== undefined) {
-        (this.outerMeshes[i].material as THREE.MeshBasicMaterial).dispose();
+        (this.outerMeshes[i].material as THREE.MeshLambertMaterial).dispose();
         this.outerMeshes[i].geometry.dispose();
         this.cube.remove(this.outerMeshes[i]);
       }

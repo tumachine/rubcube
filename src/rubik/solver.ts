@@ -53,6 +53,7 @@ class RubikSolver {
         this.solveEdgesRubik.solve();
         this.solveStandardRubik.solve();
       }
+      console.log(`Generated history moves: ${this.rubikModel.currentHistoryIndex}`);
     }
 }
 

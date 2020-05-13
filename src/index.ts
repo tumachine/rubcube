@@ -36,15 +36,22 @@ class MainScene {
   mouse: THREE.Vector3
 
   constructor() {
-    this.light = createLight();
-    this.canvas = document.querySelector('#c');
-    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
-
     this.scene = new THREE.Scene();
 
-    this.scene.add(this.light);
-
     this.camera = createCamera();
+
+    const downLight = new THREE.HemisphereLight(0xffffff, 0x000088);
+    downLight.position.set(-1, 1, 1);
+    downLight.add(new THREE.AxesHelper(3));
+    this.scene.add(downLight);
+
+    const upLight = new THREE.HemisphereLight(0xffffff, 0x880000);
+    upLight.position.set(1, -1, -1);
+    upLight.add(new THREE.AxesHelper(3));
+    this.scene.add(upLight);
+
+    this.canvas = document.querySelector('#c');
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     // this.controls.update();
@@ -125,7 +132,7 @@ class MainScene {
     }
 
     this.controls.update();
-    this.light.position.copy(this.camera.getWorldPosition(new THREE.Vector3()));
+    // this.light.position.copy(this.camera.getWorldPosition(new THREE.Vector3()));
     this.renderer.render(this.scene, this.camera);
     requestAnimationFrame(this.render);
   }

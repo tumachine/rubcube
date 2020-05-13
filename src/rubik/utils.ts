@@ -129,11 +129,9 @@ sidesOrientaion[sides.d] = (object: THREE.Object3D, detach: number = 0, rotation
 };
 
 export const createMesh = (boxWidth: number, boxHeight: number) => {
-  const material = new THREE.MeshBasicMaterial();
-
   const mesh = new THREE.Mesh(
     new THREE.PlaneBufferGeometry(boxWidth, boxHeight),
-    material,
+    new THREE.MeshBasicMaterial(),
   );
   return mesh;
 };
@@ -156,18 +154,6 @@ export const getTextTexture = (text: string): THREE.Texture => {
   texture.needsUpdate = true;
 
   return texture;
-};
-
-export const getTextMesh = (): THREE.Mesh => {
-  // const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
-  const material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
-  material.transparent = true;
-
-  const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(1, 1),
-    material,
-  );
-  return mesh;
 };
 
 export const getLargestValue = (vec: THREE.Vector3): string => {

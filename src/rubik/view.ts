@@ -85,6 +85,8 @@ class RubikView implements RenderInterface, MouseInterface {
 
   private eventMoveComplete: CustomEvent
 
+  public baseMesh: THREE.InstancedMesh
+
   constructor(rubikModel: RubikModel, scene: MainScene) {
     this.name = 'rubik';
     this.rubikModel = rubikModel;
@@ -113,8 +115,6 @@ class RubikView implements RenderInterface, MouseInterface {
     this.clickedOnFace = false;
 
     this.eventMoveComplete = new CustomEvent('moveComplete');
-
-    console.log(scene.renderer.info.memory);
   }
 
   private getMousePosition = (mouse: THREE.Vector3, plane: planeOrientation = planeOrientation.XY): THREE.Vector3 => {

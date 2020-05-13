@@ -80,7 +80,7 @@ class RubikManager {
     this.scene = scene;
     this.renderOrder.set('rubik', 0);
 
-    this.addRubik(3);
+    this.addRubik(20);
   }
 
   private drawNewRubik() {
@@ -90,6 +90,7 @@ class RubikManager {
 
     this.rubikView.enableBase();
     this.rubikView.changeCamera();
+    console.log(this.scene.renderer.info.memory);
   }
 
   private addRubik(length: number) {
@@ -115,7 +116,7 @@ class RubikManager {
 
   public scramble = () => {
     this.rubikModel.removeHistoryByCurrentIndex();
-    this.rubikModel.scramble(5);
+    this.rubikModel.scramble(50);
     this.clearHistoryButtons();
     this.refreshHistoryButtons();
     this.rubikView.startNextMove();
