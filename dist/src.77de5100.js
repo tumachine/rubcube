@@ -83070,6 +83070,10 @@ Object.defineProperty(exports, "__esModule", {
 
 var THREE = __importStar(require("../../node_modules/three/src/Three"));
 
+exports.randomInt = function (min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+};
+
 var sides;
 
 (function (sides) {
@@ -83288,7 +83292,42 @@ exports.getLargestValue = function (vec) {
 
 
 exports.colorHashes = [1, 10, 100, 1000, 10000, 100000];
-},{"../../node_modules/three/src/Three":"../node_modules/three/src/Three.js"}],"rubik/moveActions.ts":[function(require,module,exports) {
+},{"../../node_modules/three/src/Three":"../node_modules/three/src/Three.js"}],"rubik/face.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var Face =
+/** @class */
+function () {
+  function Face(sideLength) {
+    var faceDown = 1;
+    var faceDownRight = sideLength - 1;
+    var faceDownLeft = 0;
+    var faceMiddle = sideLength + 1;
+    var faceMiddleRight = sideLength * 2 - 1;
+    var faceMiddleLeft = sideLength;
+    var faceUp = sideLength * sideLength - sideLength + 1;
+    var faceUpRight = sideLength * sideLength - 1;
+    var faceUpLeft = sideLength * sideLength - sideLength;
+    this.d = faceDown;
+    this.dr = faceDownRight;
+    this.dl = faceDownLeft;
+    this.m = faceMiddle;
+    this.r = faceMiddleRight;
+    this.l = faceMiddleLeft;
+    this.u = faceUp;
+    this.ur = faceUpRight;
+    this.ul = faceUpLeft;
+  }
+
+  return Face;
+}();
+
+exports.default = Face;
+},{}],"rubik/moveActions.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -83384,7 +83423,130 @@ function () {
 
 exports.MoveActions = MoveActions;
 exports.default = MoveActions;
-},{"./utils":"rubik/utils.ts"}],"rubik/solutions/rubikSolutionBase.ts":[function(require,module,exports) {
+},{"./utils":"rubik/utils.ts"}],"rubik/move.ts":[function(require,module,exports) {
+"use strict";
+/* eslint-disable max-classes-per-file */
+
+/* eslint-disable max-len */
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var Move =
+/** @class */
+function () {
+  function Move(side, axis, rotation, cubeGetter, length, original) {
+    var _this = this;
+
+    this.getSliceOriginal = function (slice) {
+      return slice;
+    };
+
+    this.getSliceOpposite = function (slice) {
+      if (Array.isArray(slice)) {
+        var slices = [];
+        console.log(slice);
+
+        for (var i = 0; i < slice.length; i += 1) {
+          slices.push(_this.length - 1 - slice[i]);
+        }
+
+        return slices;
+      }
+
+      return _this.length - 1 - slice;
+    };
+
+    this.getClockwiseOriginal = function (clockwise) {
+      return clockwise;
+    };
+
+    this.getClockwiseOpposite = function (clockwise) {
+      return !clockwise;
+    };
+
+    this.rotation = rotation;
+    this.cubeGetter = cubeGetter;
+    this.side = side;
+    this.axis = axis;
+    this.length = length;
+    this.original = original;
+  }
+
+  Move.prototype.rotate = function (slice, clockwise, matrix) {
+    if (Array.isArray(slice)) {
+      for (var i = 0; i < slice.length; i += 1) {
+        this.rotation(slice[i], clockwise, matrix);
+      }
+    } else {
+      this.rotation(slice, clockwise, matrix);
+    }
+  };
+
+  Move.prototype.getCubes = function (slice) {
+    if (Array.isArray(slice)) {
+      var cubes_1 = [];
+
+      for (var i = 0; i < slice.length; i += 1) {
+        this.cubeGetter(slice[i]).forEach(function (cube) {
+          return cubes_1.push(cube);
+        });
+      }
+
+      return cubes_1;
+    }
+
+    return this.cubeGetter(slice);
+  };
+
+  return Move;
+}();
+
+exports.Move = Move;
+
+var MoveOperation =
+/** @class */
+function () {
+  function MoveOperation(move, slice, clockwise) {
+    this.move = move;
+    this.slice = this.move.original ? this.move.getSliceOriginal(slice) : this.move.getSliceOpposite(slice);
+    this.clockwise = this.move.original ? this.move.getClockwiseOpposite(clockwise) : this.move.getClockwiseOriginal(clockwise);
+    this.axis = this.move.axis;
+    this.side = this.move.side;
+  }
+
+  MoveOperation.prototype.rotate = function (matrix) {
+    this.move.rotate(this.slice, this.clockwise, matrix);
+  };
+
+  MoveOperation.prototype.getCubes = function () {
+    return this.move.getCubes(this.slice);
+  };
+
+  return MoveOperation;
+}();
+
+exports.MoveOperation = MoveOperation;
+
+var CurrentMoveHistory =
+/** @class */
+function () {
+  function CurrentMoveHistory(move, index, rotateCube) {
+    if (rotateCube === void 0) {
+      rotateCube = false;
+    }
+
+    this.move = move;
+    this.index = index;
+    this.rotateCube = rotateCube;
+  }
+
+  return CurrentMoveHistory;
+}();
+
+exports.CurrentMoveHistory = CurrentMoveHistory;
+},{}],"rubik/solutions/rubikSolutionBase.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {
@@ -83499,42 +83661,7 @@ function () {
 }();
 
 exports.default = RubikSolutionBase;
-},{"../utils":"rubik/utils.ts","../moveActions":"rubik/moveActions.ts"}],"rubik/face.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var Face =
-/** @class */
-function () {
-  function Face(sideLength) {
-    var faceDown = 1;
-    var faceDownRight = sideLength - 1;
-    var faceDownLeft = 0;
-    var faceMiddle = sideLength + 1;
-    var faceMiddleRight = sideLength * 2 - 1;
-    var faceMiddleLeft = sideLength;
-    var faceUp = sideLength * sideLength - sideLength + 1;
-    var faceUpRight = sideLength * sideLength - 1;
-    var faceUpLeft = sideLength * sideLength - sideLength;
-    this.d = faceDown;
-    this.dr = faceDownRight;
-    this.dl = faceDownLeft;
-    this.m = faceMiddle;
-    this.r = faceMiddleRight;
-    this.l = faceMiddleLeft;
-    this.u = faceUp;
-    this.ur = faceUpRight;
-    this.ul = faceUpLeft;
-  }
-
-  return Face;
-}();
-
-exports.default = Face;
-},{}],"rubik/solutions/solveStandardRubik.ts":[function(require,module,exports) {
+},{"../utils":"rubik/utils.ts","../moveActions":"rubik/moveActions.ts"}],"rubik/solutions/solveStandardRubik.ts":[function(require,module,exports) {
 "use strict";
 
 var __extends = this && this.__extends || function () {
@@ -87079,112 +87206,7 @@ function () {
 }();
 
 exports.default = RubikSolver;
-},{"./solutions/solveStandardRubik":"rubik/solutions/solveStandardRubik.ts","./solutions/solveWhiteCenterRubik":"rubik/solutions/solveWhiteCenterRubik.ts","./solutions/solveYellowCenterRubik":"rubik/solutions/solveYellowCenterRubik.ts","./solutions/solveBlueCenterRubik":"rubik/solutions/solveBlueCenterRubik.ts","./solutions/solveYellowMiddleLineRubik":"rubik/solutions/solveYellowMiddleLineRubik.ts","./solutions/solveRedCenterRubik":"rubik/solutions/solveRedCenterRubik.ts","./solutions/solveGreenOrangeCenterRubik":"rubik/solutions/solveGreenOrangeCenterRubik.ts","./solutions/solveEdgesRubik":"rubik/solutions/solveEdgesRubik.ts"}],"rubik/move.ts":[function(require,module,exports) {
-"use strict";
-/* eslint-disable max-classes-per-file */
-
-/* eslint-disable max-len */
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var Move =
-/** @class */
-function () {
-  function Move(side, axis, rotation, cubeGetter, length, original) {
-    var _this = this;
-
-    this.getSliceOriginal = function (slice) {
-      return slice;
-    };
-
-    this.getSliceOpposite = function (slice) {
-      if (Array.isArray(slice)) {
-        var slices = [];
-        console.log(slice);
-
-        for (var i = 0; i < slice.length; i += 1) {
-          slices.push(_this.length - 1 - slice[i]);
-        }
-
-        return slices;
-      }
-
-      return _this.length - 1 - slice;
-    };
-
-    this.getClockwiseOriginal = function (clockwise) {
-      return clockwise;
-    };
-
-    this.getClockwiseOpposite = function (clockwise) {
-      return !clockwise;
-    };
-
-    this.rotation = rotation;
-    this.cubeGetter = cubeGetter;
-    this.side = side;
-    this.axis = axis;
-    this.length = length;
-    this.original = original;
-  }
-
-  Move.prototype.rotate = function (slice, clockwise, matrix) {
-    if (Array.isArray(slice)) {
-      for (var i = 0; i < slice.length; i += 1) {
-        this.rotation(slice[i], clockwise, matrix);
-      }
-    } else {
-      this.rotation(slice, clockwise, matrix);
-    }
-  };
-
-  Move.prototype.getCubes = function (slice) {
-    if (Array.isArray(slice)) {
-      var cubes_1 = [];
-
-      for (var i = 0; i < slice.length; i += 1) {
-        this.cubeGetter(slice[i]).forEach(function (cube) {
-          return cubes_1.push(cube);
-        });
-      }
-
-      return cubes_1;
-    }
-
-    return this.cubeGetter(slice);
-  };
-
-  return Move;
-}();
-
-exports.Move = Move;
-
-var MoveOperation =
-/** @class */
-function () {
-  function MoveOperation(move, slice, clockwise) {
-    this.move = move;
-    this.slice = this.move.original ? this.move.getSliceOriginal(slice) : this.move.getSliceOpposite(slice);
-    this.clockwise = this.move.original ? this.move.getClockwiseOpposite(clockwise) : this.move.getClockwiseOriginal(clockwise);
-    this.axis = this.move.axis;
-    this.side = this.move.side;
-  }
-
-  MoveOperation.prototype.rotate = function (matrix) {
-    this.move.rotate(this.slice, this.clockwise, matrix);
-  };
-
-  MoveOperation.prototype.getCubes = function () {
-    return this.move.getCubes(this.slice);
-  };
-
-  return MoveOperation;
-}();
-
-exports.MoveOperation = MoveOperation;
-},{}],"rubik/model.ts":[function(require,module,exports) {
+},{"./solutions/solveStandardRubik":"rubik/solutions/solveStandardRubik.ts","./solutions/solveWhiteCenterRubik":"rubik/solutions/solveWhiteCenterRubik.ts","./solutions/solveYellowCenterRubik":"rubik/solutions/solveYellowCenterRubik.ts","./solutions/solveBlueCenterRubik":"rubik/solutions/solveBlueCenterRubik.ts","./solutions/solveYellowMiddleLineRubik":"rubik/solutions/solveYellowMiddleLineRubik.ts","./solutions/solveRedCenterRubik":"rubik/solutions/solveRedCenterRubik.ts","./solutions/solveGreenOrangeCenterRubik":"rubik/solutions/solveGreenOrangeCenterRubik.ts","./solutions/solveEdgesRubik":"rubik/solutions/solveEdgesRubik.ts"}],"rubik/model.ts":[function(require,module,exports) {
 "use strict";
 
 var __spreadArrays = this && this.__spreadArrays || function () {
@@ -87225,9 +87247,12 @@ var moveActions_1 = require("./moveActions");
 
 var move_1 = require("./move");
 
+var solver_1 = __importDefault(require("./solver"));
+
 var RubikModel =
 /** @class */
 function () {
+  // random moves do not update current index or do not rotate internal matrix
   function RubikModel(sideLength) {
     var _this = this;
 
@@ -87236,7 +87261,37 @@ function () {
     this.sequenceDep = [utils_1.sides.l, utils_1.sides.u, utils_1.sides.r, utils_1.sides.d, utils_1.sides.l];
     this.sequenceHorRev = [utils_1.sides.r, utils_1.sides.b, utils_1.sides.l, utils_1.sides.f, utils_1.sides.r];
     this.sequenceVerRev = [utils_1.sides.f, utils_1.sides.d, utils_1.sides.b, utils_1.sides.u, utils_1.sides.f];
-    this.sequenceDepRev = [utils_1.sides.d, utils_1.sides.r, utils_1.sides.u, utils_1.sides.l, utils_1.sides.d];
+    this.sequenceDepRev = [utils_1.sides.d, utils_1.sides.r, utils_1.sides.u, utils_1.sides.l, utils_1.sides.d]; // for solve - generate moves starting from currentIndex and current matrix
+    // once all moves are generated push them to currentMoves
+
+    this.solve = function () {
+      _this.doContinuousMovesToEnd(function () {
+        var t0 = performance.now();
+
+        _this.solver.solve();
+
+        var t1 = performance.now();
+        console.log('Took', (t1 - t0).toFixed(4), 'milliseconds to solve');
+      });
+    };
+
+    this.scramble = function (moves) {
+      _this.doContinuousMovesToEnd(function () {
+        return _this.generateRandomMoves(moves);
+      });
+    };
+
+    this.doContinuousMovesToEnd = function (func) {
+      _this.removeHistoryByCurrentIndex();
+
+      if (func) {
+        func();
+      }
+
+      _this.fillCurrentMoves(_this.currentHistoryIndex, _this.moveHistory.length - 1);
+
+      _this.currentHistoryIndex = _this.moveHistory.length - 1;
+    };
 
     this.resetSO = function () {
       _this.SO = [utils_1.sides.l, utils_1.sides.r, utils_1.sides.u, utils_1.sides.d, utils_1.sides.f, utils_1.sides.b];
@@ -87255,12 +87310,13 @@ function () {
     };
 
     this.rotateCube = function (side, sidesRotation, clockwise) {
-      _this.currentMoves.push({
+      var moveH = {
         side: side,
         slice: _this.slices,
-        clockwise: clockwise,
-        rotation: true
-      });
+        clockwise: clockwise
+      };
+
+      _this.currentMoves.push(new move_1.CurrentMoveHistory(moveH, -1, true));
 
       sidesRotation(clockwise);
     };
@@ -87303,23 +87359,70 @@ function () {
       return {
         side: realSide,
         slice: slice,
-        clockwise: clockwise,
-        rotation: false
+        clockwise: clockwise
       };
+    }; // select which portion of move history to animate
+    // add backward move generation
+
+
+    this.fillCurrentMoves = function (start, end) {
+      if (end === void 0) {
+        end = null;
+      }
+
+      if (start < 0 || start > _this.moveHistory.length) {
+        console.log('Incorrect start index');
+      }
+
+      if (end !== null) {
+        if (end < 0 || end > _this.moveHistory.length) {
+          console.log('Incorrect end index');
+        }
+      }
+
+      if (end === null) {
+        _this.currentMoves.push(new move_1.CurrentMoveHistory(_this.moveHistory[start], _this.currentHistoryIndex));
+      } else {
+        // forward moves
+        // eslint-disable-next-line no-lonely-if
+        if (start < end) {
+          for (var i = start; i < end; i += 1) {
+            var index = i + 1;
+
+            _this.currentMoves.push(new move_1.CurrentMoveHistory(_this.moveHistory[index], index));
+          } // backward moves
+
+        } else if (start > end) {
+          for (var i = start; i > end; i -= 1) {
+            var move = _this.moveHistory[i];
+            var backwards = {
+              side: move.side,
+              slice: move.slice,
+              clockwise: !move.clockwise
+            };
+
+            _this.currentMoves.push(new move_1.CurrentMoveHistory(backwards, i - 1));
+          }
+        }
+      }
     };
+
+    this.clearCurrentMoves = function () {
+      _this.currentMoves = [];
+    }; // this function is primarily for solving rubik's cube, don't forget to reset matrix to the state before solve
+
 
     this.moveOperation = function (side, slice, clockwise) {
-      var moveH = _this.createMoveBasedOnOrientation(side, slice, clockwise); // rotate real matrix, with correct orientation
+      var moveH = new move_1.MoveOperation(_this.moves[side], slice, clockwise);
+      moveH.rotate(_this.matrix);
 
+      _this.moveHistory.push({
+        side: side,
+        slice: slice,
+        clockwise: clockwise
+      });
+    }; // mouse moves
 
-      _this.getUserMove(moveH).rotate(_this.matrix);
-
-      _this.moveHistory.push(moveH);
-
-      _this.currentMoves.push(moveH);
-
-      _this.currentHistoryIndex += 1;
-    };
 
     this.userMoveOperation = function (side, slice, clockwise) {
       var moveH = _this.createMoveBasedOnOrientation(side, slice, clockwise); // rotate real matrix based on a limited user input
@@ -87328,19 +87431,15 @@ function () {
       _this.getUserMove({
         side: moveH.side,
         slice: slice,
-        clockwise: clockwise,
-        rotation: false
-      }).rotate(_this.matrix); // rotate ref matrix 
+        clockwise: clockwise
+      }).rotate(_this.matrix); // rotate ref matrix
 
 
       _this.getUserMove({
         side: side,
         slice: slice,
-        clockwise: clockwise,
-        rotation: false
+        clockwise: clockwise
       }).rotate(_this.matrixReference);
-
-      moveH.rotation = true;
 
       _this.moveHistory.push(moveH);
 
@@ -87411,19 +87510,19 @@ function () {
     this.moveBackward = function () {
       if (_this.currentHistoryIndex > 0) {
         var currentMove = _this.moveHistory[_this.currentHistoryIndex];
+        _this.currentHistoryIndex -= 1;
 
         var iMove = _this.getUserMove(currentMove);
 
         iMove.clockwise = !iMove.clockwise;
         iMove.rotate(_this.matrix);
-        _this.currentHistoryIndex -= 1;
-
-        _this.currentMoves.push({
+        var moveH = {
           side: currentMove.side,
           slice: currentMove.slice,
-          clockwise: !currentMove.clockwise,
-          rotation: false
-        });
+          clockwise: !currentMove.clockwise
+        };
+
+        _this.currentMoves.push(new move_1.CurrentMoveHistory(moveH, _this.currentHistoryIndex));
       }
     };
 
@@ -87436,7 +87535,7 @@ function () {
 
         iMove.rotate(_this.matrix);
 
-        _this.currentMoves.push(currentMove);
+        _this.currentMoves.push(new move_1.CurrentMoveHistory(currentMove, _this.currentHistoryIndex));
       }
     };
 
@@ -87446,10 +87545,19 @@ function () {
       }
     };
 
-    this.addMove = function (side, slice, clockwise) {
+    this.doUserMove = function (side, slice, clockwise) {
       _this.removeHistoryByCurrentIndex();
 
-      _this.moveOperation(side, slice, clockwise);
+      var moveH = _this.createMoveBasedOnOrientation(side, slice, clockwise); // rotate real matrix, with correct orientation
+
+
+      _this.getUserMove(moveH).rotate(_this.matrix);
+
+      _this.moveHistory.push(moveH);
+
+      _this.currentHistoryIndex += 1;
+
+      _this.currentMoves.push(new move_1.CurrentMoveHistory(moveH, _this.currentHistoryIndex));
     };
 
     this.getNextMove = function () {
@@ -87475,10 +87583,14 @@ function () {
 
         for (var i = 0; i < absSteps; i += 1) {
           var currentMove = _this.moveHistory[_this.currentHistoryIndex];
+          var backwardsMove = {
+            side: currentMove.side,
+            slice: currentMove.slice,
+            clockwise: !currentMove.clockwise
+          };
 
-          var iMove = _this.getUserMove(currentMove);
+          var iMove = _this.getUserMove(backwardsMove);
 
-          iMove.clockwise = !iMove.clockwise;
           iMove.rotate(_this.matrix);
           _this.currentHistoryIndex -= 1;
         }
@@ -87521,12 +87633,36 @@ function () {
       return _this.matrixReference[side][inter[side][direction]];
     };
 
-    this.scramble = function (moves) {
-      if (_this.sideLength > 3) {
-        _this.doRandomMoves(moves, true);
-      } else {
-        _this.doRandomMoves(moves);
+    this.generateRandomMoves = function (moves) {
+      var randomSlices = _this.sideLength > 3;
+
+      for (var i = 0; i < moves; i += 1) {
+        var move = _this.getRandomMove(randomSlices);
+
+        _this.moveOperation(move.side, move.slice, move.clockwise);
       }
+    };
+
+    this.getRandomMove = function (randomSlices) {
+      if (randomSlices === void 0) {
+        randomSlices = false;
+      }
+
+      var side = utils_1.randomInt(0, 5);
+      var slice;
+
+      if (randomSlices) {
+        slice = utils_1.randomInt(0, Math.floor(_this.sideLength / 2) - 1);
+      } else {
+        slice = 0;
+      }
+
+      var clockwise = utils_1.randomInt(0, 1) === 0;
+      return {
+        side: side,
+        slice: slice,
+        clockwise: clockwise
+      };
     };
 
     this.generateSideRotations = function () {
@@ -87615,34 +87751,6 @@ function () {
           }
         }
       }
-    };
-
-    this.doRandomMoves = function (num, randomSlices) {
-      if (randomSlices === void 0) {
-        randomSlices = false;
-      }
-
-      function randomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1) + min);
-      }
-
-      var moves = [_this.m.D, _this.m.U, _this.m.F, _this.m.B, _this.m.L, _this.m.R];
-
-      if (randomSlices === true) {
-        for (var i = 0; i < num; i += 1) {
-          var clockwise = randomInt(0, 1) === 0; // random moves should not move center slices
-
-          var slice = randomInt(0, Math.floor(_this.sideLength / 2) - 1);
-          moves[randomInt(0, moves.length - 1)](slice, clockwise);
-        }
-      } else {
-        for (var i = 0; i < num; i += 1) {
-          var clockwise = randomInt(0, 1) === 0;
-          moves[randomInt(0, moves.length - 1)](0, clockwise);
-        }
-      }
-
-      console.log('Generated random moves');
     };
 
     this.createMatrix = function () {
@@ -87914,6 +88022,8 @@ function () {
     for (var i = 0; i < this.sideLength; i += 1) {
       this.slices.push(i);
     }
+
+    this.solver = new solver_1.default(this);
   }
 
   RubikModel.prototype.createEmptySlices = function () {
@@ -87938,7 +88048,7 @@ function () {
 }();
 
 exports.default = RubikModel;
-},{"./utils":"rubik/utils.ts","./face":"rubik/face.ts","./moveActions":"rubik/moveActions.ts","./move":"rubik/move.ts"}],"rubik/cube.ts":[function(require,module,exports) {
+},{"./utils":"rubik/utils.ts","./face":"rubik/face.ts","./moveActions":"rubik/moveActions.ts","./move":"rubik/move.ts","./solver":"rubik/solver.ts"}],"rubik/cube.ts":[function(require,module,exports) {
 "use strict";
 
 var __importStar = this && this.__importStar || function (mod) {
@@ -88126,6 +88236,8 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+/* eslint-disable no-else-return */
+
 /* eslint-disable prefer-destructuring */
 
 /* eslint-disable no-lonely-if */
@@ -88138,13 +88250,21 @@ var cube_1 = __importDefault(require("./cube"));
 
 var utils_1 = require("./utils");
 
-var planeOrientation;
+var PLANEORIENTATION;
 
-(function (planeOrientation) {
-  planeOrientation["XY"] = "z";
-  planeOrientation["ZY"] = "x";
-  planeOrientation["XZ"] = "y";
-})(planeOrientation || (planeOrientation = {}));
+(function (PLANEORIENTATION) {
+  PLANEORIENTATION["XY"] = "z";
+  PLANEORIENTATION["ZY"] = "x";
+  PLANEORIENTATION["XZ"] = "y";
+})(PLANEORIENTATION || (PLANEORIENTATION = {}));
+
+var STATE;
+
+(function (STATE) {
+  STATE[STATE["NONE"] = -1] = "NONE";
+  STATE[STATE["MOUSE_ROTATE"] = 0] = "MOUSE_ROTATE";
+  STATE[STATE["ROTATE"] = 1] = "ROTATE";
+})(STATE || (STATE = {}));
 
 var RubikView =
 /** @class */
@@ -88155,9 +88275,16 @@ function () {
     this.completingMouseMove = false;
     this.distanceTrigger = 0.2;
 
+    this.updateMousePosition = function (event) {
+      var rect = _this.scene.canvas.getBoundingClientRect();
+
+      _this.mouse.x = event.clientX / rect.width * 2 - 1;
+      _this.mouse.y = -(event.clientY / rect.height) * 2 + 1;
+    };
+
     this.getMousePosition = function (mouse, plane) {
       if (plane === void 0) {
-        plane = planeOrientation.XY;
+        plane = PLANEORIENTATION.XY;
       }
 
       var vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
@@ -88168,6 +88295,40 @@ function () {
       var pos = _this.scene.camera.position.clone().add(dir.multiplyScalar(distance));
 
       return pos;
+    };
+
+    this.onMouseUp = function (e) {
+      _this.clickedOnFace = false;
+
+      if (_this.mouseRotating) {
+        _this.targetRotation = _this.getTargetRotation();
+        _this.completingMouseMove = true;
+        _this.mouseRotating = false;
+      } // this.scene.controls.enable(true);
+
+
+      _this.scene.controls.enabled = true;
+    };
+
+    this.onMouseDown = function (e) {
+      _this.updateMousePosition(e);
+
+      _this.positionOnMouseDown = _this.mouse.clone();
+
+      _this.raycaster.setFromCamera(_this.mouse, _this.scene.camera);
+
+      var intersects = _this.raycaster.intersectObjects(_this.raycastMeshes);
+
+      if (intersects.length > 0 && !_this.completingMouseMove) {
+        _this.clickedOnFace = true;
+        _this.scene.controls.enabled = false;
+        var intersection = intersects[0];
+        var obj = intersection.object;
+        var point = intersection.point;
+
+        _this.calculateCubeOnFace(obj.name, point); // console.log(`Point: ${intersects[0].point.x} ${intersects[0].point.y} ${intersects[0].point.z}`);
+
+      }
     };
 
     this.calculateCubeOnFace = function (sideString, point) {
@@ -88191,45 +88352,35 @@ function () {
 
       if (side === utils_1.sides.l || side === utils_1.sides.r) {
         vector = new THREE.Vector2(z, y);
-        _this.selectedOrientation = planeOrientation.ZY;
+        _this.selectedOrientation = PLANEORIENTATION.ZY;
       } else if (side === utils_1.sides.u || side === utils_1.sides.d) {
         vector = new THREE.Vector2(x, z);
-        _this.selectedOrientation = planeOrientation.XZ;
+        _this.selectedOrientation = PLANEORIENTATION.XZ;
       } else if (side === utils_1.sides.f || side === utils_1.sides.b) {
         vector = new THREE.Vector2(x, y);
-        _this.selectedOrientation = planeOrientation.XY;
+        _this.selectedOrientation = PLANEORIENTATION.XY;
       }
 
       return vector;
     };
 
-    this.createRaycastMeshes = function () {
-      _this.raycastMeshes = [];
-      var limit = Math.floor(_this.rubikModel.sideLength / 2);
+    this.getTargetRotation = function () {
+      var rotation = Math.PI / 2;
+      var halfRotation = rotation / 2;
+      var radians = _this.pivot.rotation[_this.mouseAxis];
 
-      if (_this.rubikModel.sideLength % 2 === 0) {
-        limit = _this.rubikModel.sideLength / 2 - 0.5;
-      }
-
-      var percentBigger = 1;
-      limit = limit / 100 * percentBigger + limit;
-      var length = _this.rubikModel.sideLength;
-      var material = new THREE.MeshBasicMaterial();
-      var geometry = new THREE.PlaneBufferGeometry(length, length);
-
-      var createMesh = function createMesh() {
-        var mesh = new THREE.Mesh(geometry, material.clone());
-        return mesh;
-      };
-
-      for (var i = 0; i < utils_1.sidesArr.length; i += 1) {
-        var mesh = createMesh(); // (mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00);
-
-        utils_1.sidesOrientaion[i](mesh, limit, 0);
-        mesh.name = utils_1.sidesStr[i];
-        mesh.visible = false;
-
-        _this.raycastMeshes.push(mesh);
+      if (radians > 0) {
+        if (radians % rotation > halfRotation) {
+          return (Math.floor(radians / rotation) + 1) * rotation;
+        } else {
+          return Math.floor(radians / rotation) * rotation;
+        }
+      } else if (radians < 0) {
+        if (radians % rotation < -halfRotation) {
+          return Math.floor(radians / rotation) * rotation;
+        } else {
+          return (Math.floor(radians / rotation) + 1) * rotation;
+        }
       }
     };
 
@@ -88263,20 +88414,72 @@ function () {
       _this.activeGroup = [];
     };
 
+    this.doNoAnimationMove = function (move) {
+      _this.activateSlice(move.getCubes());
+
+      _this.pivot.rotation[move.axis] = move.clockwise ? Math.PI / -2 : Math.PI / 2; // this.pivot.rotation[currentMove.axis] = currentMove.clockwise ? Math.PI / 2 : Math.PI / -2;
+
+      _this.deactivateSlice();
+
+      move.rotate(_this.rubikModel.matrixReference);
+    };
+
+    this.jumpToHistoryIndex = function (historyIndex) {
+      var steps = historyIndex - _this.rubikModel.currentHistoryIndex;
+
+      if (steps > 0) {
+        // move forward
+        for (var i = 0; i < steps; i += 1) {
+          _this.rubikModel.currentHistoryIndex += 1;
+          var currentMove = _this.rubikModel.moveHistory[_this.rubikModel.currentHistoryIndex];
+
+          var iMove = _this.rubikModel.getUserMove(currentMove);
+
+          iMove.rotate(_this.rubikModel.matrix);
+
+          var gMove = _this.rubikModel.getInternalMove(currentMove);
+
+          _this.doNoAnimationMove(gMove);
+        }
+      } else if (steps < 0) {
+        // move backwards
+        var absSteps = Math.abs(steps);
+
+        for (var i = 0; i < absSteps; i += 1) {
+          var currentMove = _this.rubikModel.moveHistory[_this.rubikModel.currentHistoryIndex];
+          var backwardsMove = {
+            side: currentMove.side,
+            slice: currentMove.slice,
+            clockwise: !currentMove.clockwise
+          };
+
+          var iMove = _this.rubikModel.getUserMove(backwardsMove);
+
+          iMove.rotate(_this.rubikModel.matrix);
+
+          var gMove = _this.rubikModel.getInternalMove(backwardsMove);
+
+          _this.doNoAnimationMove(gMove);
+
+          _this.rubikModel.currentHistoryIndex -= 1;
+        }
+      }
+    };
+
     this.startNextMove = function () {
       if (_this.isMoving) {
         console.log('Already moving');
         return;
       }
 
-      var nextMove = _this.rubikModel.getNextMove();
+      _this.curMoveH = _this.rubikModel.getNextMove();
 
-      if (nextMove) {
+      if (_this.curMoveH) {
         if (!_this.isMoving) {
-          if (nextMove.rotation) {
-            _this.currentMove = _this.rubikModel.getUserMove(nextMove);
+          if (_this.curMoveH.rotateCube) {
+            _this.currentMove = _this.rubikModel.getUserMove(_this.curMoveH.move);
           } else {
-            _this.currentMove = _this.rubikModel.getInternalMove(nextMove);
+            _this.currentMove = _this.rubikModel.getInternalMove(_this.curMoveH.move);
           }
 
           _this.isMoving = true;
@@ -88313,7 +88516,9 @@ function () {
 
       _this.currentMove.rotate(_this.rubikModel.matrixReference);
 
-      _this.moveDirection = undefined;
+      if (_this.moveCompleteHandler && !_this.curMoveH.rotateCube) {
+        _this.moveCompleteHandler(_this.curMoveH);
+      }
 
       _this.startNextMove();
     };
@@ -88323,6 +88528,36 @@ function () {
         _this.doMove();
       } else if (_this.completingMouseMove) {
         _this.completeMouseMove();
+      }
+    };
+
+    this.createRaycastMeshes = function () {
+      _this.raycastMeshes = [];
+      var limit = Math.floor(_this.rubikModel.sideLength / 2);
+
+      if (_this.rubikModel.sideLength % 2 === 0) {
+        limit = _this.rubikModel.sideLength / 2 - 0.5;
+      }
+
+      var percentBigger = 1;
+      limit = limit / 100 * percentBigger + limit;
+      var length = _this.rubikModel.sideLength;
+      var material = new THREE.MeshBasicMaterial();
+      var geometry = new THREE.PlaneBufferGeometry(length, length);
+
+      var createMesh = function createMesh() {
+        var mesh = new THREE.Mesh(geometry, material.clone());
+        return mesh;
+      };
+
+      for (var i = 0; i < utils_1.sidesArr.length; i += 1) {
+        var mesh = createMesh(); // (mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00);
+
+        utils_1.sidesOrientaion[i](mesh, limit, 0);
+        mesh.name = utils_1.sidesStr[i];
+        mesh.visible = false;
+
+        _this.raycastMeshes.push(mesh);
       }
     };
 
@@ -88471,94 +88706,42 @@ function () {
     });
     this.currentMove = null;
     this.isMoving = false;
-    this.moveDirection = null;
-    this.rotationSpeed = 2;
+    this.rotationSpeed = 0.4;
     this.pivot = new THREE.Object3D();
     this.activeGroup = [];
     this.clickedOnFace = false;
-    this.eventMoveComplete = new CustomEvent('moveComplete');
+    this.mouse = new THREE.Vector3(0, 0, 0);
+    document.addEventListener('mousedown', this.onMouseDown.bind(this), false);
+    document.addEventListener('mouseup', this.onMouseUp.bind(this), false);
+    document.addEventListener('mousemove', this.onMouseMove.bind(this), false);
   }
 
-  RubikView.prototype.mouseUp = function (position) {
-    this.mouseIsDown = false;
-    this.clickedOnFace = false;
-
-    if (this.rotating) {
-      this.stopRotation();
-      this.rotating = false;
-    } // this.scene.controls.enable(true);
-
-
-    this.scene.controls.enabled = true;
-  };
-
-  RubikView.prototype.mouseDown = function (position) {
-    this.mouseIsDown = true;
-    this.positionOnMouseDown = position.clone(); // console.log(this.positionOnMouseDown);
-
-    this.raycaster.setFromCamera(position, this.scene.camera);
-    var intersects = this.raycaster.intersectObjects(this.raycastMeshes);
-
-    if (intersects.length > 0) {
-      this.clickedOnFace = true;
-      this.scene.controls.enabled = false;
-      var intersection = intersects[0];
-      var obj = intersection.object;
-      var point = intersection.point;
-      this.calculateCubeOnFace(obj.name, point); // console.log(`Point: ${intersects[0].point.x} ${intersects[0].point.y} ${intersects[0].point.z}`);
-    }
-  };
-
-  RubikView.prototype.mouseMove = function (position) {
-    if (this.mouseIsDown) {
+  RubikView.prototype.onMouseMove = function (e) {
+    if (this.clickedOnFace) {
+      this.updateMousePosition(e);
       var mPosDown = this.getMousePosition(this.positionOnMouseDown);
-      var mPos = this.getMousePosition(position);
+      var mPos = this.getMousePosition(this.mouse);
+      var distance = mPos.sub(mPosDown).distanceTo(new THREE.Vector3(0, 0, 0));
 
-      if (this.rotating) {
+      if (distance >= this.distanceTrigger) {
+        console.log('TRIGGER');
         var orientation = this.selectedOrientation;
-        var mPosLast = this.getMousePosition(this.lastMousePosition, orientation);
-        mPos = this.getMousePosition(position, orientation);
-        var dir = mPos.sub(mPosLast);
-        this.rotateWithMouse(dir);
-        this.lastMousePosition = position.clone();
-      } else if (this.clickedOnFace) {
-        var distance = mPos.sub(mPosDown).distanceTo(new THREE.Vector3(0, 0, 0));
-
-        if (distance >= this.distanceTrigger) {
-          console.log('TRIGGER');
-          var orientation = this.selectedOrientation;
-          mPosDown = this.getMousePosition(this.positionOnMouseDown, orientation);
-          mPos = this.getMousePosition(position, orientation);
-          var dir = mPos.sub(mPosDown);
-          this.mouseMoveTrigger(dir);
-          this.clickedOnFace = false;
-          this.lastMousePosition = position.clone();
-          this.rotating = true;
-        }
+        mPosDown = this.getMousePosition(this.positionOnMouseDown, orientation);
+        mPos = this.getMousePosition(this.mouse, orientation);
+        var dir = mPos.sub(mPosDown);
+        this.mouseMoveTrigger(dir);
+        this.lastMousePosition = this.mouse.clone();
+        this.mouseRotating = true;
+        this.clickedOnFace = false;
       }
+    } else if (this.mouseRotating) {
+      this.updateMousePosition(e);
+      var mPosLast = this.getMousePosition(this.lastMousePosition, this.selectedOrientation);
+      var mPos = this.getMousePosition(this.mouse, this.selectedOrientation);
+      var dir = mPos.sub(mPosLast);
+      this.rotateWithMouse(dir);
+      this.lastMousePosition = this.mouse.clone();
     }
-  };
-
-  RubikView.prototype.stopRotation = function () {
-    var rotation = Math.PI / 2;
-    var halfRotation = rotation / 2;
-    var radians = this.pivot.rotation[this.mouseAxis];
-
-    if (radians > 0) {
-      if (radians % rotation > halfRotation) {
-        this.targetRotation = (Math.floor(radians / rotation) + 1) * rotation;
-      } else {
-        this.targetRotation = Math.floor(radians / rotation) * rotation;
-      }
-    } else if (radians < 0) {
-      if (radians % rotation < -halfRotation) {
-        this.targetRotation = Math.floor(radians / rotation) * rotation;
-      } else {
-        this.targetRotation = (Math.floor(radians / rotation) + 1) * rotation;
-      }
-    }
-
-    this.completingMouseMove = true;
   };
 
   RubikView.prototype.completeMouseMove = function () {
@@ -88570,15 +88753,15 @@ function () {
 
     if (this.pivot.rotation[this.mouseAxis] > 0) {
       if (this.pivot.rotation[this.mouseAxis] % rotation < halfRotation) {
-        this.pivot.rotation[this.mouseAxis] -= 1 * 0.03;
+        this.pivot.rotation[this.mouseAxis] -= 1 * 0.1;
       } else {
-        this.pivot.rotation[this.mouseAxis] += 1 * 0.03;
+        this.pivot.rotation[this.mouseAxis] += 1 * 0.1;
       }
     } else {
       if (this.pivot.rotation[this.mouseAxis] % rotation < -halfRotation) {
-        this.pivot.rotation[this.mouseAxis] -= 1 * 0.03;
+        this.pivot.rotation[this.mouseAxis] -= 1 * 0.1;
       } else {
-        this.pivot.rotation[this.mouseAxis] += 1 * 0.03;
+        this.pivot.rotation[this.mouseAxis] += 1 * 0.1;
       }
     } // const completion = Math.abs((this.pivot.rotation[this.mouseAxis] % (Math.PI * 2)) - this.targetRotation);
 
@@ -88605,7 +88788,9 @@ function () {
       this.mouseMoveAction(this.mouseSlice, rotations > 0);
     }
 
-    window.dispatchEvent(this.eventMoveComplete);
+    if (this.mouseMoveCompleteHandler) {
+      this.mouseMoveCompleteHandler();
+    }
   };
 
   RubikView.prototype.rotateWithMouse = function (rotation) {
@@ -88775,8 +88960,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var solver_1 = __importDefault(require("./solver"));
-
 var model_1 = __importDefault(require("./model"));
 
 var view_1 = __importDefault(require("./view"));
@@ -88793,25 +88976,42 @@ function () {
     this.historyButtonActiveColor = '#868588';
     this.historyButtonNotActiveColor = '#4CAF50';
 
-    this.scramble = function () {
-      _this.rubikModel.removeHistoryByCurrentIndex();
+    this.updateToIndex = function () {
+      _this.toIndexInput.value = (_this.rubikModel.moveHistory.length - 1).toString();
+    };
 
-      _this.rubikModel.scramble(3);
+    this.updateFromIndex = function () {
+      _this.fromIndexInput.value = _this.rubikModel.currentHistoryIndex.toString();
+    };
+
+    this.updateMoveIndexText = function () {
+      _this.currentMoveIndexText.innerHTML = _this.rubikModel.currentHistoryIndex.toString();
+    };
+
+    this.updateRubikSizeText = function () {
+      _this.currentRubikSizeText.innerHTML = _this.rubikModel.sideLength.toString();
+    };
+
+    this.addNewMoveUpdate = function () {
+      _this.updateToIndex();
 
       _this.clearHistoryButtons();
 
       _this.refreshHistoryButtons();
+    };
+
+    this.scramble = function () {
+      _this.rubikModel.scramble(5);
+
+      _this.addNewMoveUpdate();
 
       _this.rubikView.startNextMove();
     };
 
     this.solve = function () {
-      var t0 = performance.now();
+      _this.rubikModel.solve();
 
-      _this.rubikSolver.solve();
-
-      var t1 = performance.now();
-      console.log('Took', (t1 - t0).toFixed(4), 'milliseconds to solve');
+      _this.addNewMoveUpdate();
 
       _this.rubikView.startNextMove();
     };
@@ -88833,23 +89033,11 @@ function () {
     this.prev = function () {
       _this.rubikModel.moveBackward();
 
-      _this.switchButtonBackgroundColor(_this.historyButtonPrevActive, false);
-
-      _this.switchButtonBackgroundColor(_this.historyButtons[_this.rubikModel.currentHistoryIndex], true);
-
-      _this.historyButtonPrevActive = _this.historyButtons[_this.rubikModel.currentHistoryIndex];
-
       _this.rubikView.startNextMove();
     };
 
     this.next = function () {
       _this.rubikModel.moveForward();
-
-      _this.switchButtonBackgroundColor(_this.historyButtonPrevActive, false);
-
-      _this.switchButtonBackgroundColor(_this.historyButtons[_this.rubikModel.currentHistoryIndex], true);
-
-      _this.historyButtonPrevActive = _this.historyButtons[_this.rubikModel.currentHistoryIndex];
 
       _this.rubikView.startNextMove();
     };
@@ -88885,24 +89073,46 @@ function () {
       }
 
       button.onclick = function () {
-        _this.reset(index);
+        // this.reset(index);
+        _this.jump(index);
 
         if (_this.outerMeshesCheckbox.checked) {
           _this.rubikView.colorizeOuter();
-        }
+        } // this.switchButtonBackgroundColor(this.historyButtonPrevActive, false);
+        // this.switchButtonBackgroundColor(button, true);
+        // this.historyButtonPrevActive = button;
 
-        _this.switchButtonBackgroundColor(_this.historyButtonPrevActive, false);
-
-        _this.switchButtonBackgroundColor(button, true);
-
-        _this.historyButtonPrevActive = button;
       };
 
       _this.historyButtons.push(button);
     };
 
+    this.jump = function (historyIndex) {
+      _this.rubikView.jumpToHistoryIndex(historyIndex);
+
+      _this.updateFromIndex();
+
+      _this.updateMoveIndexText();
+
+      _this.switchButtonBackgroundColor(_this.historyButtonPrevActive, false);
+
+      _this.switchButtonBackgroundColor(_this.historyButtons[historyIndex], true);
+
+      _this.historyButtonPrevActive = _this.historyButtons[historyIndex];
+    };
+
     this.reset = function (historyIndex) {
       _this.rubikModel.jumpToHistoryIndex(historyIndex);
+
+      _this.updateFromIndex();
+
+      _this.updateMoveIndexText();
+
+      _this.switchButtonBackgroundColor(_this.historyButtonPrevActive, false);
+
+      _this.switchButtonBackgroundColor(_this.historyButtons[historyIndex], true);
+
+      _this.historyButtonPrevActive = _this.historyButtons[historyIndex];
 
       _this.rubikModel.resetSO();
 
@@ -88957,46 +89167,34 @@ function () {
     };
 
     this.createMovementButtons = function () {
-      for (var i = 0; i < Math.abs(_this.rubikModel.sideLength / 2); i += 1) {
-        _this.addButtonPair(i, utils_1.sides.l);
-
-        _this.addButtonPair(i, utils_1.sides.r);
-
-        _this.addButtonPair(i, utils_1.sides.u);
-
-        _this.addButtonPair(i, utils_1.sides.d);
-
-        _this.addButtonPair(i, utils_1.sides.f);
-
-        _this.addButtonPair(i, utils_1.sides.b);
+      // every side
+      for (var i = 0; i < 6; i += 1) {
+        for (var b = 0; b < 2; b += 1) {
+          // every slice
+          for (var j = 0; j < _this.rubikModel.sideLength / 2; j += 1) {
+            if (b === 0) {
+              _this.addButton(i, j, true);
+            } else {
+              _this.addButton(i, j, false);
+            }
+          }
+        }
       }
     };
 
-    this.addButtonPair = function (slice, sideNum) {
-      var buttonClockwise = _this.createMovementButton(slice, true, sideNum);
-
-      var buttonCounter = _this.createMovementButton(slice, false, sideNum);
-
-      _this.movementDiv.appendChild(buttonClockwise);
-
-      _this.movementDiv.appendChild(buttonCounter);
-    };
-
-    this.createMovementButton = function (slice, clockwise, side) {
+    this.addButton = function (side, slice, clockwise) {
       var button = document.createElement('button');
       button.innerHTML = "" + utils_1.sidesStr[side] + (clockwise ? '' : "'") + (slice === 0 ? '' : slice + 1);
 
       button.onclick = function () {
-        _this.rubikModel.addMove(side, slice, clockwise);
+        _this.rubikModel.doUserMove(side, slice, clockwise);
 
-        _this.clearHistoryButtons();
-
-        _this.refreshHistoryButtons();
+        _this.addNewMoveUpdate();
 
         _this.rubikView.startNextMove();
       };
 
-      return button;
+      _this.movementDiv.appendChild(button);
     };
 
     var sizeUp = document.getElementById('sizeUp');
@@ -89039,11 +89237,53 @@ function () {
     this.movementDiv = document.getElementById('moves');
     this.outerMeshesCheckbox = document.getElementById('outerMeshes');
     this.numbersCheckbox = document.getElementById('numbers');
+    this.currentMoveIndexText = document.getElementById('current-move');
+    this.currentRubikSizeText = document.getElementById('current-size');
+    this.fromIndexInput = document.getElementById('from-index');
+    this.toIndexInput = document.getElementById('to-index');
+    this.fromToAnimateButton = document.getElementById('from-to-animate');
+    this.stopAnimationButton = document.getElementById('stop-animation');
+
+    this.stopAnimationButton.onclick = function (e) {
+      if (_this.rubikModel.currentMoves.length > 0 || _this.rubikView.isMoving) {
+        var currentMove = _this.rubikView.curMoveH;
+        _this.rubikModel.currentHistoryIndex = currentMove.index;
+
+        _this.rubikModel.clearCurrentMoves();
+      }
+    };
+
+    this.fromIndexInput.oninput = function (e) {
+      var from = parseInt(_this.fromIndexInput.value);
+
+      if (from >= 0 && from < _this.historyButtons.length) {
+        // this.reset(from);
+        _this.jump(from);
+      }
+    };
+
+    this.fromToAnimateButton.onclick = function () {
+      var from = parseInt(_this.fromIndexInput.value);
+      var to = parseInt(_this.toIndexInput.value);
+
+      _this.jump(from);
+
+      _this.switchButtonBackgroundColor(_this.historyButtonPrevActive, false);
+
+      _this.switchButtonBackgroundColor(_this.historyButtons[from], true);
+
+      _this.historyButtonPrevActive = _this.historyButtons[from];
+
+      _this.rubikModel.fillCurrentMoves(from, to);
+
+      _this.rubikModel.currentHistoryIndex = to;
+
+      _this.rubikView.startNextMove();
+    };
 
     this.outerMeshesCheckbox.onchange = function (e) {
       if (_this.outerMeshesCheckbox.checked) {
-        _this.reset(_this.rubikModel.currentHistoryIndex);
-
+        // this.reset(this.rubikModel.currentHistoryIndex);
         _this.rubikView.enableOuter();
       } else {
         _this.rubikView.disposeOuter();
@@ -89052,8 +89292,7 @@ function () {
 
     this.numbersCheckbox.onchange = function (e) {
       if (_this.numbersCheckbox.checked) {
-        _this.reset(_this.rubikModel.currentHistoryIndex);
-
+        // this.reset(this.rubikModel.currentHistoryIndex);
         _this.rubikView.enableText();
       } else {
         _this.rubikView.disposeText();
@@ -89062,12 +89301,11 @@ function () {
 
     this.scene = scene;
     this.renderOrder.set('rubik', 0);
-    this.addRubik(5);
+    this.addRubik(3);
   }
 
   RubikManager.prototype.drawNewRubik = function () {
     this.scene.renderObjects[0] = this.rubikView;
-    this.scene.mouseObjects[0] = this.rubikView;
     this.rubikView.addToScene();
     this.rubikView.enableBase();
     this.rubikView.changeCamera();
@@ -89079,14 +89317,37 @@ function () {
 
     this.rubikModel = new model_1.default(length);
     this.rubikView = new view_1.default(this.rubikModel, this.scene);
-    this.rubikSolver = new solver_1.default(this.rubikModel);
-    window.addEventListener('moveComplete', function (e) {
-      console.log('event happened');
+    this.updateMoveIndexText();
+    this.updateRubikSizeText();
+    this.updateFromIndex();
+    this.updateToIndex();
+
+    this.rubikView.mouseMoveCompleteHandler = function () {
+      console.log('mousemovecomplete: event happened');
+
+      _this.updateMoveIndexText();
 
       _this.clearHistoryButtons();
 
+      _this.updateFromIndex();
+
+      _this.updateToIndex();
+
       _this.refreshHistoryButtons();
-    }, false);
+    };
+
+    this.rubikView.moveCompleteHandler = function (move) {
+      console.log('movecomplete: event happened');
+
+      _this.switchButtonBackgroundColor(_this.historyButtonPrevActive, false);
+
+      _this.switchButtonBackgroundColor(_this.historyButtons[move.index], true);
+
+      _this.historyButtonPrevActive = _this.historyButtons[move.index];
+      _this.fromIndexInput.value = move.index.toString();
+      _this.currentMoveIndexText.innerHTML = move.index.toString();
+    };
+
     this.historyButtons = [];
     this.clearMoveButtons();
     this.clearHistoryButtons();
@@ -89099,7 +89360,7 @@ function () {
 }();
 
 exports.default = RubikManager;
-},{"./solver":"rubik/solver.ts","./model":"rubik/model.ts","./view":"rubik/view.ts","./utils":"rubik/utils.ts"}],"index.ts":[function(require,module,exports) {
+},{"./model":"rubik/model.ts","./view":"rubik/view.ts","./utils":"rubik/utils.ts"}],"index.ts":[function(require,module,exports) {
 "use strict";
 
 var __importStar = this && this.__importStar || function (mod) {
@@ -89144,13 +89405,6 @@ function () {
   function MainScene() {
     var _this = this;
 
-    this.updateMousePosition = function (event) {
-      var rect = _this.canvas.getBoundingClientRect();
-
-      _this.mouse.x = event.clientX / rect.width * 2 - 1;
-      _this.mouse.y = -(event.clientY / rect.height) * 2 + 1;
-    };
-
     this.resizeRendererToDisplaySize = function () {
       var width = _this.canvas.clientWidth;
       var height = _this.canvas.clientHeight;
@@ -89188,11 +89442,11 @@ function () {
     this.scene = new THREE.Scene();
     this.camera = utils_1.createCamera();
     var downLight = new THREE.HemisphereLight(0xffffff, 0x000088);
-    downLight.position.set(-1, 1, 1);
+    downLight.position.set(-10, 10, 10);
     downLight.add(new THREE.AxesHelper(3));
     this.scene.add(downLight);
     var upLight = new THREE.HemisphereLight(0xffffff, 0x880000);
-    upLight.position.set(1, -1, -1);
+    upLight.position.set(10, -10, -10);
     upLight.add(new THREE.AxesHelper(3));
     this.scene.add(upLight);
     this.canvas = document.querySelector('#c');
@@ -89203,40 +89457,9 @@ function () {
     // this.scene.background = new THREE.Color(0x3399ff);
 
     this.renderObjects = [];
-    this.mouseObjects = [];
-    this.mouse = new THREE.Vector3();
-    document.addEventListener('mousedown', this.onMouseDown.bind(this), false);
-    document.addEventListener('mouseup', this.onMouseUp.bind(this), false);
-    document.addEventListener('mousemove', this.onMouseMove.bind(this), false);
     var helper = new THREE.AxesHelper(5);
     this.scene.add(helper);
   }
-
-  MainScene.prototype.onMouseMove = function (event) {
-    this.updateMousePosition(event);
-
-    for (var i = 0; i < this.mouseObjects.length; i += 1) {
-      this.mouseObjects[i].mouseMove(this.mouse);
-    }
-  };
-
-  MainScene.prototype.onMouseUp = function (event) {
-    event.preventDefault();
-    this.updateMousePosition(event);
-
-    for (var i = 0; i < this.mouseObjects.length; i += 1) {
-      this.mouseObjects[i].mouseUp(this.mouse);
-    }
-  };
-
-  MainScene.prototype.onMouseDown = function (event) {
-    event.preventDefault();
-    this.updateMousePosition(event);
-
-    for (var i = 0; i < this.mouseObjects.length; i += 1) {
-      this.mouseObjects[i].mouseDown(this.mouse);
-    }
-  };
 
   return MainScene;
 }();
@@ -89276,7 +89499,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54786" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51255" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

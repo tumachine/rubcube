@@ -1,6 +1,8 @@
 /* eslint-disable max-len */
 import * as THREE from '../../node_modules/three/src/Three';
 
+export const randomInt = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1) + min);
+
 export enum sides {
   l = 0,
 
@@ -26,6 +28,12 @@ sidesMap.U = sides.u;
 sidesMap.D = sides.d;
 sidesMap.F = sides.f;
 sidesMap.B = sides.b;
+
+export interface MoveHistory {
+  side: number,
+  slice: number | number[],
+  clockwise: boolean,
+}
 
 export enum colors {
   green = 0,

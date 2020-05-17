@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable max-len */
 
-import { Matrix } from './utils';
+import { Matrix, MoveHistory } from './utils';
 
 export class Move {
   public rotation: RotateInterface
@@ -95,3 +95,18 @@ export class MoveOperation {
 
 type CubeGetter = (slice: number) => number[];
 type RotateInterface = (slice: number, clockwise: boolean, matrix: Matrix) => void;
+
+
+export class CurrentMoveHistory {
+  move: MoveHistory
+
+  index: number
+
+  rotateCube: boolean
+
+  public constructor(move: MoveHistory, index: number, rotateCube: boolean = false) {
+    this.move = move;
+    this.index = index;
+    this.rotateCube = rotateCube;
+  }
+}

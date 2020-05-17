@@ -1,12 +1,13 @@
+/* eslint-disable no-else-return */
 /* eslint-disable prefer-destructuring */
 /* eslint-disable no-lonely-if */
 /* eslint-disable max-len */
 import * as THREE from '../../node_modules/three/src/Three';
 import Cube from './cube';
-import { Move, MoveOperation } from './move';
-import { sides, sidesArr, sidesOrientaion, sidesStr, sidesMap, getLargestValue } from './utils';
+import { Move, MoveOperation, CurrentMoveHistory } from './move';
+import { sides, sidesArr, sidesOrientaion, sidesStr, sidesMap, getLargestValue, MoveHistory } from './utils';
 import RubikModel from './model';
-import { RenderInterface, MouseInterface } from '../d';
+import { RenderInterface } from '../d';
 import { MoveInterface } from './moveActions';
 import MainScene from '..';
 import { MathUtils } from '../../node_modules/three/src/Three';
@@ -15,13 +16,27 @@ interface CubeOperation {
   (side: number, cube?: number): void;
 }
 
-enum planeOrientation {
+interface MoveComplete {
+  (move: CurrentMoveHistory): void;
+}
+
+interface MouseMoveComplete {
+  (): void;
+}
+
+enum PLANEORIENTATION {
   XY = 'z',
   ZY = 'x',
   XZ = 'y',
 }
 
-class RubikView implements RenderInterface, MouseInterface {
+enum STATE {
+  NONE = -1,
+  MOUSE_ROTATE = 0,
+  ROTATE = 1,
+}
+
+class RubikView implements RenderInterface {
   private rubikModel: RubikModel
 
   private scene: MainScene
@@ -32,7 +47,7 @@ class RubikView implements RenderInterface, MouseInterface {
 
   private currentMove: MoveOperation
 
-  private isMoving: boolean
+  public isMoving: boolean
 
   private moveDirection: number
 
@@ -50,7 +65,7 @@ class RubikView implements RenderInterface, MouseInterface {
 
   private selectedCube: number
 
-  private selectedOrientation: planeOrientation
+  private selectedOrientation: PLANEORIENTATION
 
   private mouseAxis: string
 
@@ -70,21 +85,25 @@ class RubikView implements RenderInterface, MouseInterface {
 
   private clickedOnFace: boolean
 
-  private mouseIsDown: boolean;
-
   private positionOnMouseDown: THREE.Vector3
 
   private distanceTrigger: number = 0.2
 
   private lastMousePosition: THREE.Vector3
 
-  private rotating: boolean
+  private mouseRotating: boolean
 
   private raycaster: THREE.Raycaster
 
-  private eventMoveComplete: CustomEvent
+  public mouseMoveCompleteHandler: MouseMoveComplete
+
+  public moveCompleteHandler: MoveComplete
 
   public baseMesh: THREE.InstancedMesh
+
+  public mouse: THREE.Vector3
+
+  public curMoveH: CurrentMoveHistory
 
   constructor(rubikModel: RubikModel, scene: MainScene) {
     this.name = 'rubik';
@@ -105,18 +124,28 @@ class RubikView implements RenderInterface, MouseInterface {
     this.currentMove = null;
 
     this.isMoving = false;
-    this.moveDirection = null;
-    this.rotationSpeed = 2;
+    this.rotationSpeed = 0.4;
 
     this.pivot = new THREE.Object3D();
     this.activeGroup = [];
 
     this.clickedOnFace = false;
+    this.mouse = new THREE.Vector3(0, 0, 0);
 
-    this.eventMoveComplete = new CustomEvent('moveComplete');
+    document.addEventListener('mousedown', this.onMouseDown.bind(this), false);
+
+    document.addEventListener('mouseup', this.onMouseUp.bind(this), false);
+
+    document.addEventListener('mousemove', this.onMouseMove.bind(this), false);
   }
 
-  private getMousePosition = (mouse: THREE.Vector3, plane: planeOrientation = planeOrientation.XY): THREE.Vector3 => {
+  private updateMousePosition = (event: MouseEvent) => {
+    const rect = this.scene.canvas.getBoundingClientRect();
+    this.mouse.x = (event.clientX / rect.width) * 2 - 1;
+    this.mouse.y = -(event.clientY / rect.height) * 2 + 1;
+  }
+
+  private getMousePosition = (mouse: THREE.Vector3, plane: PLANEORIENTATION = PLANEORIENTATION.XY): THREE.Vector3 => {
     const vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
     vector.unproject(this.scene.camera);
     const dir = vector.sub(this.scene.camera.position).normalize();
@@ -125,31 +154,32 @@ class RubikView implements RenderInterface, MouseInterface {
     return pos;
   }
 
-  public mouseUp(position: THREE.Vector3) {
-    this.mouseIsDown = false;
+  public onMouseUp = (e: MouseEvent) => {
     this.clickedOnFace = false;
 
-    if (this.rotating) {
-      this.stopRotation();
-      this.rotating = false;
+    if (this.mouseRotating) {
+      this.targetRotation = this.getTargetRotation();
+      this.completingMouseMove = true;
+
+      this.mouseRotating = false;
     }
 
     // this.scene.controls.enable(true);
     this.scene.controls.enabled = true;
   }
 
-  public mouseDown(position: THREE.Vector3) {
-    this.mouseIsDown = true;
+  private onMouseDown = (e: MouseEvent) => {
+    this.updateMousePosition(e);
 
-    this.positionOnMouseDown = position.clone();
-    // console.log(this.positionOnMouseDown);
+    this.positionOnMouseDown = this.mouse.clone();
 
-    this.raycaster.setFromCamera(position, this.scene.camera);
+    this.raycaster.setFromCamera(this.mouse, this.scene.camera);
 
     const intersects = this.raycaster.intersectObjects(this.raycastMeshes);
-    if (intersects.length > 0) {
+    if (intersects.length > 0 && !this.completingMouseMove) {
       this.clickedOnFace = true;
       this.scene.controls.enabled = false;
+
       const intersection = intersects[0];
       const obj = intersection.object as THREE.Mesh;
       const { point } = intersection;
@@ -159,37 +189,38 @@ class RubikView implements RenderInterface, MouseInterface {
     }
   }
 
-  public mouseMove(position: THREE.Vector3) {
-    if (this.mouseIsDown) {
+  private onMouseMove(e: MouseEvent) {
+    if (this.clickedOnFace) {
+      this.updateMousePosition(e);
+
       let mPosDown = this.getMousePosition(this.positionOnMouseDown);
-      let mPos = this.getMousePosition(position);
+      let mPos = this.getMousePosition(this.mouse);
 
-      if (this.rotating) {
+      const distance = mPos.sub(mPosDown).distanceTo(new THREE.Vector3(0, 0, 0));
+      if (distance >= this.distanceTrigger) {
+        console.log('TRIGGER');
+
         const orientation = this.selectedOrientation;
-        const mPosLast = this.getMousePosition(this.lastMousePosition, orientation);
-        mPos = this.getMousePosition(position, orientation);
-        const dir = mPos.sub(mPosLast);
+        mPosDown = this.getMousePosition(this.positionOnMouseDown, orientation);
+        mPos = this.getMousePosition(this.mouse, orientation);
+        const dir = mPos.sub(mPosDown);
+        this.mouseMoveTrigger(dir);
 
-        this.rotateWithMouse(dir);
 
-        this.lastMousePosition = position.clone();
-      } else if (this.clickedOnFace) {
-        const distance = mPos.sub(mPosDown).distanceTo(new THREE.Vector3(0, 0, 0));
-        if (distance >= this.distanceTrigger) {
-          console.log('TRIGGER');
-
-          const orientation = this.selectedOrientation;
-          mPosDown = this.getMousePosition(this.positionOnMouseDown, orientation);
-          mPos = this.getMousePosition(position, orientation);
-          const dir = mPos.sub(mPosDown);
-          this.mouseMoveTrigger(dir);
-
-          this.clickedOnFace = false;
-
-          this.lastMousePosition = position.clone();
-          this.rotating = true;
-        }
+        this.lastMousePosition = this.mouse.clone();
+        this.mouseRotating = true;
+        this.clickedOnFace = false;
       }
+    } else if (this.mouseRotating) {
+      this.updateMousePosition(e);
+
+      const mPosLast = this.getMousePosition(this.lastMousePosition, this.selectedOrientation);
+      const mPos = this.getMousePosition(this.mouse, this.selectedOrientation);
+      const dir = mPos.sub(mPosLast);
+
+      this.rotateWithMouse(dir);
+
+      this.lastMousePosition = this.mouse.clone();
     }
   }
 
@@ -215,70 +246,35 @@ class RubikView implements RenderInterface, MouseInterface {
 
     if (side === sides.l || side === sides.r) {
       vector = new THREE.Vector2(z, y);
-      this.selectedOrientation = planeOrientation.ZY;
+      this.selectedOrientation = PLANEORIENTATION.ZY;
     } else if (side === sides.u || side === sides.d) {
       vector = new THREE.Vector2(x, z);
-      this.selectedOrientation = planeOrientation.XZ;
+      this.selectedOrientation = PLANEORIENTATION.XZ;
     } else if (side === sides.f || side === sides.b) {
       vector = new THREE.Vector2(x, y);
-      this.selectedOrientation = planeOrientation.XY;
+      this.selectedOrientation = PLANEORIENTATION.XY;
     }
     return vector;
   }
 
-  private createRaycastMeshes = () => {
-    this.raycastMeshes = [];
-    let limit = Math.floor(this.rubikModel.sideLength / 2);
-    if (this.rubikModel.sideLength % 2 === 0) {
-      limit = this.rubikModel.sideLength / 2 - 0.5;
-    }
-
-    const percentBigger = 1;
-    limit = (limit / 100) * percentBigger + limit;
-
-    const length = this.rubikModel.sideLength;
-
-    const material = new THREE.MeshBasicMaterial();
-    const geometry = new THREE.PlaneBufferGeometry(length, length);
-
-    const createMesh = () => {
-      const mesh = new THREE.Mesh(
-        geometry,
-        material.clone(),
-      );
-      return mesh;
-    };
-
-    for (let i = 0; i < sidesArr.length; i += 1) {
-      const mesh = createMesh();
-      // (mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00);
-      sidesOrientaion[i](mesh, limit, 0);
-      mesh.name = sidesStr[i];
-      mesh.visible = false;
-      this.raycastMeshes.push(mesh);
-    }
-  }
-
-  private stopRotation() {
+  private getTargetRotation = (): number => {
     const rotation = Math.PI / 2;
     const halfRotation = rotation / 2;
     const radians = this.pivot.rotation[this.mouseAxis];
 
     if (radians > 0) {
       if (radians % rotation > halfRotation) {
-        this.targetRotation = (Math.floor(radians / rotation) + 1) * rotation;
+        return (Math.floor(radians / rotation) + 1) * rotation;
       } else {
-        this.targetRotation = Math.floor(radians / rotation) * rotation;
+        return Math.floor(radians / rotation) * rotation;
       }
     } else if (radians < 0) {
       if (radians % rotation < -halfRotation) {
-        this.targetRotation = Math.floor(radians / rotation) * rotation;
+        return Math.floor(radians / rotation) * rotation;
       } else {
-        this.targetRotation = (Math.floor(radians / rotation) + 1) * rotation;
+        return (Math.floor(radians / rotation) + 1) * rotation;
       }
     }
-
-    this.completingMouseMove = true;
   }
 
   private completeMouseMove() {
@@ -291,15 +287,15 @@ class RubikView implements RenderInterface, MouseInterface {
 
     if (this.pivot.rotation[this.mouseAxis] > 0) {
       if (this.pivot.rotation[this.mouseAxis] % rotation < halfRotation) {
-        this.pivot.rotation[this.mouseAxis] -= (1 * 0.03);
+        this.pivot.rotation[this.mouseAxis] -= (1 * 0.1);
       } else {
-        this.pivot.rotation[this.mouseAxis] += (1 * 0.03);
+        this.pivot.rotation[this.mouseAxis] += (1 * 0.1);
       }
     } else {
       if (this.pivot.rotation[this.mouseAxis] % rotation < -halfRotation) {
-        this.pivot.rotation[this.mouseAxis] -= (1 * 0.03);
+        this.pivot.rotation[this.mouseAxis] -= (1 * 0.1);
       } else {
-        this.pivot.rotation[this.mouseAxis] += (1 * 0.03);
+        this.pivot.rotation[this.mouseAxis] += (1 * 0.1);
       }
     }
 
@@ -326,7 +322,9 @@ class RubikView implements RenderInterface, MouseInterface {
       this.mouseMoveAction(this.mouseSlice, rotations > 0);
     }
 
-    window.dispatchEvent(this.eventMoveComplete);
+    if (this.mouseMoveCompleteHandler) {
+      this.mouseMoveCompleteHandler();
+    }
   }
 
   private rotateWithMouse(rotation: THREE.Vector3) {
@@ -487,20 +485,62 @@ class RubikView implements RenderInterface, MouseInterface {
     this.activeGroup = [];
   }
 
+  private doNoAnimationMove = (move: MoveOperation) => {
+    this.activateSlice(move.getCubes());
+
+    this.pivot.rotation[move.axis] = move.clockwise ? Math.PI / -2 : Math.PI / 2;
+    // this.pivot.rotation[currentMove.axis] = currentMove.clockwise ? Math.PI / 2 : Math.PI / -2;
+
+    this.deactivateSlice();
+
+    move.rotate(this.rubikModel.matrixReference);
+  }
+
+  public jumpToHistoryIndex = (historyIndex: number) => {
+    const steps = historyIndex - this.rubikModel.currentHistoryIndex;
+    if (steps > 0) {
+      // move forward
+      for (let i = 0; i < steps; i += 1) {
+        this.rubikModel.currentHistoryIndex += 1;
+        const currentMove = this.rubikModel.moveHistory[this.rubikModel.currentHistoryIndex];
+
+        const iMove = this.rubikModel.getUserMove(currentMove);
+        iMove.rotate(this.rubikModel.matrix);
+
+        const gMove = this.rubikModel.getInternalMove(currentMove);
+        this.doNoAnimationMove(gMove);
+      }
+    } else if (steps < 0) {
+      // move backwards
+      const absSteps = Math.abs(steps);
+      for (let i = 0; i < absSteps; i += 1) {
+        const currentMove = this.rubikModel.moveHistory[this.rubikModel.currentHistoryIndex];
+        const backwardsMove: MoveHistory = { side: currentMove.side, slice: currentMove.slice, clockwise: !currentMove.clockwise };
+
+        const iMove = this.rubikModel.getUserMove(backwardsMove);
+        iMove.rotate(this.rubikModel.matrix);
+
+        const gMove = this.rubikModel.getInternalMove(backwardsMove);
+        this.doNoAnimationMove(gMove);
+
+        this.rubikModel.currentHistoryIndex -= 1;
+      }
+    }
+  }
+
   public startNextMove = () => {
     if (this.isMoving) {
       console.log('Already moving');
       return;
     }
-    const nextMove = this.rubikModel.getNextMove();
+    this.curMoveH = this.rubikModel.getNextMove();
 
-
-    if (nextMove) {
+    if (this.curMoveH) {
       if (!this.isMoving) {
-        if (nextMove.rotation) {
-          this.currentMove = this.rubikModel.getUserMove(nextMove);
+        if (this.curMoveH.rotateCube) {
+          this.currentMove = this.rubikModel.getUserMove(this.curMoveH.move);
         } else {
-          this.currentMove = this.rubikModel.getInternalMove(nextMove);
+          this.currentMove = this.rubikModel.getInternalMove(this.curMoveH.move);
         }
 
         this.isMoving = true;
@@ -536,7 +576,9 @@ class RubikView implements RenderInterface, MouseInterface {
     // update matrix reference
     this.currentMove.rotate(this.rubikModel.matrixReference);
 
-    this.moveDirection = undefined;
+    if (this.moveCompleteHandler && !this.curMoveH.rotateCube) {
+      this.moveCompleteHandler(this.curMoveH);
+    }
 
     this.startNextMove();
   }
@@ -547,6 +589,39 @@ class RubikView implements RenderInterface, MouseInterface {
       this.doMove();
     } else if (this.completingMouseMove) {
       this.completeMouseMove();
+    }
+  }
+
+  private createRaycastMeshes = () => {
+    this.raycastMeshes = [];
+    let limit = Math.floor(this.rubikModel.sideLength / 2);
+    if (this.rubikModel.sideLength % 2 === 0) {
+      limit = this.rubikModel.sideLength / 2 - 0.5;
+    }
+
+    const percentBigger = 1;
+    limit = (limit / 100) * percentBigger + limit;
+
+    const length = this.rubikModel.sideLength;
+
+    const material = new THREE.MeshBasicMaterial();
+    const geometry = new THREE.PlaneBufferGeometry(length, length);
+
+    const createMesh = () => {
+      const mesh = new THREE.Mesh(
+        geometry,
+        material.clone(),
+      );
+      return mesh;
+    };
+
+    for (let i = 0; i < sidesArr.length; i += 1) {
+      const mesh = createMesh();
+      // (mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00);
+      sidesOrientaion[i](mesh, limit, 0);
+      mesh.name = sidesStr[i];
+      mesh.visible = false;
+      this.raycastMeshes.push(mesh);
     }
   }
 

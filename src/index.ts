@@ -33,20 +33,18 @@ class MainScene {
 
   mouseObjects: MouseInterface[]
 
-  mouse: THREE.Vector3
-
   constructor() {
     this.scene = new THREE.Scene();
 
     this.camera = createCamera();
 
     const downLight = new THREE.HemisphereLight(0xffffff, 0x000088);
-    downLight.position.set(-1, 1, 1);
+    downLight.position.set(-10, 10, 10);
     downLight.add(new THREE.AxesHelper(3));
     this.scene.add(downLight);
 
     const upLight = new THREE.HemisphereLight(0xffffff, 0x880000);
-    upLight.position.set(1, -1, -1);
+    upLight.position.set(10, -10, -10);
     upLight.add(new THREE.AxesHelper(3));
     this.scene.add(upLight);
 
@@ -60,52 +58,8 @@ class MainScene {
 
     this.renderObjects = [];
 
-    this.mouseObjects = [];
-
-    this.mouse = new THREE.Vector3();
-
-    document.addEventListener('mousedown', this.onMouseDown.bind(this), false);
-
-    document.addEventListener('mouseup', this.onMouseUp.bind(this), false);
-
-    document.addEventListener('mousemove', this.onMouseMove.bind(this), false);
-
     const helper = new THREE.AxesHelper(5);
     this.scene.add(helper);
-  }
-
-  updateMousePosition = (event: MouseEvent) => {
-    const rect = this.canvas.getBoundingClientRect();
-    this.mouse.x = (event.clientX / rect.width) * 2 - 1;
-    this.mouse.y = -(event.clientY / rect.height) * 2 + 1;
-  }
-
-  onMouseMove(event: MouseEvent) {
-    this.updateMousePosition(event);
-
-    for (let i = 0; i < this.mouseObjects.length; i += 1) {
-      this.mouseObjects[i].mouseMove(this.mouse);
-    }
-  }
-
-  onMouseUp(event: MouseEvent) {
-    event.preventDefault();
-
-    this.updateMousePosition(event);
-
-    for (let i = 0; i < this.mouseObjects.length; i += 1) {
-      this.mouseObjects[i].mouseUp(this.mouse);
-    }
-  }
-
-  onMouseDown(event: MouseEvent) {
-    event.preventDefault();
-
-    this.updateMousePosition(event);
-
-    for (let i = 0; i < this.mouseObjects.length; i += 1) {
-      this.mouseObjects[i].mouseDown(this.mouse);
-    }
   }
 
   resizeRendererToDisplaySize = () => {
