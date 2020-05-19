@@ -540,7 +540,7 @@ class RubikView implements RenderInterface {
 
       new TWEEN.Tween(start)
         .to(end, 400)
-        .easing(TWEEN.Easing.Back.Out)
+        .easing(TWEEN.Easing.Quadratic.Out)
         .onUpdate(() => {
           this.pivot.rotation[currentMove.axis] = start.angle;
         })

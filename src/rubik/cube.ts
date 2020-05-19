@@ -4,6 +4,7 @@ import { sides, sidesOrientaion, getTextTexture } from './utils';
 import { Vector3, Euler } from '../../node_modules/three/src/Three';
 // import { makeTextSprite } from './utils';
 // import * as THREE from 'three';
+import main from '../index';
 
 const boxWidth = 0.95;
 const boxHeight = 0.95;
@@ -18,8 +19,12 @@ const orange = 0xFFA500;
 
 const colors = [green, blue, orange, red, white, yellow];
 
-const planeMaterial = new THREE.MeshLambertMaterial();
-const planeGeometry = new THREE.PlaneBufferGeometry(boxWidth, boxHeight);
+const planeTexture = new THREE.TextureLoader().load(require('../textures/cube.jpg'));
+
+planeTexture.anisotropy = 4;
+const planeMaterial = new THREE.MeshPhongMaterial({ map: planeTexture });
+const planeGeometry = new THREE.PlaneBufferGeometry(1, 1);
+
 
 const createPlaneMesh = () => {
   const mesh = new THREE.Mesh(
@@ -94,12 +99,12 @@ export default class Cube {
 
   setColor(faceSide: number, color: number) {
     const mesh = this.baseMeshes[faceSide];
-    (mesh.material as THREE.MeshLambertMaterial).color.set(colors[color]);
+    (mesh.material as THREE.MeshPhongMaterial).color.set(colors[color]);
   }
 
   setOuterColor(faceSide: number, color: number) {
     const mesh = this.outerMeshes[faceSide];
-    (mesh.material as THREE.MeshLambertMaterial).color.set(colors[color]);
+    (mesh.material as THREE.MeshPhongMaterial).color.set(colors[color]);
   }
 
   setText(faceSide: number, text: string) {
@@ -111,7 +116,7 @@ export default class Cube {
   disposeBase() {
     for (let i = 0; i < 6; i += 1) {
       if (this.baseMeshes[i] !== undefined) {
-        (this.baseMeshes[i].material as THREE.MeshLambertMaterial).dispose();
+        (this.baseMeshes[i].material as THREE.MeshPhongMaterial).dispose();
         this.baseMeshes[i].geometry.dispose();
         this.cube.remove(this.baseMeshes[i]);
       }
@@ -121,7 +126,7 @@ export default class Cube {
   disposeOuter() {
     for (let i = 0; i < 6; i += 1) {
       if (this.outerMeshes[i] !== undefined) {
-        (this.outerMeshes[i].material as THREE.MeshLambertMaterial).dispose();
+        (this.outerMeshes[i].material as THREE.MeshPhongMaterial).dispose();
         this.outerMeshes[i].geometry.dispose();
         this.cube.remove(this.outerMeshes[i]);
       }

@@ -37,16 +37,23 @@ class MainScene {
     this.scene = new THREE.Scene();
 
     this.camera = createCamera();
-
     const downLight = new THREE.HemisphereLight(0xffffff, 0x000088);
     downLight.position.set(-10, 10, 10);
-    downLight.add(new THREE.AxesHelper(3));
+    downLight.intensity = 0.7;
+    // downLight.add(new THREE.AxesHelper(3));
     this.scene.add(downLight);
 
     const upLight = new THREE.HemisphereLight(0xffffff, 0x880000);
     upLight.position.set(10, -10, -10);
-    upLight.add(new THREE.AxesHelper(3));
+    upLight.intensity = 0.7;
+    // upLight.add(new THREE.AxesHelper(3));
     this.scene.add(upLight);
+
+    // this.light = new THREE.PointLight(0xffffff, 1, 100);
+    this.light = new THREE.DirectionalLight(0xffffff, 0.4);
+    this.scene.add(this.light);
+
+    // this.scene.add(new THREE.HemisphereLight(0x443333, 0x222233, 4));
 
     this.canvas = document.querySelector('#c');
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
@@ -58,8 +65,8 @@ class MainScene {
 
     this.renderObjects = [];
 
-    const helper = new THREE.AxesHelper(5);
-    this.scene.add(helper);
+    // const helper = new THREE.AxesHelper(5);
+    // this.scene.add(helper);
   }
 
   resizeRendererToDisplaySize = () => {
@@ -86,7 +93,7 @@ class MainScene {
     }
 
     this.controls.update();
-    // this.light.position.copy(this.camera.getWorldPosition(new THREE.Vector3()));
+    this.light.position.copy(this.camera.getWorldPosition(new THREE.Vector3()));
     this.renderer.render(this.scene, this.camera);
     requestAnimationFrame(this.render);
   }

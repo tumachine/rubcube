@@ -10,6 +10,12 @@ import RubikSolver from './solver';
 
 type Slices = Array<Array<Array<number>>>;
 
+enum MoveType {
+  SOLVE = 0,
+  USER = 1,
+  RANDOM = 2,
+}
+
 interface MoveHistory {
   side: number,
   slice: number | number[],
@@ -243,7 +249,7 @@ class RubikModel {
     this.currentMoves = [];
   }
 
-  // this function is primarily for solving rubik's cube, don't forget to reset matrix to the state before solve
+  // this function is primarily for generating moves
   private moveOperation = (side: number, slice: number | number[], clockwise: boolean) => {
     const moveH = new MoveOperation(this.moves[side], slice, clockwise);
     moveH.rotate(this.matrix);
