@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
 import MoveActions from '../moveActions';
-import { sides as s, colorHashes } from '../utils';
+import { Side as s, Side } from '../utils';
 import RubikModel from '../model';
 import Face from '../face';
 
@@ -33,81 +33,27 @@ class SolveStandardRubik extends RubikSolutionBase {
 
     this.generateFaceSideCases();
 
-    const frontLeft = {
-      U: this.m.L,
-      D: this.m.R,
-      L: this.m.D,
-      R: this.m.U,
-      F: this.m.F,
-      B: this.m.B,
-    };
+    this.frontOrient = [
+      // left
+      MoveActions.createCustom(this.m.D, this.m.U, this.m.L, this.m.R, this.m.F, this.m.B),
+      // right
+      MoveActions.createCustom(this.m.U, this.m.D, this.m.R, this.m.L, this.m.F, this.m.B),
+      // up
+      MoveActions.createCustom(this.m.L, this.m.R, this.m.U, this.m.D, this.m.F, this.m.B),
+      // down
+      MoveActions.createCustom(this.m.R, this.m.L, this.m.D, this.m.U, this.m.F, this.m.B),
+    ];
 
-    const frontRight = {
-      U: this.m.R,
-      D: this.m.L,
-      L: this.m.U,
-      R: this.m.D,
-      F: this.m.F,
-      B: this.m.B,
-    };
-
-    const frontUp = {
-      U: this.m.U,
-      D: this.m.D,
-      L: this.m.L,
-      R: this.m.R,
-      F: this.m.F,
-      B: this.m.B,
-    };
-
-    const frontDown = {
-      U: this.m.D,
-      D: this.m.U,
-      L: this.m.R,
-      R: this.m.L,
-      F: this.m.F,
-      B: this.m.B,
-    };
-
-    this.frontOrient = [frontLeft, frontRight, frontUp, frontDown];
-
-    const sideLeft = {
-      U: this.m.B,
-      D: this.m.F,
-      L: this.m.D,
-      R: this.m.U,
-      F: this.m.L,
-      B: this.m.R,
-    };
-
-    const sideRight = {
-      U: this.m.B,
-      D: this.m.F,
-      L: this.m.U,
-      R: this.m.D,
-      F: this.m.R,
-      B: this.m.L,
-    };
-
-    const sideUp = {
-      U: this.m.B,
-      D: this.m.F,
-      L: this.m.L,
-      R: this.m.R,
-      F: this.m.U,
-      B: this.m.D,
-    };
-
-    const sideDown = {
-      U: this.m.B,
-      D: this.m.F,
-      L: this.m.R,
-      R: this.m.L,
-      F: this.m.D,
-      B: this.m.U,
-    };
-
-    this.sideOrient = [sideLeft, sideRight, sideUp, sideDown];
+    this.sideOrient = [
+      // left
+      MoveActions.createCustom(this.m.D, this.m.U, this.m.B, this.m.F, this.m.L, this.m.R),
+      // right
+      MoveActions.createCustom(this.m.U, this.m.D, this.m.B, this.m.F, this.m.R, this.m.L),
+      // up
+      MoveActions.createCustom(this.m.L, this.m.R, this.m.B, this.m.F, this.m.U, this.m.D),
+      // down
+      MoveActions.createCustom(this.m.R, this.m.L, this.m.B, this.m.F, this.m.D, this.m.U),
+    ];
   }
 
   private generateFaceSideCases = () => {
@@ -277,9 +223,9 @@ class SolveStandardRubik extends RubikSolutionBase {
     // find cube where sum of the colors equals, sum of the desired cube
     // can check bottom and top with this solution
     let desiredSum = 0;
-    desiredSum += colorHashes[sc[0]];
-    desiredSum += colorHashes[sc[1]];
-    desiredSum += colorHashes[s.f];
+    desiredSum += Side.getHash(sc[0]);
+    desiredSum += Side.getHash(sc[1]);
+    desiredSum += Side.getHash(s.f);
     // front
     let sum = 0;
     let frontFaceSide = null;
@@ -601,9 +547,9 @@ class SolveStandardRubik extends RubikSolutionBase {
         const fc = this.faceCornerCases[i];
 
         let desiredSum = 0;
-        desiredSum += colorHashes[sc[0]];
-        desiredSum += colorHashes[sc[1]];
-        desiredSum += colorHashes[s.b];
+        desiredSum += s.getHash(sc[0]);
+        desiredSum += s.getHash(sc[1]);
+        desiredSum += s.getHash(s.b);
 
         let sum = 0;
         sum += this.getColorHash(sc[0], this.f.ur);

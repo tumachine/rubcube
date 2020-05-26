@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import RubikOperations from '../operations';
-import { sides as s, colorHashes } from '../utils';
+import { Side as s, Side } from '../utils';
 import { FindReturn } from './d';
 import RubikSolutionBase from './rubikSolutionBase';
 import MoveActions from '../moveActions';
@@ -19,8 +19,8 @@ interface ParityInfo {
 
 interface Edge {
     side: number[][],
-    firstFace: s,
-    secondFace: s,
+    firstFace: number,
+    secondFace: number,
     rotateOpposite: RotateFunc,
     rotateCorrect: RotateFunc,
 }
@@ -61,12 +61,7 @@ class SolveEdgesRubik extends RubikSolutionBase {
   public constructor(r: RubikModel) {
     super(r);
 
-    this.m.L = this.r.m.L;
-    this.m.R = this.r.m.R;
-    this.m.F = this.r.m.F;
-    this.m.B = this.r.m.B;
-    this.m.U = this.r.m.U;
-    this.m.D = this.r.m.D;
+    this.m = this.r.m;
 
     this.interface[s.l] = [...this.r.stRotations[0]];
     this.interface[s.r] = [...this.r.opRotations[0]];
@@ -301,7 +296,7 @@ class SolveEdgesRubik extends RubikSolutionBase {
     }
   };
 
-  getEdgeHashFromFaces = (firstFace: number, secondFace: number) => colorHashes[firstFace] + colorHashes[secondFace];
+  getEdgeHashFromFaces = (firstFace: number, secondFace: number) => Side.getHash(firstFace) + Side.getHash(secondFace);
 
   getEdgeHash = (e: Edge) => this.getEdgeHashFromFaces(e.firstFace, e.secondFace);
 

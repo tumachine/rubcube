@@ -2,7 +2,7 @@
 /* eslint-disable max-len */
 /* eslint-disable no-param-reassign */
 // eslint-disable-next-line max-classes-per-file
-import { sides as s, sides, getLargestValue, sidesStr, sidesMap, Matrix, randomInt } from './utils';
+import { Side as s, Matrix, randomInt } from './utils';
 import Face from './face';
 import { MoveActions, MoveInterface } from './moveActions';
 import { Move, MoveOperation, CurrentMoveHistory } from './move';
@@ -85,7 +85,6 @@ class RubikModel {
 
   private solver: RubikSolver
 
-  // random moves do not update current index or do not rotate internal matrix
   public constructor(sideLength: number) {
     this.sideLength = sideLength;
     this.totalColors = sideLength * sideLength;
@@ -126,7 +125,7 @@ class RubikModel {
   // for solve - generate moves starting from currentIndex and current matrix
   // once all moves are generated push them to currentMoves
   public solve = () => {
-    this.doContinuousMovesToEnd(() => {
+    this.fillMovesFromCurrentToEnd(() => {
       const t0 = performance.now();
       this.solver.solve();
       const t1 = performance.now();
@@ -135,10 +134,10 @@ class RubikModel {
   }
 
   public scramble = (moves: number) => {
-    this.doContinuousMovesToEnd(() => this.generateRandomMoves(moves));
+    this.fillMovesFromCurrentToEnd(() => this.generateRandomMoves(moves));
   }
 
-  private doContinuousMovesToEnd = (func: Function) => {
+  private fillMovesFromCurrentToEnd = (func: Function) => {
     this.removeHistoryByCurrentIndex();
 
     if (func) {
@@ -151,12 +150,12 @@ class RubikModel {
 
   public resetSO = () => {
     this.SO = [
-      sides.l,
-      sides.r,
-      sides.u,
-      sides.d,
-      sides.f,
-      sides.b,
+      s.l,
+      s.r,
+      s.u,
+      s.d,
+      s.f,
+      s.b,
     ];
   }
 
@@ -190,9 +189,9 @@ class RubikModel {
     let iWhite: number;
     let iOrange: number;
     for (let i = 0; i < 6; i += 1) {
-      if (this.SO[i] === sides.f) {
+      if (this.SO[i] === s.f) {
         iWhite = i;
-      } else if (this.SO[i] === sides.u) {
+      } else if (this.SO[i] === s.u) {
         iOrange = i;
       }
     }
@@ -283,45 +282,45 @@ class RubikModel {
   private rotateSOVer = (clockwise: boolean) => {
     const copySO = [...this.SO];
     if (clockwise) {
-      this.SO[sides.u] = copySO[sides.b];
-      this.SO[sides.f] = copySO[sides.u];
-      this.SO[sides.d] = copySO[sides.f];
-      this.SO[sides.b] = copySO[sides.d];
+      this.SO[s.u] = copySO[s.b];
+      this.SO[s.f] = copySO[s.u];
+      this.SO[s.d] = copySO[s.f];
+      this.SO[s.b] = copySO[s.d];
     } else {
-      this.SO[sides.u] = copySO[sides.f];
-      this.SO[sides.f] = copySO[sides.d];
-      this.SO[sides.d] = copySO[sides.b];
-      this.SO[sides.b] = copySO[sides.u];
+      this.SO[s.u] = copySO[s.f];
+      this.SO[s.f] = copySO[s.d];
+      this.SO[s.d] = copySO[s.b];
+      this.SO[s.b] = copySO[s.u];
     }
   }
 
   private rotateSOHor = (clockwise: boolean) => {
     const copySO = [...this.SO];
     if (clockwise) {
-      this.SO[sides.f] = copySO[sides.l];
-      this.SO[sides.r] = copySO[sides.f];
-      this.SO[sides.b] = copySO[sides.r];
-      this.SO[sides.l] = copySO[sides.b];
+      this.SO[s.f] = copySO[s.l];
+      this.SO[s.r] = copySO[s.f];
+      this.SO[s.b] = copySO[s.r];
+      this.SO[s.l] = copySO[s.b];
     } else {
-      this.SO[sides.f] = copySO[sides.r];
-      this.SO[sides.r] = copySO[sides.b];
-      this.SO[sides.b] = copySO[sides.l];
-      this.SO[sides.l] = copySO[sides.f];
+      this.SO[s.f] = copySO[s.r];
+      this.SO[s.r] = copySO[s.b];
+      this.SO[s.b] = copySO[s.l];
+      this.SO[s.l] = copySO[s.f];
     }
   }
 
   private rotateSODep = (clockwise: boolean) => {
     const copySO = [...this.SO];
     if (clockwise) {
-      this.SO[sides.u] = copySO[sides.r];
-      this.SO[sides.r] = copySO[sides.d];
-      this.SO[sides.d] = copySO[sides.l];
-      this.SO[sides.l] = copySO[sides.u];
+      this.SO[s.u] = copySO[s.r];
+      this.SO[s.r] = copySO[s.d];
+      this.SO[s.d] = copySO[s.l];
+      this.SO[s.l] = copySO[s.u];
     } else {
-      this.SO[sides.u] = copySO[sides.l];
-      this.SO[sides.r] = copySO[sides.u];
-      this.SO[sides.d] = copySO[sides.r];
-      this.SO[sides.l] = copySO[sides.d];
+      this.SO[s.u] = copySO[s.l];
+      this.SO[s.r] = copySO[s.u];
+      this.SO[s.d] = copySO[s.r];
+      this.SO[s.l] = copySO[s.d];
     }
   }
 
@@ -458,8 +457,8 @@ class RubikModel {
     for (let i = 0; i < 4; i += 1) {
       // private sequenceVer: number[] = [s.u, s.b, s.d, s.f, s.u]
       verticalSides.push([
-        sides.l,
-        sides.r,
+        s.l,
+        s.r,
         this.sequenceVer[(0 + i) % 4],
         this.sequenceVer[(2 + i) % 4],
         this.sequenceVer[(3 + i) % 4],
@@ -468,8 +467,8 @@ class RubikModel {
 
       // private sequenceVerRev: number[] = [s.f, s.d, s.b, s.u, s.f]
       verticalOppSides.push([
-        sides.r,
-        sides.l,
+        s.r,
+        s.l,
         this.sequenceVerRev[(1 + i) % 4],
         this.sequenceVerRev[(3 + i) % 4],
         this.sequenceVerRev[(0 + i) % 4],
@@ -478,8 +477,8 @@ class RubikModel {
 
       // private sequenceHor: number[] = [s.f, s.l, s.b, s.r, s.f]
       horizontalSides.push([
-        sides.d,
-        sides.u,
+        s.d,
+        s.u,
         this.sequenceHor[(1 + i) % 4],
         this.sequenceHor[(3 + i) % 4],
         this.sequenceHor[(0 + i) % 4],
@@ -488,8 +487,8 @@ class RubikModel {
 
       // private sequenceHorRev: number[] = [s.r, s.b, s.l, s.f, s.r]
       horizontalOppSides.push([
-        sides.u,
-        sides.d,
+        s.u,
+        s.d,
         this.sequenceHorRev[(0 + i) % 4],
         this.sequenceHorRev[(2 + i) % 4],
         this.sequenceHorRev[(3 + i) % 4],
@@ -498,8 +497,8 @@ class RubikModel {
 
       // private sequenceDep: number[] = [s.l, s.u, s.r, s.d, s.l]
       depthSides.push([
-        sides.b,
-        sides.f,
+        s.b,
+        s.f,
         this.sequenceDep[(2 + i) % 4],
         this.sequenceDep[(0 + i) % 4],
         this.sequenceDep[(1 + i) % 4],
@@ -508,8 +507,8 @@ class RubikModel {
 
       // private sequenceDepRev: number[] = [s.d, s.r, s.u, s.l, s.d]
       depthOppSides.push([
-        sides.f,
-        sides.b,
+        s.f,
+        s.b,
         this.sequenceDepRev[(3 + i) % 4],
         this.sequenceDepRev[(1 + i) % 4],
         this.sequenceDepRev[(2 + i) % 4],
@@ -665,7 +664,7 @@ class RubikModel {
 
   public getCubesDep = (slice: number): number[] => this.getCubes(this.posDep, this.sequenceDep, slice, s.b, s.f);
 
-  private getCubes = (slices: Slices, sequence: Array<number>, slice: number, bottom: number, top: number): number[] => {
+  private getCubes = (slices: Slices, sequence: number[], slice: number, bottom: number, top: number): number[] => {
     if (slice === 0) {
       return this.matrixReference[bottom];
     }
@@ -793,7 +792,7 @@ class RubikModel {
     }
   }
 
-  private rotate = (slices: Slices, sequence: Array<number>, slice: number, matrix: Matrix) => {
+  private rotate = (slices: Slices, sequence: number[], slice: number, matrix: Matrix) => {
     const layer = slices[slice];
     let first = layer[0];
     // save values of first face
@@ -815,7 +814,7 @@ class RubikModel {
     }
   }
 
-  private rotateFaceReal = (slice: number, bottom: number, top: number, clockwiseArr: Array<number>, matrix: Matrix) => {
+  private rotateFaceReal = (slice: number, bottom: number, top: number, clockwiseArr: number[], matrix: Matrix) => {
     if (slice === 0) {
       this.rotateFace(bottom, clockwiseArr, matrix);
     } else if (slice === this.sideLength - 1) {
@@ -825,7 +824,7 @@ class RubikModel {
 
   // keep matrix and reference separated
   // ref update is unnesesary unless you have a rubik model
-  private rotateFace = (face: number, positionFace: Array<number>, matrix: Matrix) => {
+  private rotateFace = (face: number, positionFace: number[], matrix: Matrix) => {
     const faceCopy = [...matrix[face]];
     for (let i = 0; i < this.totalColors; i += 1) {
       matrix[face][i] = faceCopy[positionFace[i]];

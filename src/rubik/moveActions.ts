@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { sides } from './utils';
+import { Side } from './utils';
 
 export class MoveActions {
   private operation;
@@ -8,17 +8,28 @@ export class MoveActions {
     this.operation = operation;
   }
 
-  public L: MoveInterface = (slice = 0, clockwise = true) => this.operation(sides.l, slice, clockwise);
+  public static createCustom(L: MoveInterface, R: MoveInterface, U: MoveInterface, D: MoveInterface, F: MoveInterface, B: MoveInterface): MoveActions {
+    const customMoveActions = new MoveActions(null);
+    customMoveActions.L = L;
+    customMoveActions.R = R;
+    customMoveActions.U = U;
+    customMoveActions.D = D;
+    customMoveActions.F = F;
+    customMoveActions.B = B;
+    return customMoveActions;
+  }
 
-  public R: MoveInterface = (slice = 0, clockwise = true) => this.operation(sides.r, slice, clockwise);
+  public L: MoveInterface = (slice = 0, clockwise = true) => this.operation(Side.l, slice, clockwise);
 
-  public U: MoveInterface = (slice = 0, clockwise = true) => this.operation(sides.u, slice, clockwise);
+  public R: MoveInterface = (slice = 0, clockwise = true) => this.operation(Side.r, slice, clockwise);
 
-  public D: MoveInterface = (slice = 0, clockwise = true) => this.operation(sides.d, slice, clockwise);
+  public U: MoveInterface = (slice = 0, clockwise = true) => this.operation(Side.u, slice, clockwise);
 
-  public F: MoveInterface = (slice = 0, clockwise = true) => this.operation(sides.f, slice, clockwise);
+  public D: MoveInterface = (slice = 0, clockwise = true) => this.operation(Side.d, slice, clockwise);
 
-  public B: MoveInterface = (slice = 0, clockwise = true) => this.operation(sides.b, slice, clockwise);
+  public F: MoveInterface = (slice = 0, clockwise = true) => this.operation(Side.f, slice, clockwise);
+
+  public B: MoveInterface = (slice = 0, clockwise = true) => this.operation(Side.b, slice, clockwise);
 }
 
 interface MoveOperation {

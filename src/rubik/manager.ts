@@ -2,7 +2,7 @@
 import RubikSolver from './solver';
 import RubikModel from './model';
 import RubikView from './view';
-import { sides as s, sidesStr, sidesArr, createCamera, sides } from './utils';
+import { Side as s, createCamera, sides } from './utils';
 import { MoveInterface } from './moveActions';
 import MainScene from '..';
 import * as THREE from '../../node_modules/three/src/Three';
@@ -263,7 +263,7 @@ class RubikManager {
 
     const move = this.rubikModel.moveHistory[index];
     if (move !== null) {
-      button.innerHTML = `${sidesStr[move.side]}${move.clockwise ? '' : "'"}${move.slice === 0 ? '' : move.slice}`;
+      button.innerHTML = `${s.toString(move.side)}${move.clockwise ? '' : "'"}${move.slice === 0 ? '' : move.slice}`;
     }
 
     button.onclick = () => {
@@ -353,7 +353,7 @@ class RubikManager {
 
   private addButton = (side: number, slice: number, clockwise: boolean) => {
     const button = document.createElement('button');
-    button.innerHTML = `${sidesStr[side]}${clockwise ? '' : "'"}${slice === 0 ? '' : slice + 1}`;
+    button.innerHTML = `${s.toString(side)}${clockwise ? '' : "'"}${slice === 0 ? '' : slice + 1}`;
 
     button.onclick = () => {
       this.rubikModel.doUserMove(side, slice, clockwise);

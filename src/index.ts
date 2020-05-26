@@ -1,12 +1,17 @@
 // import * as THREE from 'three';
 import * as THREE from '../node_modules/three/src/Three';
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls';
-import { TrackballControls } from '../node_modules/three/examples/jsm/controls/TrackballControls';
-import { FlyControls } from '../node_modules/three/examples/jsm/controls/FlyControls';
 import { RenderInterface, MouseInterface } from './d';
 import RubikManager from './rubik/manager';
-import { createCamera } from './rubik/utils';
-import CameraControls from './lib/CameraControls';
+
+export const createCamera = () => {
+  const fov = 75;
+  const aspect = 2;
+  const near = 0.1;
+  const far = 20;
+  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+  return camera;
+};
 
 function createLight() {
   const color = 0xFFFFFF;

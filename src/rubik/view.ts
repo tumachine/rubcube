@@ -1,17 +1,15 @@
 /* eslint-disable no-else-return */
 /* eslint-disable prefer-destructuring */
-/* eslint-disable no-lonely-if */
 /* eslint-disable max-len */
+import TWEEN from 'tween.ts';
 import * as THREE from '../../node_modules/three/src/Three';
 import Cube from './cube';
 import { Move, MoveOperation, CurrentMoveHistory } from './move';
-import { sides, sidesArr, sidesOrientaion, sidesStr, sidesMap, getLargestValue, MoveHistory } from './utils';
+import { Side, getLargestValue, MoveHistory, rotateSide } from './utils';
 import RubikModel from './model';
 import { RenderInterface } from '../d';
 import { MoveInterface } from './moveActions';
 import MainScene from '..';
-import { MathUtils } from '../../node_modules/three/src/Three';
-import TWEEN from 'tween.ts';
 
 interface CubeOperation {
   (side: number, cube?: number): void;
@@ -90,8 +88,6 @@ class RubikView implements RenderInterface {
 
   public moveCompleteHandler: MoveComplete
 
-  public baseMesh: THREE.InstancedMesh
-
   public mouse: THREE.Vector3
 
   public curMoveH: CurrentMoveHistory
@@ -164,7 +160,7 @@ class RubikView implements RenderInterface {
         const intersection = intersects[0];
         const obj = intersection.object as THREE.Mesh;
         const { point } = intersection;
-        this.setVarsBeforeMouseMove(obj.name, point);
+        this.setVarsOnCubeClick(obj.name, point);
         // console.log(`Point: ${intersects[0].point.x} ${intersects[0].point.y} ${intersects[0].point.z}`);
       }
     }
@@ -217,8 +213,8 @@ class RubikView implements RenderInterface {
     }
   }
 
-  private setVarsBeforeMouseMove = (sideString: string, point: THREE.Vector3) => {
-    const side = sidesMap[sideString];
+  private setVarsOnCubeClick = (sideString: string, point: THREE.Vector3) => {
+    const side = Side.fromString(sideString);
     const vector = this.getVectorBasedOnSide(side, point);
     const cubeNum = vector.y * this.rubikModel.sideLength + vector.x;
 
@@ -231,11 +227,11 @@ class RubikView implements RenderInterface {
   }
 
   private determinePlaneOrientation = (side: number): PLANEORIENTATION => {
-    if (side === sides.l || side === sides.r) {
+    if (side === Side.l || side === Side.r) {
       return PLANEORIENTATION.ZY;
-    } else if (side === sides.u || side === sides.d) {
+    } else if (side === Side.u || side === Side.d) {
       return PLANEORIENTATION.XZ;
-    } else if (side === sides.f || side === sides.b) {
+    } else if (side === Side.f || side === Side.b) {
       return PLANEORIENTATION.XY;
     }
     return undefined;
@@ -247,11 +243,11 @@ class RubikView implements RenderInterface {
     const y = Math.floor(point.y + length);
     const z = Math.floor(point.z + length);
 
-    if (side === sides.l || side === sides.r) {
+    if (side === Side.l || side === Side.r) {
       return new THREE.Vector2(z, y);
-    } else if (side === sides.u || side === sides.d) {
+    } else if (side === Side.u || side === Side.d) {
       return new THREE.Vector2(x, z);
-    } else if (side === sides.f || side === sides.b) {
+    } else if (side === Side.f || side === Side.b) {
       return new THREE.Vector2(x, y);
     }
   }
@@ -278,12 +274,12 @@ class RubikView implements RenderInterface {
           return (Math.floor(radians / rotation) + 1) * rotation;
         }
       }
+    }
+
+    if (radians > 0) {
+      return rotation;
     } else {
-      if (radians > 0) {
-        return rotation;
-      } else {
-        return -rotation;
-      }
+      return -rotation;
     }
   }
 
@@ -334,7 +330,7 @@ class RubikView implements RenderInterface {
     // determine what kind of move is to be performed
     this.mouseLargest = getLargestValue(direction);
 
-    if (this.selectedFace === sides.l) {
+    if (this.selectedFace === Side.l) {
       if (this.mouseLargest === 'y') {
         this.mouseRotation = direction.y < 0;
         this.mouseMoveAction = this.rubikModel.mu.B;
@@ -350,7 +346,7 @@ class RubikView implements RenderInterface {
         this.mouseAxis = 'y';
         this.mouseClockwise = false;
       }
-    } else if (this.selectedFace === sides.r) {
+    } else if (this.selectedFace === Side.r) {
       // D B
       if (this.mouseLargest === 'y') {
         this.mouseRotation = direction.y > 0;
@@ -367,7 +363,7 @@ class RubikView implements RenderInterface {
         this.mouseAxis = 'y';
         this.mouseClockwise = true;
       }
-    } else if (this.selectedFace === sides.u) {
+    } else if (this.selectedFace === Side.u) {
       // B L
       if (this.mouseLargest === 'x') {
         this.mouseRotation = direction.x < 0;
@@ -384,7 +380,7 @@ class RubikView implements RenderInterface {
         this.mouseAxis = 'x';
         this.mouseClockwise = false;
       }
-    } else if (this.selectedFace === sides.d) {
+    } else if (this.selectedFace === Side.d) {
       // B L
       if (this.mouseLargest === 'x') {
         this.mouseRotation = direction.x > 0;
@@ -401,7 +397,7 @@ class RubikView implements RenderInterface {
         this.mouseAxis = 'x';
         this.mouseClockwise = true;
       }
-    } else if (this.selectedFace === sides.f) {
+    } else if (this.selectedFace === Side.f) {
       // L D
       if (this.mouseLargest === 'x') {
         this.mouseRotation = direction.x > 0;
@@ -418,7 +414,7 @@ class RubikView implements RenderInterface {
         this.mouseAxis = 'x';
         this.mouseClockwise = true;
       }
-    } else if (this.selectedFace === sides.b) {
+    } else if (this.selectedFace === Side.b) {
       // L D
       if (this.mouseLargest === 'x') {
         this.mouseRotation = direction.x < 0;
@@ -539,8 +535,8 @@ class RubikView implements RenderInterface {
       const end = { angle: currentMove.clockwise ? Math.PI / -2 : Math.PI / 2 };
 
       new TWEEN.Tween(start)
-        .to(end, 400)
-        .easing(TWEEN.Easing.Quadratic.Out)
+        .to(end, 20)
+        .easing(TWEEN.Easing.Back.Out)
         .onUpdate(() => {
           this.pivot.rotation[currentMove.axis] = start.angle;
         })
@@ -589,11 +585,11 @@ class RubikView implements RenderInterface {
       return mesh;
     };
 
-    for (let i = 0; i < sidesArr.length; i += 1) {
+    for (let i = 0; i < 6; i += 1) {
       const mesh = createMesh();
       // (mesh.material as THREE.MeshBasicMaterial).color.set(0x00ff00);
-      sidesOrientaion[i](mesh, limit, 0);
-      mesh.name = sidesStr[i];
+      rotateSide(i, mesh, limit, 0);
+      mesh.name = Side.toString(i);
       mesh.visible = false;
       this.raycastMeshes.push(mesh);
     }

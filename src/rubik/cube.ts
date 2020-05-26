@@ -1,10 +1,7 @@
 /* eslint-disable max-len */
 import * as THREE from '../../node_modules/three/src/Three';
-import { sides, sidesOrientaion, getTextTexture } from './utils';
+import { Side, getTextTexture, rotateSide } from './utils';
 import { Vector3, Euler } from '../../node_modules/three/src/Three';
-// import { makeTextSprite } from './utils';
-// import * as THREE from 'three';
-import main from '../index';
 
 const boxWidth = 0.95;
 const boxHeight = 0.95;
@@ -73,21 +70,22 @@ export default class Cube {
 
   createMeshes(faceSide: number, detach: number = 0) {
     const baseMesh = createPlaneMesh();
-    sidesOrientaion[faceSide](baseMesh, detach, 0);
+    // sidesOrientaion[faceSide](baseMesh, detach, 0);
+    rotateSide(faceSide, baseMesh, detach, 0);
     this.baseMeshes[faceSide] = baseMesh;
     this.cube.add(baseMesh);
   }
 
   createOuterMeshes(faceSide: number, detach: number) {
     const outerMesh = createPlaneMesh();
-    sidesOrientaion[faceSide](outerMesh, detach, 180);
+    rotateSide(faceSide, outerMesh, detach, 180);
     this.outerMeshes[faceSide] = outerMesh;
     this.cube.add(outerMesh);
   }
 
   createTextMeshes(faceSide: number, detach: number = 0.05) {
     const mesh = getTextMesh();
-    sidesOrientaion[faceSide](mesh, detach, 0);
+    rotateSide(faceSide, mesh, detach, 0);
     this.textMeshes[faceSide] = mesh;
     this.cube.add(mesh);
   }

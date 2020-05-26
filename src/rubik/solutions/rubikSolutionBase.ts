@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { colorHashes, sides } from '../utils';
+import { Side } from '../utils';
 import RubikOperations from '../operations';
 import Face from '../face';
 import MoveActions from '../moveActions';
@@ -43,15 +43,28 @@ class RubikSolutionBase {
       this.lineLength = this.sideLength - 1;
 
       this.interface = new Array(6);
+    }
 
-      this.m = new MoveActions();
+    public setLocalSidesAndMoves = (l: number, r: number, u: number, d: number, f: number, b: number) => {
+      this.m = MoveActions.createCustom(
+        this.r.m[Side.toString(l)],
+        this.r.m[Side.toString(r)],
+        this.r.m[Side.toString(u)],
+        this.r.m[Side.toString(d)],
+        this.r.m[Side.toString(f)],
+        this.r.m[Side.toString(b)],
+      );
+
+      this.ls = {
+        l, r, u, d, f, b,
+      };
     }
 
     public check = (side: number, face: number, color: number): boolean => this.r.getColorFromInterface(side, face, this.interface) === color;
 
-    public getColorHash = (side: number, direction: number): number => colorHashes[this.r.getColorFromInterface(side, direction, this.interface)];
+    public getColorHash = (side: number, direction: number): number => Side.getHash(this.r.getColorFromInterface(side, direction, this.interface));
 
-    public getHash = (face: number): number => colorHashes[face];
+    public getHash = (face: number): number => Side.getHash(face);
 
     public getFaceDirection = (row, col) => col + row * this.sideLength;
 
