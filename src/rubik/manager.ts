@@ -79,20 +79,14 @@ class RubikManager {
     this.fromIndexInput.oninput = (e: Event) => {
       const from = parseInt(this.fromIndexInput.value);
       if (from >= 0 && from < this.historyButtons.length) {
-        // this.reset(from);
         this.jump(from);
       }
     };
 
     this.fromToAnimateButton.onclick = () => {
-      const from = parseInt(this.fromIndexInput.value);
       const to = parseInt(this.toIndexInput.value);
 
-      this.rubikView.doMoves(from, to);
-
-      this.switchButtonBackgroundColor(this.historyButtonPrevActive, false);
-      this.switchButtonBackgroundColor(this.historyButtons[from], true);
-      this.historyButtonPrevActive = this.historyButtons[from];
+      this.rubikView.doMoves(to);
     };
 
     this.outerMeshesCheckbox.onchange = (e: Event) => {
@@ -130,7 +124,6 @@ class RubikManager {
     this.currentMoveIndexText.innerHTML = this.rubikView.currentHistoryIndex.toString();
   }
 
-
   private addNewMoveUpdate = () => {
     this.updateToIndex();
     this.refreshHistoryButtons();
@@ -162,15 +155,17 @@ class RubikManager {
 
     this.rubikView.moveCompleteHandler = (move: CurrentMoveHistory) => {
       // console.log('movecomplete: event happened');
-      this.updateActiveHistoryButton(move.index);
+      if (move.index !== -1) {
+        this.updateActiveHistoryButton(move.index);
 
-      this.fromIndexInput.value = move.index.toString();
-      this.currentMoveIndexText.innerHTML = move.index.toString();
+        this.fromIndexInput.value = move.index.toString();
+        this.currentMoveIndexText.innerHTML = move.index.toString();
+      }
     };
   }
 
   public scramble = () => {
-    this.rubikView.scramble(5);
+    this.rubikView.scramble(20);
     this.addNewMoveUpdate();
   }
 
@@ -246,12 +241,11 @@ class RubikManager {
   }
 
   private jump = (historyIndex: number) => {
-    this.rubikView.jumpSaveRotation(historyIndex);
-    this.updateActiveHistoryButton(historyIndex);
-  }
-
-  private jumpAndReset = (historyIndex: number) => {
-    this.rubikView.jumpAndReset(historyIndex);
+    if (Math.abs(historyIndex - this.rubikView.currentHistoryIndex) > 1000) {
+      this.rubikView.jumpAndReset(historyIndex);
+    } else {
+      this.rubikView.jumpSaveRotation(historyIndex);
+    }
     this.updateActiveHistoryButton(historyIndex);
   }
 

@@ -100,13 +100,17 @@ type RotateInterface = (slice: number, clockwise: boolean, matrix: Matrix) => vo
 export class CurrentMoveHistory {
   move: MoveHistory
 
+  getMove: Function
+
+  onComplete: Function
+
   index: number
 
-  rotateCube: boolean
-
-  public constructor(move: MoveHistory, index: number, rotateCube: boolean = false) {
+  // public constructor(move: MoveHistory, index: number, rotateCube: boolean = false) {
+  public constructor(move: MoveHistory, index: number, getMove: Function, onComplete: Function) {
     this.move = move;
+    this.getMove = getMove;
+    this.onComplete = onComplete;
     this.index = index;
-    this.rotateCube = rotateCube;
   }
 }

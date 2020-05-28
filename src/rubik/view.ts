@@ -15,10 +15,6 @@ interface CubeOperation {
   (side: number, cube?: number): void;
 }
 
-interface MoveComplete {
-  (move: CurrentMoveHistory): void;
-}
-
 interface MouseMoveComplete {
   (): void;
 }
@@ -27,6 +23,10 @@ enum PLANEORIENTATION {
   XY = 'z',
   ZY = 'x',
   XZ = 'y',
+}
+
+interface TweenAngle {
+  angle: number
 }
 
 class RubikView implements RenderInterface {
@@ -80,17 +80,17 @@ class RubikView implements RenderInterface {
 
   public mouseMoveCompleteHandler: MouseMoveComplete
 
-  public moveCompleteHandler: MoveComplete
+  public moveCompleteHandler: Function
 
   public mouse: THREE.Vector3
-
-  public curMoveH: CurrentMoveHistory
 
   private halfMoveThresholdPassed: boolean
 
   private mouseTime: number
 
   private mouseDistance: number
+
+  private doAnimationToHistoryIndex: number
 
   constructor(sideLength: number, scene: MainScene) {
     this.rubikModel = new RubikModel(sideLength);
@@ -121,83 +121,6 @@ class RubikView implements RenderInterface {
     this.drawNewRubik();
   }
 
-  get length() {
-    return this.rubikModel.sideLength;
-  }
-
-  get currentHistoryIndex() {
-    return this.rubikModel.currentHistoryIndex;
-  }
-
-  get history() {
-    return this.rubikModel.moveHistory;
-  }
-
-  public stopAnimation = () => {
-    if (this.rubikModel.currentMoves.length > 0 || this.isMoving) {
-      const currentMove = this.curMoveH;
-      this.rubikModel.currentHistoryIndex = currentMove.index;
-      this.rubikModel.clearCurrentMoves();
-    }
-  }
-
-  public doMoves = (from: number, to: number) => {
-    this.jumpSaveRotation(from);
-
-    this.rubikModel.fillCurrentMoves(from, to);
-    this.rubikModel.currentHistoryIndex = to;
-    this.startNextMove();
-  }
-
-  public scramble = (moves: number) => {
-    this.rubikModel.scramble(moves);
-    this.startNextMove();
-  }
-
-  public solve = () => {
-    this.rubikModel.solve();
-    this.startNextMove();
-  }
-
-  public moveBack() {
-    this.rubikModel.moveBackward();
-    this.startNextMove();
-  }
-
-  public moveForward() {
-    this.rubikModel.moveForward();
-    this.startNextMove();
-  }
-
-  public jumpAndReset(historyIndex: number) {
-    this.rubikModel.jumpToHistoryIndex(historyIndex);
-
-    this.rubikModel.resetSO();
-    this.resetCubePositions();
-    this.colorizeBase();
-  }
-
-  private wrapFunc(func: Function) {
-    return () => {
-      func();
-      this.startNextMove();
-    };
-  }
-
-  public cubeRotationOperations = {
-    up: this.wrapFunc(() => this.rubikModel.rotateOVer(false)),
-    down: this.wrapFunc(() => this.rubikModel.rotateOVer(true)),
-    left: this.wrapFunc(() => this.rubikModel.rotateOHor(false)),
-    right: this.wrapFunc(() => this.rubikModel.rotateOHor(true)),
-    clockwise: this.wrapFunc(() => this.rubikModel.rotateODep(false)),
-    counter: this.wrapFunc(() => this.rubikModel.rotateODep(true)),
-  }
-
-  public doMove = (side: number, slice: number, clockwise: boolean) => {
-    this.rubikModel.doUserMove(side, slice, clockwise);
-    this.startNextMove();
-  }
-
   private drawNewRubik() {
     this.scene.renderObjects[0] = this;
 
@@ -214,6 +137,81 @@ class RubikView implements RenderInterface {
     this.enableBase();
     this.changeCamera();
     console.log(this.scene.renderer.info.memory);
+  }
+
+  get length() {
+    return this.rubikModel.sideLength;
+  }
+
+  get currentHistoryIndex() {
+    return this.rubikModel.currentHistoryIndex;
+  }
+
+  get history() {
+    return this.rubikModel.moveHistory;
+  }
+
+  public stopAnimation = () => {
+    this.rubikModel.clearCurrentMoves();
+    this.doAnimationToHistoryIndex = this.currentHistoryIndex;
+  }
+
+  public doMoves = (to: number) => {
+    this.doAnimationToHistoryIndex = to;
+    this.doMovesToHistoryIndex();
+  }
+
+  public scramble = (moves: number) => {
+    this.rubikModel.generateRandomMoves(moves);
+    this.doAnimationToHistoryIndex = this.rubikModel.moveHistory.length - 1;
+    this.doMovesToHistoryIndex();
+  }
+
+  public solve = () => {
+    this.rubikModel.generateSolveMoves();
+    this.doAnimationToHistoryIndex = this.rubikModel.moveHistory.length - 1;
+    this.doMovesToHistoryIndex();
+  }
+
+  public moveBack() {
+    this.rubikModel.moveBackward();
+    this.doStandardMoveAnimation();
+  }
+
+  public moveForward() {
+    this.rubikModel.moveForward();
+    this.doStandardMoveAnimation();
+  }
+
+  public jumpAndReset(historyIndex: number) {
+    this.rubikModel.jumpToHistoryIndex(historyIndex);
+
+    this.rubikModel.resetSO();
+    this.resetCubePositions();
+    this.colorizeBase();
+  }
+
+  private wrapRotation(func: Function) {
+    return () => {
+      if (!this.isMoving) {
+        func();
+        this.doStandardMoveAnimation();
+      }
+    };
+  }
+
+  public cubeRotationOperations = {
+    up: this.wrapRotation(() => this.rubikModel.rotateOVer(false)),
+    down: this.wrapRotation(() => this.rubikModel.rotateOVer(true)),
+    left: this.wrapRotation(() => this.rubikModel.rotateOHor(false)),
+    right: this.wrapRotation(() => this.rubikModel.rotateOHor(true)),
+    clockwise: this.wrapRotation(() => this.rubikModel.rotateODep(false)),
+    counter: this.wrapRotation(() => this.rubikModel.rotateODep(true)),
+  }
+
+  public doMove = (side: number, slice: number, clockwise: boolean) => {
+    this.rubikModel.doUserMove(side, slice, clockwise);
+    this.doStandardMoveAnimation();
   }
 
   private updateMousePosition = (event: MouseEvent) => {
@@ -345,7 +343,7 @@ class RubikView implements RenderInterface {
       object.translateY(detach);
     };
     const cube = this.cubes[this.rubikModel.getCube(side, cubeNum)];
-    rotateSide(side, cube.cube, 0.5);
+    // rotateSide(side, cube.cube, 0.5);
     const start = { x: cube.cube.position.x, y: cube.cube.position.y, z: cube.cube.position.z };
     const end = { x: cube.cube.position.x, y: cube.cube.position.y, z: cube.cube.position.z + 0.1 };
 
@@ -442,30 +440,22 @@ class RubikView implements RenderInterface {
     const start = { angle: this.pivot.rotation[this.mouseAxis] };
     const end = { angle: this.getTargetRotation() };
 
-    new TWEEN.Tween(start)
-      .to(end, 400)
-      .easing(TWEEN.Easing.Exponential.Out)
-      .onUpdate(() => {
-        this.pivot.rotation[this.mouseAxis] = start.angle;
-      })
-      .onComplete(() => {
-        this.mouseRotating = false;
-        this.deactivateSlice();
+    this.doMoveAnimation(start, end, this.mouseAxis, () => {
+      const rotations = (this.pivot.rotation[this.mouseAxis] / (Math.PI / 2)) % 4;
+      if (Math.abs(rotations) > 0) {
+        this.rubikModel.removeHistoryByCurrentIndex();
+      }
 
-        const rotations = (this.pivot.rotation[this.mouseAxis] / (Math.PI / 2)) % 4;
-        if (Math.abs(rotations) > 0) {
-          this.rubikModel.removeHistoryByCurrentIndex();
-        }
+      for (let i = 0; i < Math.abs(rotations); i += 1) {
+        this.mouseMoveAction(this.mouseSlice, rotations > 0);
+      }
 
-        for (let i = 0; i < Math.abs(rotations); i += 1) {
-          this.mouseMoveAction(this.mouseSlice, rotations > 0);
-        }
+      if (this.mouseMoveCompleteHandler) {
+        this.mouseMoveCompleteHandler();
+      }
 
-        if (this.mouseMoveCompleteHandler) {
-          this.mouseMoveCompleteHandler();
-        }
-      })
-      .start();
+      this.mouseRotating = false;
+    });
   }
 
   private mouseMoveTrigger(direction: THREE.Vector3) {
@@ -650,55 +640,84 @@ class RubikView implements RenderInterface {
     }
   }
 
-  private getNextMove = (): MoveOperation => {
-    this.curMoveH = this.rubikModel.getNextMove();
+  private doCurrentMoveAnimation = (move: CurrentMoveHistory, onComplete: Function = null) => {
+    const currentAnimatedMove = move.getMove();
 
-    if (this.curMoveH) {
-      if (this.curMoveH.rotateCube) {
-        return this.rubikModel.getUserMove(this.curMoveH.move);
-      } else {
-        return this.rubikModel.getInternalMove(this.curMoveH.move);
+    this.activateSlice(currentAnimatedMove.getCubes());
+
+    const start = { angle: 0 };
+    const end = { angle: currentAnimatedMove.clockwise ? Math.PI / -2 : Math.PI / 2 };
+
+    this.doMoveAnimation(start, end, currentAnimatedMove.axis, () => {
+      this.isMoving = false;
+      currentAnimatedMove.rotate(this.rubikModel.matrixReference);
+
+      move.onComplete();
+
+      if (onComplete) {
+        onComplete();
       }
-    }
-    return undefined;
+
+      if (this.moveCompleteHandler) {
+        this.moveCompleteHandler(move);
+      }
+    });
   }
 
-  public startNextMove = () => {
+  public doStandardMoveAnimation = () => {
     if (this.isMoving) {
       console.log('Already moving');
       return;
     }
 
-    const currentMove = this.getNextMove();
-    if (currentMove) {
+    const move = this.rubikModel.getNextMove();
+    if (move) {
       this.isMoving = true;
-      this.activateSlice(currentMove.getCubes());
 
-
-      const start = { angle: 0 };
-      const end = { angle: currentMove.clockwise ? Math.PI / -2 : Math.PI / 2 };
-
-      new TWEEN.Tween(start)
-        .to(end, 20)
-        .easing(TWEEN.Easing.Back.Out)
-        .onUpdate(() => {
-          this.pivot.rotation[currentMove.axis] = start.angle;
-        })
-        .onComplete(() => {
-          this.deactivateSlice();
-
-          // update matrix reference
-          currentMove.rotate(this.rubikModel.matrixReference);
-
-          if (this.moveCompleteHandler && !this.curMoveH.rotateCube) {
-            this.moveCompleteHandler(this.curMoveH);
-          }
-          this.isMoving = false;
-
-          this.startNextMove();
-        })
-        .start();
+      this.doCurrentMoveAnimation(move, () => {
+        this.doStandardMoveAnimation();
+      });
     }
+  }
+
+  // needs slice to be already activated
+  private doMoveAnimation = (start: TweenAngle, end: TweenAngle, axis: string, onComplete: Function = null) => {
+    new TWEEN.Tween(start)
+      .to(end, 200)
+      .easing(TWEEN.Easing.Linear.None)
+      .onUpdate(() => {
+        this.pivot.rotation[axis] = start.angle;
+      })
+      .onComplete(() => {
+        this.deactivateSlice();
+
+        if (onComplete) {
+          onComplete();
+        }
+      })
+      .start();
+  }
+
+  public doMovesToHistoryIndex = () => {
+    if (this.isMoving) {
+      console.log('Already moving');
+      return;
+    }
+
+    this.isMoving = true;
+    const steps = this.doAnimationToHistoryIndex - this.rubikModel.currentHistoryIndex;
+    if (steps > 0) {
+      this.rubikModel.moveForward();
+    } else if (steps < 0) {
+      this.rubikModel.moveBackward();
+    }
+
+    const move = this.rubikModel.getNextMove();
+    this.doCurrentMoveAnimation(move, () => {
+      if (this.rubikModel.currentHistoryIndex !== this.doAnimationToHistoryIndex) {
+        this.doMovesToHistoryIndex();
+      }
+    });
   }
 
   public render = () => {

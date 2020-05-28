@@ -124,28 +124,28 @@ class RubikModel {
 
   // for solve - generate moves starting from currentIndex and current matrix
   // once all moves are generated push them to currentMoves
-  public solve = () => {
-    this.fillMovesFromCurrentToEnd(() => {
-      const t0 = performance.now();
-      this.solver.solve();
-      const t1 = performance.now();
-      console.log('Took', (t1 - t0).toFixed(4), 'milliseconds to solve');
-    });
+  // solve, scramble, from - to = should use separate function, and disallow any movements while it's happening
+  // user moves, like rotation, slice, back and forward, should be adding to currentMoves
+  public generateSolveMoves = () => {
+    this.removeHistoryByCurrentIndex();
+    const copyMatrix = this.deepCopyMatrix(this.matrix);
+
+    const t0 = performance.now();
+    this.solver.solve();
+    const t1 = performance.now();
+    console.log('Took', (t1 - t0).toFixed(4), 'milliseconds to solve');
+
+    this.matrix = copyMatrix;
   }
 
-  public scramble = (moves: number) => {
-    this.fillMovesFromCurrentToEnd(() => this.generateRandomMoves(moves));
-  }
-
-  private fillMovesFromCurrentToEnd = (func: Function) => {
+  public generateRandomMoves = (moves: number) => {
     this.removeHistoryByCurrentIndex();
 
-    if (func) {
-      func();
+    const randomSlices = this.sideLength > 3;
+    for (let i = 0; i < moves; i += 1) {
+      const move = this.getRandomMove(randomSlices);
+      this.moveHistory.push(move);
     }
-
-    this.fillCurrentMoves(this.currentHistoryIndex, this.moveHistory.length - 1);
-    this.currentHistoryIndex = this.moveHistory.length - 1;
   }
 
   public resetSO = () => {
@@ -173,8 +173,10 @@ class RubikModel {
 
   private rotateCube = (side: number, sidesRotation: Function, clockwise: boolean) => {
     const moveH: MoveHistory = { side, slice: this.slices, clockwise };
-    this.currentMoves.push(new CurrentMoveHistory(moveH, -1, true));
-    sidesRotation(clockwise);
+    const getMove = () => this.getUserMove(moveH);
+    const onComplete = () => sidesRotation(clockwise);
+
+    this.currentMoves.push(new CurrentMoveHistory(moveH, -1, getMove, onComplete));
   }
 
   private getOrientation = (sideF: number, sideU: number) => this.rotations[sideF][sideU];
@@ -210,45 +212,11 @@ class RubikModel {
     };
   }
 
-  // select which portion of move history to animate
-  // add backward move generation
-  public fillCurrentMoves = (start: number, end: number = null) => {
-    if (start < 0 || start > this.moveHistory.length) {
-      console.log('Incorrect start index');
-    }
-
-    if (end !== null) {
-      if (end < 0 || end > this.moveHistory.length) {
-        console.log('Incorrect end index');
-      }
-    }
-
-    if (end === null) {
-      this.currentMoves.push(new CurrentMoveHistory(this.moveHistory[start], this.currentHistoryIndex));
-    } else {
-      // forward moves
-      // eslint-disable-next-line no-lonely-if
-      if (start < end) {
-        for (let i = start; i < end; i += 1) {
-          const index = i + 1;
-          this.currentMoves.push(new CurrentMoveHistory(this.moveHistory[index], index));
-        }
-      // backward moves
-      } else if (start > end) {
-        for (let i = start; i > end; i -= 1) {
-          const move = this.moveHistory[i];
-          const backwards: MoveHistory = { side: move.side, slice: move.slice, clockwise: !move.clockwise };
-          this.currentMoves.push(new CurrentMoveHistory(backwards, i - 1));
-        }
-      }
-    }
-  }
-
   public clearCurrentMoves = () => {
     this.currentMoves = [];
   }
 
-  // this function is primarily for generating moves
+  // this function is primarily for generating moves that depend on matrix change, like solve()
   private moveOperation = (side: number, slice: number | number[], clockwise: boolean) => {
     const moveH = new MoveOperation(this.moves[side], slice, clockwise);
     moveH.rotate(this.matrix);
@@ -332,16 +300,17 @@ class RubikModel {
   public moveBackward = () => {
     if (this.currentHistoryIndex > 0) {
       const currentMove = this.moveHistory[this.currentHistoryIndex];
+      const moveH: MoveHistory = { side: currentMove.side, slice: currentMove.slice, clockwise: !currentMove.clockwise };
       this.currentHistoryIndex -= 1;
 
-      const iMove = this.getUserMove(currentMove);
-      iMove.clockwise = !iMove.clockwise;
+      const getMove = () => this.getInternalMove(moveH);
+      const onComplete = () => {
+        const iMove = this.getUserMove(currentMove);
+        iMove.clockwise = !iMove.clockwise;
+        iMove.rotate(this.matrix);
+      };
 
-      iMove.rotate(this.matrix);
-
-      const moveH: MoveHistory = { side: currentMove.side, slice: currentMove.slice, clockwise: !currentMove.clockwise };
-
-      this.currentMoves.push(new CurrentMoveHistory(moveH, this.currentHistoryIndex));
+      this.currentMoves.push(new CurrentMoveHistory(moveH, this.currentHistoryIndex, getMove, onComplete));
     }
   }
 
@@ -350,10 +319,13 @@ class RubikModel {
       this.currentHistoryIndex += 1;
       const currentMove = this.moveHistory[this.currentHistoryIndex];
 
-      const iMove = this.getUserMove(currentMove);
-      iMove.rotate(this.matrix);
+      const getMove = () => this.getInternalMove(currentMove);
+      const onComplete = () => {
+        const iMove = this.getUserMove(currentMove);
+        iMove.rotate(this.matrix);
+      };
 
-      this.currentMoves.push(new CurrentMoveHistory(currentMove, this.currentHistoryIndex));
+      this.currentMoves.push(new CurrentMoveHistory(currentMove, this.currentHistoryIndex, getMove, onComplete));
     }
   }
 
@@ -365,14 +337,16 @@ class RubikModel {
 
   public doUserMove = (side: number, slice: number | number[], clockwise: boolean) => {
     this.removeHistoryByCurrentIndex();
-
     const moveH = this.createMoveBasedOnOrientation(side, slice, clockwise);
-    // rotate real matrix, with correct orientation
-    this.getUserMove(moveH).rotate(this.matrix);
     this.moveHistory.push(moveH);
     this.currentHistoryIndex += 1;
 
-    this.currentMoves.push(new CurrentMoveHistory(moveH, this.currentHistoryIndex));
+    const getMove = () => this.getInternalMove(moveH);
+    const onComplete = () => {
+      this.getUserMove(moveH).rotate(this.matrix);
+    };
+
+    this.currentMoves.push(new CurrentMoveHistory(moveH, this.currentHistoryIndex, getMove, onComplete));
   }
 
   public getNextMove = (): CurrentMoveHistory => this.currentMoves.shift();
@@ -422,14 +396,6 @@ class RubikModel {
   public getCube = (side: number, direction: number): number => this.matrixReference[side][direction];
 
   public getCubeFromInterface = (side: number, direction: number, inter: number[][]): number => this.matrixReference[side][inter[side][direction]];
-
-  private generateRandomMoves = (moves: number) => {
-    const randomSlices = this.sideLength > 3;
-    for (let i = 0; i < moves; i += 1) {
-      const move = this.getRandomMove(randomSlices);
-      this.moveOperation(move.side, move.slice, move.clockwise);
-    }
-  }
 
   private getRandomMove = (randomSlices = false): MoveHistory => {
     const side = randomInt(0, 5);
