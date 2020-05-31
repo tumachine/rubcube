@@ -43,7 +43,7 @@ export class Move {
 
   public getClockwiseOpposite = (clockwise: boolean) => !clockwise;
 
-  public rotate(slice: number | number[], clockwise: boolean, matrix: Matrix) {
+  public rotate<T>(slice: number | number[], clockwise: boolean, matrix: T[][]) {
     if (Array.isArray(slice)) {
       for (let i = 0; i < slice.length; i += 1) {
         this.rotation(slice[i], clockwise, matrix);
@@ -53,7 +53,7 @@ export class Move {
     }
   }
 
-  public getCubes(slice: number | number[]): number[] {
+  public getCubes(slice: number | number[]): CubeDir[] {
     if (Array.isArray(slice)) {
       const cubes = [];
       for (let i = 0; i < slice.length; i += 1) {
@@ -84,17 +84,17 @@ export class MoveOperation {
     this.side = this.move.side;
   }
 
-  public rotate(matrix: Matrix) {
+  public rotate<T>(matrix: T[][]) {
     this.move.rotate(this.slice, this.clockwise, matrix);
   }
 
-  public getCubes(): number[] {
+  public getCubes(): CubeDir[] {
     return this.move.getCubes(this.slice);
   }
 }
 
-type CubeGetter = (slice: number) => number[];
-type RotateInterface = (slice: number, clockwise: boolean, matrix: Matrix) => void;
+type CubeGetter = (slice: number) => CubeDir[];
+type RotateInterface = <T, >(slice: number, clockwise: boolean, matrix: T[][]) => void;
 
 
 export class CurrentMoveHistory {
@@ -113,4 +113,10 @@ export class CurrentMoveHistory {
     this.onComplete = onComplete;
     this.index = index;
   }
+}
+
+
+export interface CubeDir {
+  side: number,
+  direction: number,
 }

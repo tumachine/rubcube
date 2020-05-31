@@ -7,6 +7,7 @@ import MainScene from '..';
 import * as THREE from '../../node_modules/three/src/Three';
 import { MathUtils } from '../../node_modules/three/src/Three';
 import { Move, CurrentMoveHistory } from './move';
+import { threadId } from 'worker_threads';
 
 class RubikManager {
   private rubikView: RubikView
@@ -93,7 +94,7 @@ class RubikManager {
       if (this.outerMeshesCheckbox.checked) {
         // this.jump(this.rubikModel.currentHistoryIndex);
         // this.reset(this.rubikModel.currentHistoryIndex);
-        this.rubikView.resetInPlace();
+        // this.rubikView.resetInPlace();
         this.rubikView.enableOuter();
       } else {
         this.rubikView.disposeOuter();
@@ -103,7 +104,7 @@ class RubikManager {
     this.numbersCheckbox.onchange = (e: Event) => {
       if (this.numbersCheckbox.checked) {
         // this.reset(this.rubikModel.currentHistoryIndex);
-        this.rubikView.resetInPlace();
+        // this.rubikView.resetInPlace();
         this.rubikView.enableText();
       } else {
         this.rubikView.disposeText();
@@ -114,26 +115,21 @@ class RubikManager {
     this.addRubik(3);
   }
 
-  private updateToIndex = (historyIndex: number = this.rubikView.history.length - 1) => {
+  private updateToIndex = (historyIndex: number = this.rubikView.getHistory().length - 1) => {
     this.toIndexInput.value = (historyIndex).toString();
   }
 
-  private updateFromIndex = (historyIndex: number = this.rubikView.currentHistoryIndex) => {
+  private updateFromIndex = (historyIndex: number = this.rubikView.getCurrentHistoryIndex()) => {
     this.fromIndexInput.value = historyIndex.toString();
   }
 
   private updateCurrentMoveText = () => {
-    this.currentMoveIndexText.innerHTML = this.rubikView.currentHistoryIndex.toString();
-  }
-
-  private addNewMoveUpdate = () => {
-    this.updateToIndex();
-    this.refreshHistoryButtons();
+    this.currentMoveIndexText.innerHTML = this.rubikView.getCurrentHistoryIndex().toString();
   }
 
   private addRubik(length: number) {
     this.rubikView = new RubikView(length, this.scene);
-    this.currentRubikSizeText.innerHTML = this.rubikView.length.toString();
+    this.currentRubikSizeText.innerHTML = this.rubikView.getLength().toString();
 
     this.updateCurrentMoveText();
     this.updateFromIndex();
@@ -147,14 +143,6 @@ class RubikManager {
 
     this.createCubeRotationButtons();
 
-    this.rubikView.mouseMoveCompleteHandler = () => {
-      // console.log('mousemovecomplete: event happened');
-      this.updateCurrentMoveText();
-      this.updateFromIndex();
-
-      this.addNewMoveUpdate();
-    };
-
     this.rubikView.moveCompleteHandler = (move: CurrentMoveHistory) => {
       // console.log('movecomplete: event happened');
       if (move.index !== -1) {
@@ -164,27 +152,30 @@ class RubikManager {
         this.currentMoveIndexText.innerHTML = move.index.toString();
       }
     };
+
+    this.rubikView.newMoveHandler = () => {
+      this.updateToIndex();
+      this.refreshHistoryButtons();
+    };
   }
 
   public scramble = () => {
     this.rubikView.scramble(20);
-    this.addNewMoveUpdate();
   }
 
   public solve = () => {
     this.rubikView.solve();
-    this.addNewMoveUpdate();
   }
 
   public sizeUp = () => {
     this.rubikView.disposeAll();
-    this.addRubik(this.rubikView.length + 1);
+    this.addRubik(this.rubikView.getLength() + 1);
   }
 
   public sizeDown = () => {
-    if (this.rubikView.length > 3) {
+    if (this.rubikView.getLength() > 3) {
       this.rubikView.disposeAll();
-      this.addRubik(this.rubikView.length - 1);
+      this.addRubik(this.rubikView.getLength() - 1);
     }
   }
 
@@ -199,15 +190,15 @@ class RubikManager {
   private refreshHistoryButtons = () => {
     this.clearHistoryButtons();
     this.addAllHistoryButtons();
-    this.historyButtonPrevActive = this.historyButtons[this.rubikView.currentHistoryIndex];
+    this.historyButtonPrevActive = this.historyButtons[this.rubikView.getCurrentHistoryIndex()];
     this.switchButtonBackgroundColor(this.historyButtonPrevActive, true);
-    for (let i = 0; i < this.rubikView.history.length; i += 1) {
+    for (let i = 0; i < this.rubikView.getHistory().length; i += 1) {
       this.historyDiv.appendChild(this.historyButtons[i]);
     }
   }
 
   private addAllHistoryButtons = () => {
-    for (let i = 0; i < this.rubikView.history.length; i += 1) {
+    for (let i = 0; i < this.rubikView.getHistory().length; i += 1) {
       this.addHistoryButton(i);
     }
   }
@@ -228,7 +219,7 @@ class RubikManager {
   private addHistoryButton = (index: number) => {
     const button = document.createElement('button');
 
-    const move = this.rubikView.history[index];
+    const move = this.rubikView.getHistory()[index];
     if (move !== null) {
       button.innerHTML = `${index}: ${s.toString(move.side)}${move.clockwise ? '' : "'"}${move.slice === 0 ? '' : move.slice}`;
     }
@@ -243,7 +234,7 @@ class RubikManager {
   }
 
   private jump = (historyIndex: number) => {
-    if (Math.abs(historyIndex - this.rubikView.currentHistoryIndex) > 1000) {
+    if (Math.abs(historyIndex - this.rubikView.getCurrentHistoryIndex()) > 1000) {
       this.rubikView.jumpAndReset(historyIndex);
     } else {
       this.rubikView.jumpSaveRotation(historyIndex);
@@ -291,7 +282,7 @@ class RubikManager {
     for (let i = 0; i < 6; i += 1) {
       for (let b = 0; b < 2; b += 1) {
         // every slice
-        for (let j = 0; j < this.rubikView.length / 2; j += 1) {
+        for (let j = 0; j < this.rubikView.getLength() / 2; j += 1) {
           if (b === 0) {
             this.addButton(i, j, true);
           } else {
@@ -308,7 +299,6 @@ class RubikManager {
 
     button.onclick = () => {
       this.rubikView.doMove(side, slice, clockwise);
-      this.addNewMoveUpdate();
     };
 
     this.movementDiv.appendChild(button);

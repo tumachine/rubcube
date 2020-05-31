@@ -44,18 +44,18 @@ const getTextMesh = (): THREE.Mesh => {
   return mesh;
 };
 
-class CubePlane {
+export class CubePlane {
   public object: THREE.Object3D
 
-  baseMesh: THREE.Mesh
+  public baseMesh: THREE.Mesh
 
-  outerMesh: THREE.Mesh
+  public outerMesh: THREE.Mesh
 
-  textMesh: THREE.Mesh
+  public textMesh: THREE.Mesh
 
-  originalPosition: THREE.Vector3
+  public originalPosition: THREE.Vector3
 
-  originalRotation: THREE.Euler
+  public originalRotation: THREE.Euler
 
   constructor(x: number, y: number, z: number, side: number) {
     this.object = new THREE.Object3D();
@@ -67,24 +67,26 @@ class CubePlane {
   }
 
   createMesh(detach: number = 0) {
-    const baseMesh = createPlaneMesh();
+    this.baseMesh = createPlaneMesh();
     // rotateSide(faceSide, baseMesh, detach, 0);
-    this.object.add(baseMesh);
-    baseMesh.position.z += detach;
+    this.object.add(this.baseMesh);
+    this.baseMesh.position.z += detach;
   }
 
-  createOuterMeshes(detach: number) {
+  createOuterMesh(detach: number) {
     // rotateSide(faceSide, baseMesh, detach, 0);
-    const outerMesh = createPlaneMesh();
-    this.object.add(outerMesh);
-    outerMesh.position.z += detach;
-    outerMesh.rotation.z = Math.PI;
+    this.outerMesh = createPlaneMesh();
+    this.object.add(this.outerMesh);
+    this.outerMesh.position.z += detach;
+    // this.outerMesh.rotation.z += Math.PI;
+    // this.outerMesh.rotateZ(Math.PI);
+    this.outerMesh.rotation.x = Math.PI;
   }
 
-  createTextMeshes(detach: number = 0.05) {
-    const mesh = getTextMesh();
-    this.object.add(mesh);
-    mesh.position.z += detach;
+  createTextMesh(detach: number = 0.05) {
+    this.textMesh = getTextMesh();
+    this.object.add(this.textMesh);
+    this.textMesh.position.z += detach;
   }
 
   resetPosition = () => {
@@ -96,11 +98,11 @@ class CubePlane {
     (this.baseMesh.material as THREE.MeshPhongMaterial).color.set(color);
   }
 
-  setColor(faceSide: number, color: number) {
+  setColor(color: number) {
     (this.baseMesh.material as THREE.MeshPhongMaterial).color.set(colors[color]);
   }
 
-  setOuterColor(faceSide: number, color: number) {
+  setOuterColor(color: number) {
     (this.outerMesh.material as THREE.MeshPhongMaterial).color.set(colors[color]);
   }
 
@@ -141,7 +143,7 @@ class CubePlane {
   }
 }
 
-export default class Cube {
+export class Cube {
   cube: THREE.Object3D
 
   baseMeshes: THREE.Mesh[]

@@ -37,7 +37,7 @@ interface MoveOperation {
 }
 
 export interface MoveInterface {
-  (slice?: number, clockwise?: boolean): void
+  <T>(slice?: number, clockwise?: boolean, matrix?: T[][]): void
 }
 
 export default MoveActions;
