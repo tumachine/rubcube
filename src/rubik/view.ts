@@ -5,7 +5,7 @@ import TWEEN from 'tween.ts';
 import * as THREE from '../../node_modules/three/src/Three';
 import Cube from './cube';
 import { Move, MoveOperation, CurrentMoveHistory } from './move';
-import { Side, getLargestValue, MoveHistory, rotateSide } from './utils';
+import { Side, getLargestValue, MoveHistory, rotateSide, getLargestIndex } from './utils';
 import RubikModel from './model';
 import { RenderInterface } from '../d';
 import { MoveInterface } from './moveActions';
@@ -191,6 +191,14 @@ class RubikView implements RenderInterface {
     this.colorizeBase();
   }
 
+  public resetInPlace() {
+    this.rubikModel.jumpToHistoryIndex(this.rubikModel.currentHistoryIndex);
+
+    this.rubikModel.resetSO();
+    this.resetCubePositions();
+    this.colorizeBase();
+  }
+
   private wrapRotation(func: Function) {
     return () => {
       if (!this.isMoving) {
@@ -310,42 +318,35 @@ class RubikView implements RenderInterface {
     // this.cubes[this.rubikModel.getCube(side, cubeNum)].setColor(side, 2);
     // this.cubes[this.rubikModel.getCubeFromInterface(sidesArr[sidesMap[side]], cubeNum, this.rubikModel.interface)].setColor(sidesMap[side], 2);
 
-    // colorize cube
-    // const cube = this.rubikModel.getCube(side, cubeNum);
-    // const meshes = this.cubes[cube].baseMeshes.filter((mesh) => mesh !== undefined);
 
-    // const intersects = this.raycaster.intersectObjects(meshes);
-    // // console.log(intersects);
-    // // if (!this.mouseRotating) {
-    // if (intersects.length > 0) {
-    //   const mesh = intersects[0].object as THREE.Mesh;
-    //   (mesh.material as THREE.MeshBasicMaterial).color.set(0xff0000);
+
+    // const cube = this.cubes[this.rubikModel.getCube(side, cubeNum)];
+    // const cubeObject = cube.cube;
+    // const cubePosition = cubeObject.position;
+
+    // const cubeArr = cubePosition.toArray();
+
+    // const cubeArrAbs = cubeArr.map((item) => Math.abs(item));
+    // const largestIndex = getLargestIndex(...cubeArrAbs);
+    // const sameIndexes = [];
+    // cubeArrAbs.forEach((val, index) => {
+    //   if (val === cubeArrAbs[largestIndex]) {
+    //     sameIndexes.push(index);
+    //   }
+    // });
+
+    // for (let i = 0; i < sameIndexes.length; i += 1) {
+    //   if (cubeArr[sameIndexes[i]] > 0) {
+    //     cubeArr[sameIndexes[i]] += 1;
+    //   } else {
+    //     cubeArr[sameIndexes[i]] -= 1;
+    //   }
     // }
+    // const start = { x: cube.cube.position.x, y: cube.cube.position.y, z: cube.cube.position.z };
+    // const end = { x: cubeArr[0], y: cubeArr[1], z: cubeArr[2] };
+    // cubePosition.set(cubeArr[0], cubeArr[1], cubeArr[2]);
 
-    // animate cube
-    const sideBump = new Array(6);
-    sideBump[Side.f] = (object: THREE.Object3D, detach: number = 0) => {
-      object.translateZ(detach);
-    };
-    sideBump[Side.b] = (object: THREE.Object3D, detach: number = 0) => {
-      object.translateZ(-detach);
-    };
-    sideBump[Side.l] = (object: THREE.Object3D, detach: number = 0) => {
-      object.translateX(-detach);
-    };
-    sideBump[Side.r] = (object: THREE.Object3D, detach: number = 0) => {
-      object.translateX(detach);
-    };
-    sideBump[Side.u] = (object: THREE.Object3D, detach: number = 0) => {
-      object.translateY(detach);
-    };
-    sideBump[Side.d] = (object: THREE.Object3D, detach: number = 0) => {
-      object.translateY(detach);
-    };
-    const cube = this.cubes[this.rubikModel.getCube(side, cubeNum)];
-    // rotateSide(side, cube.cube, 0.5);
-    const start = { x: cube.cube.position.x, y: cube.cube.position.y, z: cube.cube.position.z };
-    const end = { x: cube.cube.position.x, y: cube.cube.position.y, z: cube.cube.position.z + 0.1 };
+
 
     // new TWEEN.Tween(start)
     //   .to(end, 5000)
@@ -360,13 +361,48 @@ class RubikView implements RenderInterface {
     //   .start();
 
 
-    // const intersects = this.raycaster.intersectObjects(meshes);
-    // // console.log(intersects);
-    // // if (!this.mouseRotating) {
-    // if (intersects.length > 0) {
-    //   const mesh = intersects[0].object as THREE.Mesh;
-    //   (mesh.material as THREE.MeshBasicMaterial).color.set(0xff0000);
-    // }
+    // colorize cube
+    const cube = this.rubikModel.getCube(side, cubeNum);
+
+    const sideDirections: THREE.Vector3[] = new Array(6);
+
+    sideDirections[Side.l] = new THREE.Vector3(-1, 0, 0);
+    sideDirections[Side.r] = new THREE.Vector3(1, 0, 0);
+    sideDirections[Side.u] = new THREE.Vector3(0, 1, 0);
+    sideDirections[Side.d] = new THREE.Vector3(0, -1, 0);
+    sideDirections[Side.f] = new THREE.Vector3(0, 0, 1);
+    sideDirections[Side.b] = new THREE.Vector3(0, 0, -1);
+
+    // now we need to determine to which side cube belongs
+    const isHorEdge = (direction: number) => {
+      const row = this.rubikModel.getRow(this.selectedCube);
+      return row === 0 || row === this.rubikModel.sideLength - 1;
+    };
+
+    const isVerEdge = (direction: number) => {
+      const col = this.rubikModel.getColumn(this.selectedCube);
+      return col === 0 || col === this.rubikModel.sideLength - 1;
+    };
+
+    const isEdge = (direction: number) => {
+      return isVerEdge(direction) && isHorEdge(direction);
+    };
+
+    let direction: THREE.Vector3;
+    if (isEdge(cube)) {
+      // only 8 cases that can be easily resolved
+
+    } else if (isHorEdge(cube)) {
+
+    } else if (isVerEdge(cube)) {
+
+    } else {
+      direction = sideDirections[side];
+    }
+
+    // before coloring, resetInPlace();
+    // console.log(this.cubes[cube].baseMeshes);
+    // this.cubes[cube].setCustomColor(side, 0xff0000);
   }
 
   private determinePlaneOrientation = (side: number): PLANEORIENTATION => {
@@ -459,8 +495,8 @@ class RubikView implements RenderInterface {
   }
 
   private mouseMoveTrigger(direction: THREE.Vector3) {
-    const col = this.selectedCube % this.rubikModel.sideLength;
-    const row = Math.floor(this.selectedCube / this.rubikModel.sideLength);
+    const col = this.rubikModel.getColumn(this.selectedCube);
+    const row = this.rubikModel.getRow(this.selectedCube);
 
     // determine what kind of move is to be performed
     this.mouseLargest = getLargestValue(direction);

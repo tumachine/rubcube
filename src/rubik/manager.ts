@@ -93,6 +93,7 @@ class RubikManager {
       if (this.outerMeshesCheckbox.checked) {
         // this.jump(this.rubikModel.currentHistoryIndex);
         // this.reset(this.rubikModel.currentHistoryIndex);
+        this.rubikView.resetInPlace();
         this.rubikView.enableOuter();
       } else {
         this.rubikView.disposeOuter();
@@ -102,6 +103,7 @@ class RubikManager {
     this.numbersCheckbox.onchange = (e: Event) => {
       if (this.numbersCheckbox.checked) {
         // this.reset(this.rubikModel.currentHistoryIndex);
+        this.rubikView.resetInPlace();
         this.rubikView.enableText();
       } else {
         this.rubikView.disposeText();

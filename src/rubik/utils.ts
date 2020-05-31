@@ -121,3 +121,16 @@ export const getLargestValue = (vec: THREE.Vector3): string => {
 
   return 'z';
 };
+
+export const getLargestIndex = (...arr: number[]) => {
+  let largest: number = arr[0];
+  let largestIndex: number = 0;
+
+  for (let i = 1; i < arr.length; i += 1) {
+    if (arr[i] > largest) {
+      largest = arr[i];
+      largestIndex = i;
+    }
+  }
+  return largestIndex;
+}

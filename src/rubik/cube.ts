@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 /* eslint-disable max-len */
 import * as THREE from '../../node_modules/three/src/Three';
 import { Side, getTextTexture, rotateSide } from './utils';
@@ -43,6 +44,102 @@ const getTextMesh = (): THREE.Mesh => {
   return mesh;
 };
 
+class CubePlane {
+  public object: THREE.Object3D
+
+  baseMesh: THREE.Mesh
+
+  outerMesh: THREE.Mesh
+
+  textMesh: THREE.Mesh
+
+  originalPosition: THREE.Vector3
+
+  originalRotation: THREE.Euler
+
+  constructor(x: number, y: number, z: number, side: number) {
+    this.object = new THREE.Object3D();
+    this.object.position.set(x, y, z);
+    rotateSide(side, this.object);
+
+    this.originalPosition = this.object.position.clone();
+    this.originalRotation = this.object.rotation.clone();
+  }
+
+  createMesh(detach: number = 0) {
+    const baseMesh = createPlaneMesh();
+    // rotateSide(faceSide, baseMesh, detach, 0);
+    this.object.add(baseMesh);
+    baseMesh.position.z += detach;
+  }
+
+  createOuterMeshes(detach: number) {
+    // rotateSide(faceSide, baseMesh, detach, 0);
+    const outerMesh = createPlaneMesh();
+    this.object.add(outerMesh);
+    outerMesh.position.z += detach;
+    outerMesh.rotation.z = Math.PI;
+  }
+
+  createTextMeshes(detach: number = 0.05) {
+    const mesh = getTextMesh();
+    this.object.add(mesh);
+    mesh.position.z += detach;
+  }
+
+  resetPosition = () => {
+    this.object.position.copy(this.originalPosition);
+    this.object.rotation.copy(this.originalRotation);
+  }
+
+  setCustomColor(color: number) {
+    (this.baseMesh.material as THREE.MeshPhongMaterial).color.set(color);
+  }
+
+  setColor(faceSide: number, color: number) {
+    (this.baseMesh.material as THREE.MeshPhongMaterial).color.set(colors[color]);
+  }
+
+  setOuterColor(faceSide: number, color: number) {
+    (this.outerMesh.material as THREE.MeshPhongMaterial).color.set(colors[color]);
+  }
+
+  setText(text: string) {
+    const texture = getTextTexture(text);
+    (this.textMesh.material as THREE.MeshBasicMaterial).map = texture;
+  }
+
+  disposeBase() {
+    if (this.baseMesh !== undefined) {
+      (this.baseMesh.material as THREE.MeshPhongMaterial).dispose();
+      this.baseMesh.geometry.dispose();
+      this.object.remove(this.baseMesh);
+    }
+  }
+
+  disposeOuter() {
+    if (this.outerMesh !== undefined) {
+      (this.outerMesh.material as THREE.MeshPhongMaterial).dispose();
+      this.outerMesh.geometry.dispose();
+      this.object.remove(this.outerMesh);
+    }
+  }
+
+  disposeText() {
+    if (this.textMesh !== undefined) {
+      (this.textMesh.material as THREE.MeshBasicMaterial).map.dispose();
+      (this.textMesh.material as THREE.MeshBasicMaterial).dispose();
+      this.textMesh.geometry.dispose();
+      this.object.remove(this.textMesh);
+    }
+  }
+
+  dispose() {
+    this.disposeBase();
+    this.disposeOuter();
+    this.disposeText();
+  }
+}
 
 export default class Cube {
   cube: THREE.Object3D
@@ -91,8 +188,13 @@ export default class Cube {
   }
 
   resetPosition = () => {
-    this.cube.position.set(this.originalPosition.x, this.originalPosition.y, this.originalPosition.z);
-    this.cube.rotation.set(this.originalRotation.x, this.originalRotation.y, this.originalRotation.z);
+    this.cube.position.copy(this.originalPosition);
+    this.cube.rotation.copy(this.originalRotation);
+  }
+
+  setCustomColor(faceSide: number, color: number) {
+    const mesh = this.baseMeshes[faceSide];
+    (mesh.material as THREE.MeshPhongMaterial).color.set(color);
   }
 
   setColor(faceSide: number, color: number) {
