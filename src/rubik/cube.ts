@@ -44,7 +44,7 @@ const getTextMesh = (): THREE.Mesh => {
   return mesh;
 };
 
-export class CubePlane {
+export default class CubePlane {
   public object: THREE.Object3D
 
   public baseMesh: THREE.Mesh
@@ -57,29 +57,31 @@ export class CubePlane {
 
   public originalRotation: THREE.Euler
 
-  constructor(x: number, y: number, z: number, side: number) {
+  public originalSide: number
+
+  public originalDirection: number
+
+  constructor(x: number, y: number, z: number, side: number, direction: number) {
     this.object = new THREE.Object3D();
     this.object.position.set(x, y, z);
     rotateSide(side, this.object);
 
+    this.originalSide = side;
+    this.originalDirection = direction;
     this.originalPosition = this.object.position.clone();
     this.originalRotation = this.object.rotation.clone();
   }
 
   createMesh(detach: number = 0) {
     this.baseMesh = createPlaneMesh();
-    // rotateSide(faceSide, baseMesh, detach, 0);
     this.object.add(this.baseMesh);
     this.baseMesh.position.z += detach;
   }
 
   createOuterMesh(detach: number) {
-    // rotateSide(faceSide, baseMesh, detach, 0);
     this.outerMesh = createPlaneMesh();
     this.object.add(this.outerMesh);
     this.outerMesh.position.z += detach;
-    // this.outerMesh.rotation.z += Math.PI;
-    // this.outerMesh.rotateZ(Math.PI);
     this.outerMesh.rotation.x = Math.PI;
   }
 
@@ -94,7 +96,7 @@ export class CubePlane {
     this.object.rotation.copy(this.originalRotation);
   }
 
-  setCustomColor(color: number) {
+  setCustomColor(color: number | string | THREE.Color) {
     (this.baseMesh.material as THREE.MeshPhongMaterial).color.set(color);
   }
 
@@ -140,119 +142,5 @@ export class CubePlane {
     this.disposeBase();
     this.disposeOuter();
     this.disposeText();
-  }
-}
-
-export class Cube {
-  cube: THREE.Object3D
-
-  baseMeshes: THREE.Mesh[]
-
-  outerMeshes: THREE.Mesh[]
-
-  textMeshes: THREE.Mesh[]
-
-  originalPosition: THREE.Vector3
-
-  originalRotation: THREE.Euler
-
-  constructor(x: number, y: number, z: number) {
-    this.cube = new THREE.Object3D();
-    this.cube.position.set(x, y, z);
-    this.originalPosition = new Vector3(x, y, z);
-    this.originalRotation = new Euler(this.cube.rotation.x, this.cube.rotation.y, this.cube.rotation.z);
-
-    this.baseMeshes = new Array(6);
-    this.outerMeshes = new Array(6);
-    this.textMeshes = new Array(6);
-  }
-
-  createMeshes(faceSide: number, detach: number = 0) {
-    const baseMesh = createPlaneMesh();
-    // sidesOrientaion[faceSide](baseMesh, detach, 0);
-    rotateSide(faceSide, baseMesh, detach, 0);
-    this.baseMeshes[faceSide] = baseMesh;
-    this.cube.add(baseMesh);
-  }
-
-  createOuterMeshes(faceSide: number, detach: number) {
-    const outerMesh = createPlaneMesh();
-    rotateSide(faceSide, outerMesh, detach, 180);
-    this.outerMeshes[faceSide] = outerMesh;
-    this.cube.add(outerMesh);
-  }
-
-  createTextMeshes(faceSide: number, detach: number = 0.05) {
-    const mesh = getTextMesh();
-    rotateSide(faceSide, mesh, detach, 0);
-    this.textMeshes[faceSide] = mesh;
-    this.cube.add(mesh);
-  }
-
-  resetPosition = () => {
-    this.cube.position.copy(this.originalPosition);
-    this.cube.rotation.copy(this.originalRotation);
-  }
-
-  setCustomColor(faceSide: number, color: number) {
-    const mesh = this.baseMeshes[faceSide];
-    (mesh.material as THREE.MeshPhongMaterial).color.set(color);
-  }
-
-  setColor(faceSide: number, color: number) {
-    const mesh = this.baseMeshes[faceSide];
-    (mesh.material as THREE.MeshPhongMaterial).color.set(colors[color]);
-  }
-
-  setOuterColor(faceSide: number, color: number) {
-    const mesh = this.outerMeshes[faceSide];
-    (mesh.material as THREE.MeshPhongMaterial).color.set(colors[color]);
-  }
-
-  setText(faceSide: number, text: string) {
-    const texture = getTextTexture(text);
-    const mesh = this.textMeshes[faceSide];
-    (mesh.material as THREE.MeshBasicMaterial).map = texture;
-  }
-
-  disposeBase() {
-    for (let i = 0; i < 6; i += 1) {
-      if (this.baseMeshes[i] !== undefined) {
-        (this.baseMeshes[i].material as THREE.MeshPhongMaterial).dispose();
-        this.baseMeshes[i].geometry.dispose();
-        this.cube.remove(this.baseMeshes[i]);
-      }
-    }
-  }
-
-  disposeOuter() {
-    for (let i = 0; i < 6; i += 1) {
-      if (this.outerMeshes[i] !== undefined) {
-        (this.outerMeshes[i].material as THREE.MeshPhongMaterial).dispose();
-        this.outerMeshes[i].geometry.dispose();
-        this.cube.remove(this.outerMeshes[i]);
-      }
-    }
-  }
-
-  disposeText() {
-    for (let i = 0; i < 6; i += 1) {
-      if (this.textMeshes[i] !== undefined) {
-        (this.textMeshes[i].material as THREE.MeshBasicMaterial).map.dispose();
-        (this.textMeshes[i].material as THREE.MeshBasicMaterial).dispose();
-        this.textMeshes[i].geometry.dispose();
-        this.cube.remove(this.textMeshes[i]);
-      }
-    }
-  }
-
-  dispose() {
-    this.disposeBase();
-    this.disposeOuter();
-    this.disposeText();
-  }
-
-  getCube() {
-    return this.cube;
   }
 }

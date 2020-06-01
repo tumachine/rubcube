@@ -5,9 +5,7 @@ import { Side as s, createCamera, sides } from './utils';
 import { MoveInterface } from './moveActions';
 import MainScene from '..';
 import * as THREE from '../../node_modules/three/src/Three';
-import { MathUtils } from '../../node_modules/three/src/Three';
 import { Move, CurrentMoveHistory } from './move';
-import { threadId } from 'worker_threads';
 
 class RubikManager {
   private rubikView: RubikView

@@ -4,6 +4,14 @@ import { MathUtils } from '../../node_modules/three/src/Three';
 
 export const randomInt = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1) + min);
 
+export const randomColor = (): string => {
+  const c = () => {
+    const hex = Math.floor(Math.random() * 256).toString(16);
+    return (`0${String(hex)}`).substr(-2); // pad with zero
+  };
+  return `#${c()}${c()}${c()}`;
+};
+
 export class Side {
   public static l: number = 0
 
