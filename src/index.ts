@@ -38,6 +38,8 @@ class MainScene {
 
   mouseObjects: MouseInterface[]
 
+  then: number = 0;
+
   constructor() {
     this.scene = new THREE.Scene();
 
@@ -96,6 +98,7 @@ class MainScene {
         this.renderObjects[i].render();
       }
     }
+
 
     this.controls.update();
     this.light.position.copy(this.camera.getWorldPosition(new THREE.Vector3()));

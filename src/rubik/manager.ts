@@ -29,6 +29,8 @@ class RubikManager {
 
   private numbersCheckbox: HTMLInputElement;
 
+  private imageCheckbox: HTMLInputElement;
+
   private currentMoveIndexText: HTMLParagraphElement
 
   private currentRubikSizeText: HTMLParagraphElement
@@ -64,6 +66,7 @@ class RubikManager {
     this.movementDiv = document.getElementById('moves') as HTMLDivElement;
     this.outerMeshesCheckbox = document.getElementById('outerMeshes') as HTMLInputElement;
     this.numbersCheckbox = document.getElementById('numbers') as HTMLInputElement;
+    this.imageCheckbox = document.getElementById('images') as HTMLInputElement;
     this.currentMoveIndexText = document.getElementById('current-move') as HTMLParagraphElement;
     this.currentRubikSizeText = document.getElementById('current-size') as HTMLParagraphElement;
     this.fromIndexInput = document.getElementById('from-index') as HTMLInputElement;
@@ -90,9 +93,6 @@ class RubikManager {
 
     this.outerMeshesCheckbox.onchange = (e: Event) => {
       if (this.outerMeshesCheckbox.checked) {
-        // this.jump(this.rubikModel.currentHistoryIndex);
-        // this.reset(this.rubikModel.currentHistoryIndex);
-        // this.rubikView.resetInPlace();
         this.rubikView.enableOuter();
       } else {
         this.rubikView.disposeOuter();
@@ -101,11 +101,19 @@ class RubikManager {
 
     this.numbersCheckbox.onchange = (e: Event) => {
       if (this.numbersCheckbox.checked) {
-        // this.reset(this.rubikModel.currentHistoryIndex);
-        // this.rubikView.resetInPlace();
-        this.rubikView.enableText();
+        this.rubikView.drawText();
+        this.imageCheckbox.checked = false;
       } else {
-        this.rubikView.disposeText();
+        this.rubikView.disposeImages();
+      }
+    };
+
+    this.imageCheckbox.onchange = (e: Event) => {
+      if (this.imageCheckbox.checked) {
+        this.rubikView.drawImages();
+        this.numbersCheckbox.checked = false;
+      } else {
+        this.rubikView.disposeImages();
       }
     };
 
@@ -232,11 +240,7 @@ class RubikManager {
   }
 
   private jump = (historyIndex: number) => {
-    if (Math.abs(historyIndex - this.rubikView.getCurrentHistoryIndex()) > 1000) {
-      this.rubikView.jumpAndReset(historyIndex);
-    } else {
-      this.rubikView.jumpSaveRotation(historyIndex);
-    }
+    this.rubikView.jump(historyIndex);
     this.updateActiveHistoryButton(historyIndex);
   }
 

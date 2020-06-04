@@ -1,5 +1,6 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable max-len */
+import TWEEN from 'tween.ts';
 import * as THREE from '../../node_modules/three/src/Three';
 import { Side, getTextTexture, rotateSide } from './utils';
 import { Vector3, Euler } from '../../node_modules/three/src/Three';
@@ -44,6 +45,26 @@ const getTextMesh = (): THREE.Mesh => {
   return mesh;
 };
 
+const textureRotations: Function[] = new Array(6);
+textureRotations[Side.l] = (mesh: THREE.Mesh) => {
+  // do nothing
+};
+textureRotations[Side.r] = (mesh: THREE.Mesh) => {
+  mesh.rotation.y = Math.PI;
+};
+textureRotations[Side.u] = (mesh: THREE.Mesh) => {
+  mesh.rotation.x = Math.PI;
+};
+textureRotations[Side.d] = (mesh: THREE.Mesh) => {
+  // do nothing
+};
+textureRotations[Side.f] = (mesh: THREE.Mesh) => {
+  // do nothing
+};
+textureRotations[Side.b] = (mesh: THREE.Mesh) => {
+  mesh.rotation.y = Math.PI;
+};
+
 export default class CubePlane {
   public object: THREE.Object3D
 
@@ -51,7 +72,7 @@ export default class CubePlane {
 
   public outerMesh: THREE.Mesh
 
-  public textMesh: THREE.Mesh
+  public imageMesh: THREE.Mesh
 
   public originalPosition: THREE.Vector3
 
@@ -85,10 +106,11 @@ export default class CubePlane {
     this.outerMesh.rotation.x = Math.PI;
   }
 
-  createTextMesh(detach: number = 0.05) {
-    this.textMesh = getTextMesh();
-    this.object.add(this.textMesh);
-    this.textMesh.position.z += detach;
+  createImageMesh(detach: number = 0.01) {
+    this.imageMesh = getTextMesh();
+    this.object.add(this.imageMesh);
+    this.imageMesh.position.z += detach;
+    textureRotations[this.originalSide](this.imageMesh);
   }
 
   resetPosition = () => {
@@ -108,9 +130,8 @@ export default class CubePlane {
     (this.outerMesh.material as THREE.MeshPhongMaterial).color.set(colors[color]);
   }
 
-  setText(text: string) {
-    const texture = getTextTexture(text);
-    (this.textMesh.material as THREE.MeshBasicMaterial).map = texture;
+  setImage(image: THREE.Texture) {
+    (this.imageMesh.material as THREE.MeshBasicMaterial).map = image;
   }
 
   disposeBase() {
@@ -129,18 +150,18 @@ export default class CubePlane {
     }
   }
 
-  disposeText() {
-    if (this.textMesh !== undefined) {
-      (this.textMesh.material as THREE.MeshBasicMaterial).map.dispose();
-      (this.textMesh.material as THREE.MeshBasicMaterial).dispose();
-      this.textMesh.geometry.dispose();
-      this.object.remove(this.textMesh);
+  disposeImage() {
+    if (this.imageMesh !== undefined) {
+      // (this.imageMesh.material as THREE.MeshBasicMaterial).map.dispose();
+      (this.imageMesh.material as THREE.MeshBasicMaterial).dispose();
+      this.imageMesh.geometry.dispose();
+      this.object.remove(this.imageMesh);
     }
   }
 
   dispose() {
     this.disposeBase();
     this.disposeOuter();
-    this.disposeText();
+    this.disposeImage();
   }
 }

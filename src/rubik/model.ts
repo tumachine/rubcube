@@ -558,9 +558,14 @@ class RubikModel {
     this.rotateFaceReal(slice, s.b, s.f, clockwise ? this.posClockwise : this.posCounter, matrix);
   }
 
-  public getColumn = (direction: number) => direction % this.sideLength;
+  public getColumn = (direction: number) => RubikModel.getColumn(direction, this.sideLength);
 
-  public getRow = (direction: number) => Math.floor(direction / this.sideLength);
+  public static getColumn = (direction: number, length: number) => direction % length;
+
+  public getRow = (direction: number) => RubikModel.getRow(direction, this.sideLength);
+
+  public static getRow = (direction: number, length: number) => Math.floor(direction / length);
+
 
   public getCubesHor = (slice: number): CubeDir[] => this.getCubes(this.posHor, this.sequenceHor, slice, s.d, s.u);
 
