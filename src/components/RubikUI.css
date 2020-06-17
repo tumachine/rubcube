@@ -1,0 +1,88 @@
+#hud {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    margin: auto;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: 20% auto 20%;
+    grid-template-rows: 20% auto 20%;
+    pointer-events: none;
+}
+
+.grid-border {
+    border: 3px solid white;
+}
+
+.top-left {
+    grid-column-start: 1;
+    grid-column-end: 2;
+    grid-row-start: 1;
+    grid-row-end: 2;
+    pointer-events: auto;
+}
+
+.top {
+    grid-column-start: 2;
+    grid-column-end: 3;
+    grid-row-start: 1;
+    grid-row-end: 2;
+    pointer-events: auto;
+}
+
+.middle {
+    grid-column-start: 2;
+    grid-column-end: 3;
+    grid-row-start: 2;
+    grid-row-end: 3;
+    pointer-events: auto;
+}
+
+.top-right {
+    grid-column-start: 3;
+    grid-column-end: 4;
+    grid-row-start: 1;
+    grid-row-end: 2;
+    pointer-events: auto;
+}
+
+.right {
+    grid-column-start: 3;
+    grid-column-end: 4;
+    grid-row-start: 2;
+    grid-row-end: 3;
+    pointer-events: auto;
+}
+
+.bottom-right {
+    grid-column-start: 3;
+    grid-column-end: 4;
+    grid-row-start: 3;
+    grid-row-end: 4;
+    pointer-events: auto;
+}
+
+.bottom {
+    grid-column-start: 2;
+    grid-column-end: 3;
+    grid-row-start: 3;
+    grid-row-end: 4;
+    pointer-events: auto;
+}
+
+.bottom-left {
+    grid-column-start: 1;
+    grid-column-end: 2;
+    grid-row-start: 3;
+    grid-row-end: 4;
+    pointer-events: auto;
+}
+
+.left {
+    grid-column-start: 1;
+    grid-column-end: 2;
+    grid-row-start: 2;
+    grid-row-end: 3;
+    pointer-events: auto;
+}

@@ -1,7 +1,9 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable no-else-return */
 /* eslint-disable prefer-destructuring */
 /* eslint-disable max-len */
 import TWEEN from 'tween.ts';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import * as THREE from '../../node_modules/three/src/Three';
 import CubePlane from './cube';
 import { Move, MoveOperation, CurrentMoveHistory, CubeDir } from './move';
@@ -11,6 +13,7 @@ import { RenderInterface } from '../d';
 import MoveActions, { MoveInterface } from './moveActions';
 import MainScene from '..';
 import Sprite from './sprite';
+import { SceneObject, MouseEventObject } from '../SceneObject';
 
 interface CubeOperation {
   (side: number, cube?: number): void;
@@ -41,12 +44,10 @@ interface MeshIntersection {
   point: THREE.Vector3,
 }
 
-class RubikView implements RenderInterface {
+class RubikView implements SceneObject {
   private rubikModel: RubikModel
 
-  private scene: MainScene
-
-  private rubik: THREE.Object3D
+  public object: THREE.Object3D
 
   private planes: CubePlane[][]
 
@@ -55,8 +56,6 @@ class RubikView implements RenderInterface {
   private pivot: THREE.Object3D
 
   private activeGroup: THREE.Object3D[]
-
-  private name: string
 
   private raycastMeshes: THREE.Mesh[]
 
@@ -94,8 +93,6 @@ class RubikView implements RenderInterface {
 
   public newMoveHandler: Function
 
-  public mouse: THREE.Vector3
-
   private halfMoveThresholdPassed: boolean
 
   private mouseTime: number
@@ -104,22 +101,13 @@ class RubikView implements RenderInterface {
 
   private doAnimationToHistoryIndex: number
 
-  private mouseDownEL: EventListener
-
-  private mouseUpEL: EventListener
-
-  private mouseMoveEL: EventListener
-
   private sprite: Sprite
 
-  private rotationTween
-
-  constructor(sideLength: number, scene: MainScene) {
+  constructor(sideLength: number) {
     this.rubikModel = new RubikModel(sideLength);
-    this.name = 'rubik';
-    this.scene = scene;
 
-    this.rubik = new THREE.Object3D();
+    this.object = new THREE.Object3D();
+    this.object.name = 'rubik';
 
     this.sprite = new Sprite(sideLength);
 
@@ -132,39 +120,18 @@ class RubikView implements RenderInterface {
     this.activeGroup = [];
 
     this.clickedOnFace = false;
-    this.mouse = new THREE.Vector3(0, 0, 0);
 
     this.raycaster = new THREE.Raycaster();
 
-    this.mouseMoveEL = this.onMouseMove.bind(this);
-    this.mouseDownEL = this.onMouseDown.bind(this);
-    this.mouseUpEL = this.onMouseUp.bind(this);
-
-    document.addEventListener('mousedown', this.mouseDownEL, false);
-
-    document.addEventListener('mouseup', this.mouseUpEL, false);
-
-    document.addEventListener('mousemove', this.mouseMoveEL, false);
-
-    this.drawNewRubik();
+    this.enableBase();
+    console.log('creating rubik view');
   }
 
-  private drawNewRubik() {
-    this.scene.renderObjects[0] = this;
-
-    const rubik3DObject = this.scene.scene.getObjectByName('rubik');
-    if (rubik3DObject !== undefined) {
-      this.scene.scene.remove(rubik3DObject);
-    }
-
-    this.rubik.name = 'rubik';
-    this.scene.scene.add(this.rubik);
-    console.log('Added rubik to scene');
-
-
-    this.enableBase();
-    this.changeCamera();
-    console.log(this.scene.renderer.info.memory);
+  controlCamera(camera: THREE.PerspectiveCamera): void {
+    const length = this.rubikModel.sideLength;
+    camera.position.set(length * 1.5, length * 1.2, length * 2);
+    camera.far = length * 4;
+    camera.updateProjectionMatrix();
   }
 
   public getLength = () => this.rubikModel.sideLength;
@@ -252,32 +219,31 @@ class RubikView implements RenderInterface {
     this.newMoveHandler();
   }
 
-  private updateMousePosition = (event: MouseEvent) => {
-    const rect = this.scene.canvas.getBoundingClientRect();
-    this.mouse.x = (event.clientX / rect.width) * 2 - 1;
-    this.mouse.y = -(event.clientY / rect.height) * 2 + 1;
-  }
+  // private updateMousePosition = (event: MouseEvent) => {
+  //   const rect = this.scene.canvas.getBoundingClientRect();
+  //   this.mouse.x = (event.clientX / rect.width) * 2 - 1;
+  //   this.mouse.y = -(event.clientY / rect.height) * 2 + 1;
+  // }
 
-  private getMousePosition = (mouse: THREE.Vector3, plane: PLANEORIENTATION = PLANEORIENTATION.XY): THREE.Vector3 => {
+  private getMousePositionBasedOnCameraOrientation = (mouse: THREE.Vector3, camera: THREE.PerspectiveCamera, plane: PLANEORIENTATION = PLANEORIENTATION.XY): THREE.Vector3 => {
     const vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
-    vector.unproject(this.scene.camera);
-    const dir = vector.sub(this.scene.camera.position).normalize();
-    const distance = -this.scene.camera.position[plane] / dir[plane];
-    const pos = this.scene.camera.position.clone().add(dir.multiplyScalar(distance));
+    vector.unproject(camera);
+    const dir = vector.sub(camera.position).normalize();
+    const distance = -camera.position[plane] / dir[plane];
+    const pos = camera.position.clone().add(dir.multiplyScalar(distance));
     return pos;
   }
 
-  private onMouseDown = (e: MouseEvent) => {
-    this.updateMousePosition(e);
-
-    this.positionOnMouseDown = this.mouse.clone();
+  public onMouseDown = (mouseEO: MouseEventObject) => {
+    const { mouse, camera, controls } = mouseEO;
+    this.positionOnMouseDown = mouse.clone();
 
     if (!this.mouseRotating) {
       // check for mesh being cube - probably check for correct name
-      const { intersected, name, point } = this.mouseOnMesh();
+      const { intersected, name, point } = this.mouseOnMesh(mouse, camera);
       if (intersected) {
         this.clickedOnFace = true;
-        this.scene.controls.enabled = false;
+        controls.enabled = false;
         const { side, direction } = this.getCubePositionOnCubeIntersection(name, point);
 
         this.selectedSide = side;
@@ -287,9 +253,8 @@ class RubikView implements RenderInterface {
     }
   }
 
-  // private mouseOnMesh = (): [boolean, string, THREE.Vector3] => {
-  private mouseOnMesh = (): MeshIntersection => {
-    this.raycaster.setFromCamera(this.mouse, this.scene.camera);
+  private mouseOnMesh = (mouse: THREE.Vector3, camera: THREE.PerspectiveCamera): MeshIntersection => {
+    this.raycaster.setFromCamera(mouse, camera);
 
     const intersects = this.raycaster.intersectObjects(this.raycastMeshes);
 
@@ -302,9 +267,9 @@ class RubikView implements RenderInterface {
     return { intersected: false, name: null, point: null };
   }
 
-  private onMouseMove(e: MouseEvent) {
-    this.updateMousePosition(e);
-    const { intersected, name, point } = this.mouseOnMesh();
+  public onMouseMove(mouseEO: MouseEventObject) {
+    const { mouse, camera } = mouseEO;
+    const { intersected, name, point } = this.mouseOnMesh(mouse, camera);
 
     if (intersected) {
       // check for mesh being cube - probably check for correct name
@@ -316,15 +281,15 @@ class RubikView implements RenderInterface {
     }
 
     if (this.clickedOnFace && !this.isMoving) {
-      let mPosDown = this.getMousePosition(this.positionOnMouseDown);
-      let mPos = this.getMousePosition(this.mouse);
+      let mPosDown = this.getMousePositionBasedOnCameraOrientation(this.positionOnMouseDown, camera);
+      let mPos = this.getMousePositionBasedOnCameraOrientation(mouse, camera);
 
       const distance = mPos.sub(mPosDown).distanceTo(new THREE.Vector3(0, 0, 0));
       if (distance >= this.distanceTrigger) {
-        console.log('TRIGGER');
+        // console.log('TRIGGER');
 
-        mPosDown = this.getMousePosition(this.positionOnMouseDown, this.selectedOrientation);
-        mPos = this.getMousePosition(this.mouse, this.selectedOrientation);
+        mPosDown = this.getMousePositionBasedOnCameraOrientation(this.positionOnMouseDown, camera, this.selectedOrientation);
+        mPos = this.getMousePositionBasedOnCameraOrientation(mouse, camera, this.selectedOrientation);
         const dir = mPos.sub(mPosDown);
         this.mouseMoveTrigger(dir);
 
@@ -332,13 +297,13 @@ class RubikView implements RenderInterface {
         this.mouseDistance = 0;
         this.mouseTime = Date.now();
 
-        this.lastMousePosition = this.mouse.clone();
+        this.lastMousePosition = mouse.clone();
         this.mouseRotating = true;
         this.clickedOnFace = false;
       }
     } else if (this.mouseRotating) {
-      const mPosLast = this.getMousePosition(this.lastMousePosition, this.selectedOrientation);
-      const mPos = this.getMousePosition(this.mouse, this.selectedOrientation);
+      const mPosLast = this.getMousePositionBasedOnCameraOrientation(this.lastMousePosition, camera, this.selectedOrientation);
+      const mPos = this.getMousePositionBasedOnCameraOrientation(mouse, camera, this.selectedOrientation);
       const distance = mPos.sub(mPosLast);
 
       this.mouseDistance += distance.length();
@@ -353,7 +318,7 @@ class RubikView implements RenderInterface {
         }
       }
 
-      this.lastMousePosition = this.mouse.clone();
+      this.lastMousePosition = mouse.clone();
     }
   }
 
@@ -498,14 +463,15 @@ class RubikView implements RenderInterface {
     }
   }
 
-  public onMouseUp = (e: MouseEvent) => {
+  public onMouseUp = (mouseEO: MouseEventObject) => {
+    const { controls } = mouseEO;
     this.clickedOnFace = false;
 
     if (this.mouseRotating) {
       this.completeMouseWithTween();
     }
 
-    this.scene.controls.enabled = true;
+    controls.enabled = true;
   }
 
   private completeMouseWithTween = () => {
@@ -656,7 +622,7 @@ class RubikView implements RenderInterface {
 
     this.pivot.rotation.set(0, 0, 0);
     this.pivot.updateMatrixWorld();
-    this.rubik.add(this.pivot);
+    this.object.add(this.pivot);
 
     this.activeGroup.forEach((e) => {
       this.pivot.attach(e);
@@ -665,12 +631,12 @@ class RubikView implements RenderInterface {
 
   private deactivateSlice = () => {
     this.pivot.updateMatrixWorld();
-    this.rubik.remove(this.pivot);
+    this.object.remove(this.pivot);
 
     this.activeGroup.forEach((cube) => {
       cube.updateMatrixWorld();
 
-      this.rubik.attach(cube);
+      this.object.attach(cube);
     });
 
 
@@ -773,7 +739,6 @@ class RubikView implements RenderInterface {
         if (onComplete) {
           onComplete();
         }
-        this.rotationTween = null;
       })
       .start();
   }
@@ -837,7 +802,7 @@ class RubikView implements RenderInterface {
       this.raycastMeshes.push(mesh);
     }
 
-    this.raycastMeshes.forEach((cube) => this.rubik.add(cube));
+    this.raycastMeshes.forEach((cube) => this.object.add(cube));
   }
 
   private createEmptyPlane = (): CubePlane[][] => {
@@ -873,7 +838,7 @@ class RubikView implements RenderInterface {
 
     for (let s = 0; s < 6; s += 1) {
       for (let p = 0; p < this.planes[s].length; p += 1) {
-        this.rubik.add(this.planes[s][p].object);
+        this.object.add(this.planes[s][p].object);
       }
     }
   }
@@ -889,12 +854,6 @@ class RubikView implements RenderInterface {
     this.planes = planes;
   }
 
-  public changeCamera() {
-    const length = this.rubikModel.sideLength;
-    this.scene.camera.position.set(length * 1.5, length * 1.2, length * 2);
-    this.scene.camera.far = length * 4;
-    this.scene.camera.updateProjectionMatrix();
-  }
 
   private forEveryCube = (func: CubeOperation) => {
     for (let s = 0; s < 6; s += 1) {
@@ -936,11 +895,10 @@ class RubikView implements RenderInterface {
     const direction = this.planes[side][plane].originalDirection;
     const image = this.sprite.getTexture(direction);
 
-    // this.planes[side][plane].setText(direction.toString());
     this.planes[side][plane].setImage(image);
   }
 
-  private dispose = (side: number, plane: number) => {
+  private disposePlane = (side: number, plane: number) => {
     this.planes[side][plane].dispose();
   }
 
@@ -982,19 +940,15 @@ class RubikView implements RenderInterface {
     this.forEveryCube(this.disposeOuterMesh);
   }
 
-  public enableImages = () => {
-    this.forEveryCube(this.createImageMesh);
-  }
-
   public drawText = () => {
     this.sprite.fillSpriteWithDirections();
-    this.forEveryCube(this.enableImages);
+    this.forEveryCube(this.createImageMesh);
     this.forEveryCube(this.placeTextureOnCube);
   }
 
   public drawImages = () => {
     this.sprite.setImage('../textures/pog-champ.png', () => {
-      this.forEveryCube(this.enableImages);
+      this.forEveryCube(this.createImageMesh);
       this.forEveryCube(this.placeTextureOnCube);
     });
   }
@@ -1007,18 +961,12 @@ class RubikView implements RenderInterface {
     this.forEveryCube(this.resetCubePosition);
   }
 
-  public disposeAll = () => {
-    this.forEveryCube(this.dispose);
+  public dispose = () => {
+    this.forEveryCube(this.disposePlane);
 
-    this.scene.scene.remove(this.rubik);
+    // this.scene.scene.remove(this.rubik);
 
     this.sprite.dispose();
-
-    document.removeEventListener('mousedown', this.mouseDownEL);
-
-    document.removeEventListener('mouseup', this.mouseUpEL);
-
-    document.removeEventListener('mousemove', this.mouseMoveEL);
   }
 }
 

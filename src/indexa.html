@@ -1,0 +1,59 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="./styles/main.css">
+    <script type="module" src="./split.js"></script>
+  </head>
+  <body>
+    <div id="editor">
+      <div id="view"><canvas id="c"></canvas></div>
+      <div id="controls">
+        <input type="button" value="scramble" id="scramble">
+
+        <!-- can act as continue -->
+        <div>
+          <p>From: </p>
+          <input type="text" id="from-index" name="from-index"><br><br>
+          <p>To: </p>
+          <input type="text" id="to-index" name="to-index"><br><br>
+          <input type="button" id="from-to-animate" value="Begin">
+          <input type="button" id="stop-animation" value="Stop">
+        </div>
+
+        <input type="button" value="solve" id="solve">
+
+        <!-- <input type="button" value="default"> -->
+        <!-- <input type="button" value="stop"> -->
+
+        <div>
+          <p>Size: </p>
+          <p id="current-size"></p>
+          <input type="button" value="-" id="sizeDown">
+          <input type="button" value="+" id="sizeUp">
+        </div>
+        <div>
+          <p>Move Index: </p>
+          <p id="current-move"></p>
+          <input type="button" value="prev" id="prev">
+          <input type="button" value="next" id="next">
+
+          <div id="moves">Moves: </div>
+          <div id="cube-rotations">Cube Rotations</div>
+
+          <form>
+            <input type="checkbox" id="outerMeshes" name="outerMeshes" value="outerMeshes">
+            <label for="outerMeshes">Outer Meshes</label><br>
+            <input type="checkbox" id="numbers" name="numbers" value="numbers">
+            <label for="numbers">Numbers</label><br>
+            <input type="checkbox" id="images" name="images" value="images">
+            <label for="images">Images</label><br>
+          </form>
+
+          <div class="btn-group" id="buttonHistory">History: </div>
+        </div>
+        </div>
+        <!-- <input type="button" value="animation"> -->
+      </div>
+    </div>
+    <script src="index.ts"></script>
+  </body>
+</html>

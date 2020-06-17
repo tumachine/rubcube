@@ -191,7 +191,6 @@ class SolveEdgesRubik extends RubikSolutionBase {
   };
 
   solveEdge = (firstFace: number, secondFace: number) => {
-    console.log('solve edge');
     const correctHash = this.getEdgeHashFromFaces(firstFace, secondFace);
     this.resetCorrectEdges();
 
@@ -250,7 +249,7 @@ class SolveEdgesRubik extends RubikSolutionBase {
         break;
       }
 
-      console.log(`Parity: ${i + 1}`);
+      // console.log(`Parity: ${i + 1}`);
       edge.rotateCorrect();
       this.m.F(0, false);
 

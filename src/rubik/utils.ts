@@ -51,6 +51,10 @@ export interface MoveHistory {
   clockwise: boolean,
 }
 
+export const moveToString = (side: number, slice: number, clockwise: boolean): string => {
+  return `${Side.toString(side)}${clockwise ? '' : "'"}${slice === 0 ? '' : slice + 1}`;
+};
+
 export type Matrix = number[][];
 
 interface MeshSideOrient {

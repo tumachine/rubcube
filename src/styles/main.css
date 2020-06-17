@@ -1,33 +1,47 @@
-body {
-    margin: 0;
-}
-
-#editor {
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-}
-
-#c {
-    width: 100%;
+#hud {
+    position: absolute;
+    top: 0;
+    width: 20%;
     height: 100%;
+    margin: auto;
+    z-index: 3;
+    /* display: none; */
     display: block;
 }
 
-#controls {
-    padding: 5px;
+#hud.visible {
+    display: block;
 }
 
-input[type=button] {
-    background-color: gray;
-    border: none;
-    color:black;
-    /* padding: 16px 32px; */
-    text-decoration: none;
-    /* margin: 4px 2px; */
-    cursor: pointer;
-    /* width: 100%; */
-    /* height: 100px; */
-    /* font-size: 30px; */
-    /* font-size: 15px; */
+#canvas-align {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    margin: auto;
+}
+
+#content-frame {
+    margin: auto;
+}
+
+#canvas-container {
+    margin: 5px 0 5px 0;
+    background-color: #444444;
+    background-image: -webkit-linear-gradient(top, #444444, #303030);
+    background-image: -moz-linear-gradient(top, #444444, #303030);
+    background-image: -o-linear-gradient(top, #444444, #303030);
+}
+
+#webgl-canvas {
+    display: block;
+    margin: auto;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background-color: #330000;
+}
+
+#stats {
+    position: relative;
 }

@@ -1,22 +1,13 @@
-export interface RenderInterface {
-    render();
+import { SceneObject } from './SceneObject';
+
+export interface addObject {
+  (sceneObj: SceneObject, index: number): void;
 }
 
-export interface MouseInterface {
-  mouseUp(position: THREE.Vector3);
-  mouseDown(position: THREE.Vector3);
-  mouseMove(position: THREE.Vector3);
+export interface removeObject {
+  (obj: SceneObject): void;
 }
 
-// export interface RenderInterface {
-//     rubik: THREE.Object3D;
-//     raycastMeshes: THREE.Mesh[];
-//     calculateCubeOnFace(side: string, point: THREE.Vector3): void;
-//     selectedOrientation: planeOrientation;
-//     rotateWithMouse(direction: THREE.Vector3);
-//     rotate(direction: THREE.Vector3);
-//     stopRotation(): void;
-//     mouseLargest: string;
-//     name: string;
-//     render();
-// }
+export interface Jump {
+  (index: number): void,
+}
