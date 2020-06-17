@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import styled, { css } from 'styled-components';
 import { MoveHistory, Side } from '../rubik/utils';
 import { Jump } from '../d';
 import RubikView from '../rubik/view';
@@ -10,15 +11,25 @@ type RubikProps = {
 
 const StandardButton = (props: RubikProps) => {
   return (
-    <div style={{color: 'white'}}>
-      <button onClick={() => props.rubik.stopAnimation()}>stop</button>
+    <>
+      <StyleButton onClick={() => props.rubik.scramble(20)}>scramble</StyleButton>
+      <StyleButton onClick={() => props.rubik.moveBack()}>back</StyleButton>
+      <StyleButton onClick={() => props.rubik.moveForward()}>forward</StyleButton>
+      <StyleButton onClick={() => props.rubik.solve()}>solve</StyleButton>
+      <StyleButton onClick={() => props.rubik.stopAnimation()}>stop</StyleButton>
       {/* <button onClick={() => props.rubik.doMoves}></button> */}
-      <button onClick={() => props.rubik.scramble(20)}>scramble</button>
-      <button onClick={() => props.rubik.solve()}>solve</button>
-      <button onClick={() => props.rubik.moveBack()}>back</button>
-      <button onClick={() => props.rubik.moveForward()}>forward</button>
-    </div>
+    </>
   );
 };
+
+const StyleButton = styled.button`
+  background-color: grey;
+  border-radius: 12px;
+  opacity: 80%;
+  width: 20%;
+  height: 100%;
+  font-size: 15px;
+  font-weight: 900;
+`;
 
 export default StandardButton;

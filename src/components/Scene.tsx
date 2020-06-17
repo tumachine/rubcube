@@ -1,10 +1,10 @@
 import React, {useRef, useState, useEffect} from 'react';
 import ReactDOM from 'react-dom';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import styled from 'styled-components';
 import * as THREE from '../../node_modules/three/src/Three';
 import { Object3D, PerspectiveCamera } from '../../node_modules/three/src/Three';
 import { SceneObject, MouseEventObject } from '../SceneObject';
-import './Scene.css';
 import Rubik from './Rubik';
 import RubikView from '../rubik/view';
 import RubikUI from './RubikUI';
@@ -200,12 +200,21 @@ export default class Scene extends React.Component<{}, SceneState> {
 
   render() {
     return (
-      <div>
-        <div
+      <>
+        <Canvas
           id='c' ref={(mount) => { this.mount = mount; }}
         />
         <RubikUI rubik={this.state.rubik} setRubik={this.setRubik}></RubikUI>
-      </div>
+      </>
     );
   }
 }
+
+const Canvas = styled.div`
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    overflow: hidden;
+`;

@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import styled from 'styled-components';
 import RubikView from '../rubik/view';
 
 type RubikProps = {
@@ -8,15 +9,22 @@ type RubikProps = {
 
 const RotateButtonPanel = (props: RubikProps) => {
   return (
-    <div>
-      <button onClick={props.rubik.cubeRotationOperations.up}>{'Up'}</button>
-      <button onClick={props.rubik.cubeRotationOperations.down}>{'Down'}</button>
-      <button onClick={props.rubik.cubeRotationOperations.left}>{'Left'}</button>
-      <button onClick={props.rubik.cubeRotationOperations.right}>{'Right'}</button>
-      <button onClick={props.rubik.cubeRotationOperations.clockwise}>{'Clockwise'}</button>
-      <button onClick={props.rubik.cubeRotationOperations.counter}>{'Counter'}</button>
-    </div>
+    <>
+      <div>Rotate</div>
+      <div>
+        <RotateButton onClick={props.rubik.cubeRotationOperations.up}>{'Up'}</RotateButton>
+        <RotateButton onClick={props.rubik.cubeRotationOperations.down}>{'Down'}</RotateButton>
+        <RotateButton onClick={props.rubik.cubeRotationOperations.left}>{'Left'}</RotateButton>
+        <RotateButton onClick={props.rubik.cubeRotationOperations.right}>{'Right'}</RotateButton>
+        <RotateButton onClick={props.rubik.cubeRotationOperations.counter}>{'Counter'}</RotateButton>
+        <RotateButton onClick={props.rubik.cubeRotationOperations.clockwise}>{'Clockwise'}</RotateButton>
+      </div>
+    </>
   );
 };
+
+const RotateButton = styled.button`
+  width: 50%; 
+`;
 
 export default RotateButtonPanel;

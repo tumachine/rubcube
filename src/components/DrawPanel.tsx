@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
+import styled from 'styled-components';
 import RubikView from '../rubik/view';
 import RadioButton from './RadioButton';
 
@@ -21,17 +22,29 @@ const DrawPanel = (props: Props) => {
   };
 
   return (
-    <form onSubmit={handleFormSubmit}>
-      { Object.entries(props.drawOperations).map((i) => <RadioButton
-            key={i[0]}
-            value={i[0]}
-            selectedOption={selected}
-            handleOptionChange={handleOptionChange}
-        />)
-      }
-      <button type='submit'>Draw</button>
-    </form>
+    <Border>
+      <form onSubmit={handleFormSubmit}>
+        { Object.entries(props.drawOperations).map((i) => <RadioButton
+              key={i[0]}
+              value={i[0]}
+              selectedOption={selected}
+              handleOptionChange={handleOptionChange}
+          />)
+        }
+        <StyledButton type='submit'>Draw</StyledButton>
+      </form>
+    </Border>
   );
 };
+
+const StyledButton = styled.button`
+  width: 100%; 
+`;
+
+const Border = styled.div`
+  width: 100%; 
+  border-color: grey;
+  border-style: solid;
+`;
 
 export default DrawPanel;

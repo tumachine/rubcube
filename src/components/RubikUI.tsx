@@ -1,10 +1,10 @@
 import React, {useState, useEffect, useRef} from 'react';
 import ReactDOM from 'react-dom';
+import styled, { css } from 'styled-components';
 import RubikView from '../rubik/view';
 import { MoveHistory } from '../rubik/utils';
 import { addObject, removeObject } from '../d';
 import RotateButtonPanel from './RotateButtonPanel';
-import './RubikUI.css';
 import SizeButtonPanel from './SizeButtonPanel';
 import { CurrentMoveHistory } from '../rubik/move';
 import DisplayMove from './DisplayMove';
@@ -56,6 +56,12 @@ const RubikUI = (props: RubikProps) => {
 
     setHistory(props.rubik.getHistory());
     setCurrentMove(props.rubik.getCurrentHistoryIndex());
+
+    drawOperations.current = {
+      none: () => props.rubik.disposeImages(),
+      image: () => props.rubik.drawImages(),
+      numbers: () => props.rubik.drawText(),
+    };
   }, [props.rubik]);
 
   const jump = (index: number) => {
@@ -64,33 +70,80 @@ const RubikUI = (props: RubikProps) => {
   };
 
   return (
-    <div id="hud">
-      <div className='top-right grid-border'>
+    <>
+      <TopRight>
         <SizeButtonPanel rubik={props.rubik} addRubik={props.setRubik} />
-      <div className='bottom-left grid-border'>
         <DisplayMove
           moveHistory={history}
           currentMove={currentMove}
           jump={jump}
         />
-      </div>
         <RotateButtonPanel rubik={props.rubik} />
-      </div>
-      <div className='top-left grid-border'>
         <MoveButtonPanel rubik={props.rubik} />
-      </div>
-      <div className='left grid-border'>
-        <HistoryPanel history={history} currentMove={currentMove} jump={jump}/>
-      </div>
-      <div className='bottom-right grid-border'>
         <CheckButtonPanel rubik={props.rubik} />
         <DrawPanel drawOperations={drawOperations.current} />
-      </div>
-      <div className='bottom grid-border'>
+      </TopRight>
+      <BotMiddle>
         <StandardButtons rubik={props.rubik} />
-      </div>
-    </div>
+      </BotMiddle>
+      <TopLeft>
+        <HistoryPanel history={history} currentMove={currentMove} jump={jump}/>
+      </TopLeft>
+    </>
   );
 };
+
+const base = css`
+  font-family: 'Teko', sans-serif;
+  position: absolute;
+  text-transform: uppercase;
+  font-weight: 900;
+  font-variant-numeric: slashed-zero tabular-nums;
+  pointer-events: none;
+  color: indianred;
+`;
+
+const TopLeft = styled.div`
+  ${base}
+  top: 5%;
+  left: 5%;
+  width: 15%;
+  height: 60%;
+  font-size: 2em;
+  // transform: skew(5deg, 10deg);
+  pointer-events: all;
+  cursor: pointer;
+  @media only screen and (max-width: 900px) {
+    font-size: 1.5em;
+  }
+`;
+
+const BotMiddle = styled.div`
+  ${base}
+  bottom: 5%;
+  left: 30%;
+  pointer-events: all;
+  width: 40%;
+  height: 10%;
+`;
+
+const TopRight = styled.div`
+  ${base}
+  text-align: right;
+  width: 15%;
+  top: 5%;
+  right: 5%;
+  font-size: 2em;
+  pointer-events: all;
+  cursor: pointer;
+  & > a {
+    color: indianred;
+    text-decoration: none;
+  }
+  @media only screen and (max-width: 900px) {
+    font-size: 1.5em;
+  }
+  // transform: skew(-5deg, -10deg);
+`;
 
 export default RubikUI;

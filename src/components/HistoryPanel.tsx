@@ -66,15 +66,19 @@ const UnorderedList = styled(FixedSizeList)`
 
   border: 2px solid #ccc;
 
-  font-size: 16px;
+  font-size: 12px;
   font-family: Arial, sans-serif;
 
-  // Again, this is where the magic happens
+  list-style-type: none;
+
   -webkit-overflow-scrolling: touch;
 `;
 
 const List = styled.li`
   border-bottom: 1px solid #ccc;
+  text-align: center;
+  font-weight: 800;
+  color: black;
 
   ${(props) => {
     if (props.active === true) {

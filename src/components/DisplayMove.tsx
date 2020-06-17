@@ -39,23 +39,17 @@ const DisplayMove = (props: DisplayMoveProps) => {
   };
 
   return (
-    <div>
+    <>
       <InputStyle correct={correctValue} type='text' value={value} onFocus={handleFocus} onChange={handleChange}></InputStyle>
-      <SpanStyle>/{props.moveHistory.length}</SpanStyle>
-      {/* <div style={{ color: correctValue ? 'white' : 'orange' }}>{correctValue ? 'Correct' : 'Wrong'}</div> */}
-    </div>
+      <SpanStyle>/{props.moveHistory.length - 1}</SpanStyle>
+    </>
   );
 };
 
-// const DivStyle = styled.div`
-
-// `;
-
 const InputStyle = styled.input`
-  ${({ correct }) => {
-    return correct ? 'background-color: transparent;' : 'background-color: orange;';
-  }}
-  width: 40%;
+  ${({ correct }) => (correct ? 'background-color: transparent;' : 'background-color: orange;')}}
+  width: 50%;
+  box-sizing: border-box;
   height: 40%;
   font-size: 25;
   outline: none;
@@ -65,9 +59,11 @@ const InputStyle = styled.input`
 
 const SpanStyle = styled.span`
   color: white;
-  width: 40%;
+  width: 50%;
   height: 40%;
   font-size: 25;
+  display: inline-block;
+  text-align: left;
 `;
 
 export default DisplayMove;
