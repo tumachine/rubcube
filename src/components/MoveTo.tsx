@@ -38,15 +38,17 @@ const MoveTo = (props: Props) => {
   };
 
   return (
-    <>
-      {/* <InputStyle correct={correctValue} type='text' value={value} onFocus={handleFocus} onChange={handleChange}></InputStyle> */}
+    <Main>
       <InputStyle correct={correctValue} type='text' value={value} onFocus={handleFocus} onChange={handleChange}></InputStyle>
-      <SpanStyle>/</SpanStyle>
-      {/* <input type='text' value={value} onFocus={handleFocus} onChange={handleChange}></input>
-      <StyledButton onClick={onClick} /> */}
-    </>
+      <StyledButton type='button' onClick={onClick} value='GO' />
+    </Main>
   );
 };
+
+const Main = styled.div`
+  width: 100%; 
+  height: 100%;
+`;
 
 const InputStyle = styled.input`
   ${({ correct }) => (correct ? 'background-color: transparent;' : 'background-color: orange;')}}
@@ -59,18 +61,12 @@ const InputStyle = styled.input`
   text-align: right;
 `;
 
-const StyledButton = styled.button`
-  width: 50%; 
-  height: 100%;
-`;
-
-const SpanStyle = styled.span`
-  color: white;
+const StyledButton = styled.input`
   width: 50%;
   height: 40%;
   font-size: 25;
   display: inline-block;
-  text-align: left;
 `;
+
 
 export default MoveTo;

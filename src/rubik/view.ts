@@ -53,6 +53,8 @@ class RubikView implements SceneObject {
 
   public isMoving: boolean
 
+  public isCurrentMoving: boolean
+
   private pivot: THREE.Object3D
 
   private activeGroup: THREE.Object3D[]
@@ -117,6 +119,7 @@ class RubikView implements SceneObject {
     this.createRaycastMeshes();
 
     this.isMoving = false;
+    this.isCurrentMoving = false;
 
     this.pivot = new THREE.Object3D();
     this.activeGroup = [];
@@ -148,40 +151,60 @@ class RubikView implements SceneObject {
   }
 
   public doMoves = (to: number) => {
-    this.doAnimationToHistoryIndex = to;
-    this.doMovesToHistoryIndex();
+    this.StopOrDoMove(() => {
+      this.doAnimationToHistoryIndex = to;
+      this.doMovesToHistoryIndex();
+    });
   }
 
   public scramble = (moves: number) => {
-    this.rubikModel.generateRandomMoves(moves);
-    this.doAnimationToHistoryIndex = this.rubikModel.moveHistory.length - 1;
-    this.doMovesToHistoryIndex();
-    this.newMoveHandler();
+    this.StopOrDoMove(() => {
+      this.rubikModel.generateRandomMoves(moves);
+      this.doAnimationToHistoryIndex = this.rubikModel.moveHistory.length - 1;
+      this.doMovesToHistoryIndex();
+      this.newMoveHandler();
+    });
   }
 
   public solve = () => {
-    this.rubikModel.generateSolveMoves();
-    this.doAnimationToHistoryIndex = this.rubikModel.moveHistory.length - 1;
-    this.doMovesToHistoryIndex();
-    this.newMoveHandler();
+    this.StopOrDoMove(() => {
+      this.rubikModel.generateSolveMoves();
+      this.doAnimationToHistoryIndex = this.rubikModel.moveHistory.length - 1;
+      this.doMovesToHistoryIndex();
+      this.newMoveHandler();
+    });
+  }
+
+  private StopOrDoMove(func: () => void) {
+    if (this.isMoving) {
+      this.stopAnimation();
+    } else {
+      func();
+    }
   }
 
   public moveBack() {
-    this.rubikModel.moveBackward();
-    this.doStandardMoveAnimation();
+    this.StopOrDoMove(() => {
+      this.rubikModel.moveBackward();
+      this.doStandardMoveAnimation();
+    });
   }
 
   public moveForward() {
-    this.rubikModel.moveForward();
-    this.doStandardMoveAnimation();
+    this.StopOrDoMove(() => {
+      this.rubikModel.moveForward();
+      this.doStandardMoveAnimation();
+    });
   }
 
   public jump(historyIndex: number) {
-    if (Math.abs(historyIndex - this.getCurrentHistoryIndex()) > 1000) {
-      this.jumpAndReset(historyIndex);
-    } else {
-      this.jumpSaveRotation(historyIndex);
-    }
+    this.StopOrDoMove(() => {
+      if (Math.abs(historyIndex - this.getCurrentHistoryIndex()) > 1000) {
+        this.jumpAndReset(historyIndex);
+      } else {
+        this.jumpSaveRotation(historyIndex);
+      }
+    });
   }
 
   private jumpAndReset(historyIndex: number) {
@@ -199,10 +222,10 @@ class RubikView implements SceneObject {
 
   private wrapRotation(func: Function) {
     return () => {
-      if (!this.isMoving) {
+      this.StopOrDoMove(() => {
         func();
         this.doStandardMoveAnimation();
-      }
+      });
     };
   }
 
@@ -216,9 +239,11 @@ class RubikView implements SceneObject {
   }
 
   public doMove = (side: number, slice: number, clockwise: boolean) => {
-    this.rubikModel.doUserMove(side, slice, clockwise);
-    this.doStandardMoveAnimation();
-    this.newMoveHandler();
+    this.StopOrDoMove(() => {
+      this.rubikModel.doUserMove(side, slice, clockwise);
+      this.doStandardMoveAnimation();
+      this.newMoveHandler();
+    });
   }
 
   // private updateMousePosition = (event: MouseEvent) => {

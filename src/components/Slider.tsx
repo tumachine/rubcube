@@ -24,10 +24,10 @@ const Slider = (props: RubikProps) => {
   }, [props.rubik]);
 
   return (
-    <>
+    <div>
       <TextDisplay>Speed: {speed / 1000}</TextDisplay>
       <SliderStyle type='range' min='1' max='3000' value={speed} onInput={onInput} />
-    </>
+    </div>
   );
 };
 
