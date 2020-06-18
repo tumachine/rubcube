@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
-import * as THREE from '../../node_modules/three/src/Three';
-import { MathUtils } from '../../node_modules/three/src/Three';
+import * as THREE from 'three';
+import { MathUtils } from 'three';
 
 export const randomInt = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1) + min);
 

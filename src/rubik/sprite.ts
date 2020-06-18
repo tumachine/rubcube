@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 
-import * as THREE from '../../node_modules/three/src/Three';
+import * as THREE from 'three';
 import RubikModel from './model';
 
 export default class Sprite {

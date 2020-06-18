@@ -202,7 +202,7 @@ export default class Scene extends React.Component<{}, SceneState> {
     return (
       <>
         <Canvas
-          id='c' ref={(mount) => { this.mount = mount; }}
+          id='c' ref={(mount: HTMLDivElement) => { this.mount = mount; }}
         />
         <RubikUI rubik={this.state.rubik} setRubik={this.setRubik}></RubikUI>
       </>

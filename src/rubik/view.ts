@@ -4,7 +4,7 @@
 /* eslint-disable max-len */
 import TWEEN from 'tween.ts';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import * as THREE from '../../node_modules/three/src/Three';
+import * as THREE from 'three';
 import CubePlane from './cube';
 import { Move, MoveOperation, CurrentMoveHistory, CubeDir } from './move';
 import { Side, getLargestValue, MoveHistory, rotateSide, getLargestIndex, randomColor } from './utils';
@@ -89,9 +89,9 @@ class RubikView implements SceneObject {
 
   private raycaster: THREE.Raycaster
 
-  public moveCompleteHandler: Function
+  public moveCompleteHandler: (move: CurrentMoveHistory) => void;
 
-  public newMoveHandler: Function
+  public newMoveHandler: () => void;
 
   private halfMoveThresholdPassed: boolean
 
@@ -102,6 +102,8 @@ class RubikView implements SceneObject {
   private doAnimationToHistoryIndex: number
 
   private sprite: Sprite
+
+  public speed: number = 200
 
   constructor(sideLength: number) {
     this.rubikModel = new RubikModel(sideLength);
@@ -728,7 +730,7 @@ class RubikView implements SceneObject {
   // needs slice to be already activated
   private doMoveAnimation = (start: TweenAngle, end: TweenAngle, axis: string, onComplete: Function = null) => {
     new TWEEN.Tween(start)
-      .to(end, 200)
+      .to(end, this.speed)
       .easing(TWEEN.Easing.Linear.None)
       .onUpdate(() => {
         this.pivot.rotation[axis] = start.angle;

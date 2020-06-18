@@ -13,6 +13,8 @@ import HistoryPanel from './HistoryPanel';
 import CheckButtonPanel from './CheckButtonPanel';
 import DrawPanel from './DrawPanel';
 import StandardButtons from './StandardButtons';
+import Slider from './Slider';
+import MoveTo from './MoveTo';
 
 type RubikState = {
   size: number,
@@ -82,6 +84,8 @@ const RubikUI = (props: RubikProps) => {
         <MoveButtonPanel rubik={props.rubik} />
         <CheckButtonPanel rubik={props.rubik} />
         <DrawPanel drawOperations={drawOperations.current} />
+        <Slider rubik={props.rubik} />
+        <MoveTo rubik={props.rubik} />
       </TopRight>
       <BotMiddle>
         <StandardButtons rubik={props.rubik} />

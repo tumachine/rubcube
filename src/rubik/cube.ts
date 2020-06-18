@@ -1,9 +1,9 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable max-len */
 import TWEEN from 'tween.ts';
-import * as THREE from '../../node_modules/three/src/Three';
+import * as THREE from 'three';
+import { Vector3, Euler } from 'three';
 import { Side, getTextTexture, rotateSide } from './utils';
-import { Vector3, Euler } from '../../node_modules/three/src/Three';
 
 const boxWidth = 0.95;
 const boxHeight = 0.95;

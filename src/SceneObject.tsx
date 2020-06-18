@@ -1,6 +1,5 @@
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import * as THREE from '../node_modules/three/src/Three';
-import { PerspectiveCamera } from '../node_modules/three/src/Three';
+import THREE, { PerspectiveCamera } from 'three';
 
 
 export interface MouseEventObject {

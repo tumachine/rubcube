@@ -64,6 +64,8 @@ const UnorderedList = styled(FixedSizeList)`
   width: 100%;
   height: 100%;
 
+  opacity: 70%;
+
   border: 2px solid #ccc;
 
   font-size: 12px;

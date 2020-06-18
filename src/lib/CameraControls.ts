@@ -1,8 +1,8 @@
 import TWEEN from 'tween.ts';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import * as THREE from '../../node_modules/three/src/Three';
+import * as THREE from 'three';
+import { Vector3, Object3D, MathUtils } from 'three';
 import { sides } from '../rubik/utils';
-import { Vector3, Object3D, MathUtils } from '../../node_modules/three/src/Three';
 import MainScene from '..';
 
 class CameraControls {
