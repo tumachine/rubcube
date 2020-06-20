@@ -39,7 +39,7 @@ export default class Sprite {
 
   public setImage = (name: string, onComplete: Function) => {
     const img = new Image();
-    img.src = require('../textures/pog-champ.png');
+    img.src = require('../textures/chess.png');
 
     img.onload = (e) => {
       const max = Math.max(img.width, img.height);

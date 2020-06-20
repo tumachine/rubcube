@@ -974,7 +974,7 @@ class RubikView implements SceneObject {
   }
 
   public drawImages = () => {
-    this.sprite.setImage('../textures/pog-champ.png', () => {
+    this.sprite.setImage('../textures/chess.png', () => {
       this.forEveryCube(this.createImageMesh);
       this.forEveryCube(this.placeTextureOnCube);
     });
