@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.js": "/rubcube/static/js/main.738198a4.js",
+    "static/media/chess.png": "/rubcube/static/media/chess.e6da754eebe9ec34074e.png",
+    "index.html": "/rubcube/index.html",
+    "main.738198a4.js.map": "/rubcube/static/js/main.738198a4.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.738198a4.js"
+  ]
+}
