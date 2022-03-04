@@ -2,11 +2,14 @@
   "name": "rubcube",
   "version": "1.0.0",
   "description": "",
+  "homepage": "https://tumachine.github.io/rubcube",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "repository": {
     "type": "git",
@@ -31,6 +34,7 @@
   },
   "dependencies": {
     "@tweenjs/tween.js": "^18.6.4",
+    "gh-pages": "^3.2.3",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "^5.0.0",

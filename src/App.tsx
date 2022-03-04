@@ -15,12 +15,6 @@ const GlobalCSS = createGlobalStyle`
     margin: 0;
     padding: 0;
     user-select: none;
-    overflow: hidden;
-  }
-
-  #root {
-    overflow: auto;
-    padding: 0px;
   }
 
   body {
