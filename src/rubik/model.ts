@@ -4,24 +4,17 @@
 // eslint-disable-next-line max-classes-per-file
 import { Side as s, Matrix, randomInt } from './utils';
 import Face from './face';
-import { MoveActions, MoveInterface } from './moveActions';
+import { MoveActions } from './moveActions';
 import { Move, MoveOperation, CurrentMoveHistory, CubeDir } from './move';
 import RubikSolver from './solver';
 
 type Slices = Array<Array<Array<number>>>;
-
-enum MoveType {
-  SOLVE = 0,
-  USER = 1,
-  RANDOM = 2,
-}
 
 interface MoveHistory {
   side: number,
   slice: number | number[],
   clockwise: boolean,
 }
-
 
 class RubikModel {
   public sideLength: number
@@ -40,44 +33,44 @@ class RubikModel {
 
   private sequenceDepRev: number[] = [s.d, s.r, s.u, s.l, s.d]
 
-  private posCounter: number[]
+  private posCounter!: number[];
 
-  private posClockwise: number[]
+  private posClockwise!: number[];
 
-  private posHor: Slices
+  private posHor!: Slices;
 
-  private posVer: Slices
+  private posVer!: Slices;
 
-  private posDep: Slices
+  private posDep!: Slices;
 
-  private posDepRev: Slices
+  private posDepRev!: Slices;
 
   private f: Face
 
   public m: MoveActions
 
-  public matrix: number[][]
+  public matrix!: number[][];
 
-  public stRotations: number[][]
+  public stRotations!: number[][];
 
-  public opRotations: number[][]
+  public opRotations!: number[][];
 
-  public moveHistory: MoveHistory[]
+  public moveHistory!: MoveHistory[];
 
-  public currentHistoryIndex: number
+  public currentHistoryIndex!: number;
 
-  public currentMoves: CurrentMoveHistory[]
+  public currentMoves!: CurrentMoveHistory[];
 
-  private moveSides: number[][][]
+  private moveSides!: number[][][];
 
-  private rotations: Move[][][]
+  private rotations!: Move[][][];
 
   private moves: Move[]
 
   private slices: number[]
 
   // side orientation
-  private SO: number[]
+  private SO!: number[];
 
   private solver: RubikSolver
 
@@ -183,8 +176,8 @@ class RubikModel {
   }
 
   public getInternalMove = (moveH: MoveHistory): MoveOperation => {
-    let iWhite: number;
-    let iOrange: number;
+    let iWhite = 0;
+    let iOrange = 0;
     for (let i = 0; i < 6; i += 1) {
       if (this.SO[i] === s.f) {
         iWhite = i;
@@ -224,6 +217,7 @@ class RubikModel {
     this.matrix = this.createMatrix();
     this.currentHistoryIndex = 0;
 
+    // @ts-ignore
     this.moveHistory = [null];
     this.currentMoves = [];
   }
@@ -329,7 +323,7 @@ class RubikModel {
     return currentMove;
   }
 
-  public getNextMove = (): CurrentMoveHistory => this.currentMoves.shift();
+  public getNextMove = () => this.currentMoves.shift()!;
 
   public jumpToHistoryIndex = (historyIndex: number) => {
     const steps = historyIndex - this.currentHistoryIndex;

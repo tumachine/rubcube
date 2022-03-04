@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 import RubikView from '../rubik/view';
 import { Side, moveToString } from '../rubik/utils';
@@ -62,7 +61,7 @@ const MoveSelection = styled.button`
   background-color: #FF3333;
 `;
 
-const MoveButton = styled.button`
+const MoveButton = styled.button<{ width: number }>`
   width: ${(props) => props.width}%;
 `;
 

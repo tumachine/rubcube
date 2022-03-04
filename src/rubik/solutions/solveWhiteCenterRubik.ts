@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
 import { FindReturn } from './d';
 import { Side as s } from '../utils';
@@ -68,7 +67,7 @@ class SolveWhiteCenterRubik extends RubikSolutionBase {
     return false;
   }
 
-  solveUpBuild = (row, column): boolean => {
+  solveUpBuild = (row: number, column: number): boolean => {
     const { highestPos, found } = this.findHighestPos(row, column, s.u);
     if (found) {
       for (let i = 0; i < 4; i += 1) {
@@ -85,27 +84,27 @@ class SolveWhiteCenterRubik extends RubikSolutionBase {
     return false;
   }
 
-  solveLeft = (row, column) => this.baseFind(row, column, s.l, this.solveLeftBuild);
+  solveLeft = (row: number, column: number) => this.baseFind(row, column, s.l, this.solveLeftBuild);
 
-  solveRight = (row, column) => this.baseFind(row, column, s.r, this.solveRightBuild);
+  solveRight = (row: number, column: number) => this.baseFind(row, column, s.r, this.solveRightBuild);
 
-  solveBack = (row, column) => this.baseFind(row, column, s.b, this.solveBackBuild);
+  solveBack = (row: number, column: number) => this.baseFind(row, column, s.b, this.solveBackBuild);
 
-  solveFront = (row, column) => {
+  solveFront = (row: number, column: number) => {
     if (this.baseFind(row, column, s.f, this.solveFrontBuild)) {
       return this.solveRight(row, column);
     }
     return false;
   }
 
-  solveUp = (row, column) => {
+  solveUp = (row: number, column: number) => {
     if (this.solveUpBuild(row, column)) {
       return this.solveRight(row, column);
     }
     return false;
   }
 
-  solveDown = (row, column) => {
+  solveDown = (row: number, column: number) => {
     if (this.baseFind(row, column, s.d, this.solveDownBuild)) {
       return this.solveRight(row, column);
     }
@@ -122,7 +121,7 @@ class SolveWhiteCenterRubik extends RubikSolutionBase {
   ]
 
 
-  solveCube = (row, column) => {
+  solveCube = (row: number, column: number) => {
     if (!this.check(s.f, this.getFaceDirection(row, column), s.f)) {
       for (let i = 0; i < this.solveOrder.length; i += 1) {
         if (this.solveOrder[i](row, column)) {

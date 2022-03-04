@@ -1,5 +1,3 @@
-/* eslint-disable max-classes-per-file */
-
 import * as THREE from 'three';
 import RubikModel from './model';
 
@@ -12,13 +10,14 @@ export default class Sprite {
 
   private textures: THREE.Texture[]
 
-  private cellLength: number
+  private cellLength!: number
 
   public constructor(length: number) {
     this.length = length;
 
     this.canvas = document.createElement('canvas');
-    this.context = this.canvas.getContext('2d');
+
+    this.context = this.canvas.getContext('2d')!;
 
     this.textures = new Array(length * length);
   }
@@ -96,13 +95,13 @@ export default class Sprite {
     this.context.fillText(text, x + this.cellLength / 2, y + this.cellLength / 2);
   }
 
-  private drawImage(img, horizontal: boolean = false, vertical: boolean = false, x: number = 0, y: number = 0) {
+  private drawImage(img: HTMLImageElement, horizontal: boolean = false, vertical: boolean = false, x: number = 0, y: number = 0) {
     this.context.save();
     this.context.setTransform(
       horizontal ? -1 : 1, 0,
       0, vertical ? -1 : 1,
-      x + horizontal ? img.width : 0,
-      y + vertical ? img.height : 0,
+      x + +horizontal ? img.width : 0,
+      y + +vertical ? img.height : 0,
     );
     this.context.drawImage(img, 0, 0);
     this.context.restore();

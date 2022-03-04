@@ -1,6 +1,7 @@
-/* eslint-disable max-len */
 import * as THREE from 'three';
 import { MathUtils } from 'three';
+
+export type SideLetter = 'L' | 'R' | 'U' | 'D' | 'F' | 'B';
 
 export const randomInt = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1) + min);
 
@@ -25,17 +26,17 @@ export class Side {
 
   public static b: number = 5
 
-  public static toString = (side: number) : string => Side.sidesStr[side];
+  public static toString = (side: number): SideLetter => Side.sidesStr[side];
 
-  public static fromString = (side: string) : number => Side.sidesMap[side];
+  public static fromString = (side: SideLetter): number => Side.sidesMap[side];
 
-  public static getHash = (side: number) : number => Side.hashes[side];
+  public static getHash = (side: number): number => Side.hashes[side];
 
   private static hashes: number[] = [1, 10, 100, 1000, 10000, 100000];
 
-  private static sidesStr = ['L', 'R', 'U', 'D', 'F', 'B'];
+  private static sidesStr: SideLetter[] = ['L', 'R', 'U', 'D', 'F', 'B'];
 
-  private static sidesMap: { [side: string]: number } = {
+  private static sidesMap: Record<SideLetter, number> = {
     L: Side.l,
     R: Side.r,
     U: Side.u,
@@ -51,15 +52,17 @@ export interface MoveHistory {
   clockwise: boolean,
 }
 
+export interface Jump {
+  (index: number): void,
+}
+
 export const moveToString = (side: number, slice: number, clockwise: boolean): string => {
   return `${Side.toString(side)}${clockwise ? '' : "'"}${slice === 0 ? '' : slice + 1}`;
 };
 
 export type Matrix = number[][];
 
-interface MeshSideOrient {
-  (object: THREE.Object3D, detach: number, rotation: number);
-}
+type MeshSideOrient = (object: THREE.Object3D, detach: number, rotation: number) => void;
 
 const sidesOrientaion: MeshSideOrient[] = new Array(6);
 sidesOrientaion[Side.f] = (object: THREE.Object3D, detach: number = 0, rotation: number = 0) => {
@@ -106,12 +109,14 @@ export const getTextTexture = (text: string): THREE.Texture => {
   canvas.width = 256;
   canvas.height = 256;
 
-  context.font = 'Bold 120px Arial';
-  context.fillStyle = 'rgba(0,0,0,0.95)';
-  context.textAlign = 'center';
-  context.textBaseline = 'middle';
+  if (context) {
+    context.font = 'Bold 120px Arial';
+    context.fillStyle = 'rgba(0,0,0,0.95)';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
 
-  context.fillText(text, 128, 128);
+    context.fillText(text, 128, 128);
+  }
 
   const texture = new THREE.Texture(canvas);
   texture.needsUpdate = true;
@@ -119,7 +124,7 @@ export const getTextTexture = (text: string): THREE.Texture => {
   return texture;
 };
 
-export const getLargestValue = (vec: THREE.Vector3): string => {
+export const getLargestValue = (vec: THREE.Vector3): 'x' | 'y' | 'z' => {
   const absX = Math.abs(vec.x);
   const absY = Math.abs(vec.y);
   const absZ = Math.abs(vec.z);

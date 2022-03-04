@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 import RubikView from '../rubik/view';
 
@@ -7,9 +6,9 @@ type Props = {
   rubik: RubikView,
 }
 
-interface addRubik {
-  (length: number): void;
-}
+const StyleLabel = styled.label`
+  font-size: 12px;
+`;
 
 type CheckButtonProps = {
   name: string,
@@ -21,7 +20,7 @@ type CheckButtonProps = {
 const CheckButton = (props: CheckButtonProps) => {
   const [checked, setChecked] = useState(false);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = () => {
     if (checked) {
       props.handleOff();
     } else {
@@ -42,8 +41,7 @@ const CheckButton = (props: CheckButtonProps) => {
   );
 };
 
-const CheckButtonPanel = (props: Props) => {
-  return (
+const CheckButtonPanel = (props: Props) => (
     <form>
       <CheckButton
         name='meshes'
@@ -56,11 +54,6 @@ const CheckButtonPanel = (props: Props) => {
         }}
       />
     </form>
-  );
-};
-
-const StyleLabel = styled.label`
-  font-size: 12px;
-`;
+);
 
 export default CheckButtonPanel;

@@ -1,7 +1,4 @@
-/* eslint-disable max-classes-per-file */
-/* eslint-disable max-len */
-
-import { Matrix, MoveHistory } from './utils';
+import { MoveHistory } from './utils';
 
 export class Move {
   public rotation: RotateInterface
@@ -10,13 +7,13 @@ export class Move {
 
   public side: string
 
-  public axis: string
+  public axis: 'x' | 'y' | 'z';
 
   public length: number
 
   public original: boolean
 
-  public constructor(side: string, axis: string, rotation: RotateInterface, cubeGetter: CubeGetter, length: number, original: boolean) {
+  public constructor(side: string, axis: 'x' | 'y' | 'z', rotation: RotateInterface, cubeGetter: CubeGetter, length: number, original: boolean) {
     this.rotation = rotation;
     this.cubeGetter = cubeGetter;
     this.side = side;
@@ -55,7 +52,7 @@ export class Move {
 
   public getCubes(slice: number | number[]): CubeDir[] {
     if (Array.isArray(slice)) {
-      const cubes = [];
+      const cubes: CubeDir[] = [];
       for (let i = 0; i < slice.length; i += 1) {
         this.cubeGetter(slice[i]).forEach((cube) => cubes.push(cube));
       }
@@ -72,7 +69,7 @@ export class MoveOperation {
 
   public clockwise: boolean
 
-  public axis: string
+  public axis: 'x' | 'y' | 'z';
 
   public side: string
 

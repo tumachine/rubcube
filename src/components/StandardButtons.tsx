@@ -1,8 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import styled, { css } from 'styled-components';
-import { MoveHistory, Side } from '../rubik/utils';
-import { Jump } from '../d';
+import styled from 'styled-components';
 import RubikView from '../rubik/view';
 
 type RubikProps = {

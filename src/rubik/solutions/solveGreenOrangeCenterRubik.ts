@@ -1,9 +1,7 @@
-/* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
 import { Side as s } from '../utils';
 import { FindReturn } from './d';
 import RubikModel from '../model';
-import MoveActions from '../moveActions';
 
 class SolveGreenOrangeCenterRubik extends RubikSolutionBase {
   public constructor(r: RubikModel) {
@@ -12,11 +10,7 @@ class SolveGreenOrangeCenterRubik extends RubikSolutionBase {
     this.setLocalSidesAndMoves(s.b, s.f, s.u, s.d, s.l, s.r);
 
     this.interface[s.l] = [...this.r.stRotations[0]];
-    this.interface[s.r] = null;
     this.interface[s.u] = [...this.r.opRotations[1]];
-    this.interface[s.d] = null;
-    this.interface[s.f] = null;
-    this.interface[s.b] = null;
 
     this.primaryColor = this.ls.f;
   }
@@ -30,7 +24,7 @@ class SolveGreenOrangeCenterRubik extends RubikSolutionBase {
     return true;
   }
 
-  solveFront = (row, column) => {
+  solveFront = (row: number, column: number) => {
     if (this.baseFind(row, column, this.ls.u, this.solveUpBuild)) {
       const currentPos = this.getFaceDirection(row, column);
       let futureCol = currentPos % this.sideLength;
@@ -69,7 +63,7 @@ class SolveGreenOrangeCenterRubik extends RubikSolutionBase {
     return false;
   }
 
-  solveCube = (row, column) => {
+  solveCube = (row: number, column: number) => {
     for (let i = 0; i < 4; i += 1) {
       if (!this.check(this.ls.f, this.getFaceDirection(row, column), this.ls.f)) {
         this.solveFront(row, column);

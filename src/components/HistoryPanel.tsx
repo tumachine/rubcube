@@ -1,10 +1,8 @@
-import React, { useEffect, useState, useRef, MutableRefObject } from 'react';
-import ReactDOM from 'react-dom';
+import React, { CSSProperties } from 'react';
 import styled from 'styled-components';
 import { FixedSizeList } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import { MoveHistory, Side, moveToString } from '../rubik/utils';
-import { Jump } from '../d';
+import { Jump, MoveHistory, moveToString } from '../rubik/utils';
 
 type HistoryPanelProps = {
   history: MoveHistory[],
@@ -13,49 +11,12 @@ type HistoryPanelProps = {
 }
 
 type HistoryButtonProps = {
-  style: string,
+  style: CSSProperties,
   index: number,
   handleClick: (index: number) => void,
   active: boolean,
   move: MoveHistory,
 }
-
-const HistoryButton = ({ style, index, handleClick, active, move }: HistoryButtonProps) => {
-  const getText = (): string => {
-    let text = '';
-    if (move !== null) {
-      const { side, slice, clockwise } = move;
-      const desc = moveToString(side, Number(slice), clockwise);
-      text = `${index}: 
-              ${desc}`;
-    }
-    return text;
-  };
-
-  return (
-    <List style={style} index={index} active={active} onClick={() => handleClick(index)}>
-        {getText()}
-    </List>
-  );
-};
-
-const HistoryPanel = (props: HistoryPanelProps) => {
-  return (
-    <AutoSizer>
-    {({ height, width }) => (
-      <UnorderedList itemCount={props.history.length} itemSize={20} width={width} height={height}>
-        {({ index, style }) => <HistoryButton
-          active={props.currentMove === index}
-          handleClick={props.jump}
-          move={props.history[index]}
-          index={index}
-          style={style}
-          />}
-      </UnorderedList>
-    )}
-    </AutoSizer>
-  );
-};
 
 const UnorderedList = styled(FixedSizeList)`
   overflow: scroll;
@@ -76,7 +37,7 @@ const UnorderedList = styled(FixedSizeList)`
   -webkit-overflow-scrolling: touch;
 `;
 
-const List = styled.li`
+const List = styled.li<{ active: boolean, index: number, style: CSSProperties }>`
   border-bottom: 1px solid #ccc;
   text-align: center;
   font-weight: 800;
@@ -93,5 +54,42 @@ const List = styled.li`
   }}
   
 `;
+
+const HistoryButton = ({
+  style, index, handleClick, active, move,
+}: HistoryButtonProps) => {
+  const getText = (): string => {
+    let text = '';
+    if (move !== null) {
+      const { side, slice, clockwise } = move;
+      const desc = moveToString(side, Number(slice), clockwise);
+      text = `${index}: 
+              ${desc}`;
+    }
+    return text;
+  };
+
+  return (
+    <List style={style} index={index} active={active} onClick={() => handleClick(index)}>
+        {getText()}
+    </List>
+  );
+};
+
+const HistoryPanel = (props: HistoryPanelProps) => (
+    <AutoSizer>
+    {({ height, width }) => (
+      <UnorderedList itemCount={props.history.length} itemSize={20} width={width} height={height}>
+        {({ index, style }) => <HistoryButton
+          active={props.currentMove === index}
+          handleClick={props.jump}
+          move={props.history[index]}
+          index={index}
+          style={style}
+          />}
+      </UnorderedList>
+    )}
+    </AutoSizer>
+);
 
 export default HistoryPanel;

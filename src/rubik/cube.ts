@@ -1,9 +1,6 @@
-/* eslint-disable max-classes-per-file */
-/* eslint-disable max-len */
-import TWEEN from 'tween.ts';
 import * as THREE from 'three';
-import { Vector3, Euler } from 'three';
-import { Side, getTextTexture, rotateSide } from './utils';
+import { Side, rotateSide } from './utils';
+import { MeshBasicMaterial, MeshPhongMaterial, PlaneGeometry } from 'three';
 
 const boxWidth = 0.95;
 const boxHeight = 0.95;
@@ -37,12 +34,11 @@ const textMaterial = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
 textMaterial.transparent = true;
 const textGeometry = new THREE.PlaneGeometry(1, 1);
 
-const getTextMesh = (): THREE.Mesh => {
-  const mesh = new THREE.Mesh(
+const getTextMesh = () => {
+  return new THREE.Mesh(
     textGeometry,
     textMaterial.clone(),
   );
-  return mesh;
 };
 
 const textureRotations: Function[] = new Array(6);
@@ -68,11 +64,11 @@ textureRotations[Side.b] = (mesh: THREE.Mesh) => {
 export default class CubePlane {
   public object: THREE.Object3D
 
-  public baseMesh: THREE.Mesh
+  public baseMesh: THREE.Mesh<PlaneGeometry, MeshPhongMaterial> | null = null;
 
-  public outerMesh: THREE.Mesh
+  public outerMesh: THREE.Mesh<PlaneGeometry, MeshPhongMaterial> | null = null;
 
-  public imageMesh: THREE.Mesh
+  public imageMesh: THREE.Mesh<PlaneGeometry, MeshBasicMaterial> | null = null;
 
   public originalPosition: THREE.Vector3
 
@@ -119,41 +115,42 @@ export default class CubePlane {
   }
 
   setCustomColor(color: number | string | THREE.Color) {
-    (this.baseMesh.material as THREE.MeshPhongMaterial).color.set(color);
+    this.baseMesh?.material.color.set(color);
   }
 
   setColor(color: number) {
-    (this.baseMesh.material as THREE.MeshPhongMaterial).color.set(colors[color]);
+    this.baseMesh?.material.color.set(colors[color]);
   }
 
   setOuterColor(color: number) {
-    (this.outerMesh.material as THREE.MeshPhongMaterial).color.set(colors[color]);
+    this.outerMesh?.material.color.set(colors[color]);
   }
 
   setImage(image: THREE.Texture) {
-    (this.imageMesh.material as THREE.MeshBasicMaterial).map = image;
+    if (this.imageMesh) {
+      this.imageMesh.material.map = image;
+    }
   }
 
   disposeBase() {
-    if (this.baseMesh !== undefined) {
-      (this.baseMesh.material as THREE.MeshPhongMaterial).dispose();
+    if (this.baseMesh) {
+      this.baseMesh.material.dispose();
       this.baseMesh.geometry.dispose();
       this.object.remove(this.baseMesh);
     }
   }
 
   disposeOuter() {
-    if (this.outerMesh !== undefined) {
-      (this.outerMesh.material as THREE.MeshPhongMaterial).dispose();
+    if (this.outerMesh) {
+      this.outerMesh.material.dispose();
       this.outerMesh.geometry.dispose();
       this.object.remove(this.outerMesh);
     }
   }
 
   disposeImage() {
-    if (this.imageMesh !== undefined) {
-      // (this.imageMesh.material as THREE.MeshBasicMaterial).map.dispose();
-      (this.imageMesh.material as THREE.MeshBasicMaterial).dispose();
+    if (this.imageMesh) {
+      this.imageMesh.material.dispose();
       this.imageMesh.geometry.dispose();
       this.object.remove(this.imageMesh);
     }

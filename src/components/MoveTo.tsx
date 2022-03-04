@@ -1,19 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { MoveHistory } from '../rubik/utils';
 import RubikView from '../rubik/view';
-import { Jump } from '../d';
 
 type Props = {
   rubik: RubikView
 }
 
+const Main = styled.div`
+  width: 100%; 
+  height: 100%;
+`;
+
+const InputStyle = styled.input<{ correct: boolean }>`
+  ${({ correct }) => (correct ? 'background-color: transparent;' : 'background-color: orange;')};
+  width: 50%;
+  box-sizing: border-box;
+  height: 40%;
+  font-size: 25px;
+  outline: none;
+  color: white;
+  text-align: right;
+`;
+
+const StyledButton = styled.input`
+  width: 50%;
+  height: 40%;
+  font-size: 25px;
+  display: inline-block;
+`;
+
+
 const MoveTo = (props: Props) => {
   const [value, setValue] = useState(props.rubik.getCurrentHistoryIndex().toString());
   const [correctValue, setCorrectValue] = useState(true);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputHistoryIndex = Number(e.target.value);
 
     if (!Number.isNaN(inputHistoryIndex)) {
@@ -27,11 +48,11 @@ const MoveTo = (props: Props) => {
     setValue(e.target.value);
   };
 
-  const handleFocus = (e) => {
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.select();
   };
 
-  const onClick = (e) => {
+  const onClick = (e: React.MouseEvent) => {
     if (correctValue) {
       props.rubik.doMoves(Number(value));
     }
@@ -39,34 +60,10 @@ const MoveTo = (props: Props) => {
 
   return (
     <Main>
-      <InputStyle correct={correctValue} type='text' value={value} onFocus={handleFocus} onChange={handleChange}></InputStyle>
+      <InputStyle correct={correctValue} type='text' value={value} onFocus={handleFocus} onChange={handleChange} />
       <StyledButton type='button' onClick={onClick} value='GO' />
     </Main>
   );
 };
-
-const Main = styled.div`
-  width: 100%; 
-  height: 100%;
-`;
-
-const InputStyle = styled.input`
-  ${({ correct }) => (correct ? 'background-color: transparent;' : 'background-color: orange;')}}
-  width: 50%;
-  box-sizing: border-box;
-  height: 40%;
-  font-size: 25;
-  outline: none;
-  color: white;
-  text-align: right;
-`;
-
-const StyledButton = styled.input`
-  width: 50%;
-  height: 40%;
-  font-size: 25;
-  display: inline-block;
-`;
-
 
 export default MoveTo;

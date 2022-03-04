@@ -1,9 +1,7 @@
-/* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
 import { Side as s } from '../utils';
 import { FindReturn } from './d';
 import RubikModel from '../model';
-import MoveActions from '../moveActions';
 
 
 class SolveYellowCenterRubik extends RubikSolutionBase {
@@ -16,7 +14,6 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
     this.interface[s.r] = [...this.r.opRotations[0]];
     this.interface[s.u] = [...this.r.opRotations[3]];
     this.interface[s.d] = [...this.r.stRotations[1]];
-    this.interface[s.f] = null;
     this.interface[s.b] = [...this.r.opRotations[0]];
 
     this.primaryColor = this.ls.f;
@@ -88,25 +85,25 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
     return true;
   }
 
-  solveLeft = (row, column) => {
+  solveLeft = (row: number, column: number) => {
     if (this.baseFind(row, column, this.ls.l, this.solveLeftBuild)) {
       return this.solveUp(row, column);
     }
     return false;
   }
 
-  solveFront = (row, column) => {
+  solveFront = (row: number, column: number) => {
     if (this.baseFind(row, column, this.ls.f, this.solveFrontBuild)) {
       return this.solveUp(row, column);
     }
     return false;
   }
 
-  solveRight = (row, column) => this.baseFind(row, column, this.ls.r, this.solveRightBuild);
+  solveRight = (row: number, column: number) => this.baseFind(row, column, this.ls.r, this.solveRightBuild);
 
-  solveUp = (row, column) => this.baseFind(row, column, this.ls.u, this.solveUpBuild);
+  solveUp = (row: number, column: number) => this.baseFind(row, column, this.ls.u, this.solveUpBuild);
 
-  solveDown = (row, column) => this.baseFind(row, column, this.ls.d, this.solveDownBuild);
+  solveDown = (row: number, column: number) => this.baseFind(row, column, this.ls.d, this.solveDownBuild);
 
   solveOrder = [
     this.solveLeft,
@@ -117,7 +114,7 @@ class SolveYellowCenterRubik extends RubikSolutionBase {
   ]
 
 
-  solveCube = (row, column) => {
+  solveCube = (row: number, column: number) => {
     if (!this.check(this.ls.l, this.getFaceDirection(row, column), this.ls.f)) {
       for (let i = 0; i < this.solveOrder.length; i += 1) {
         if (this.solveOrder[i](row, column)) {

@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
 import styled from 'styled-components';
-import RubikView from '../rubik/view';
 import RadioButton from './RadioButton';
 
 type Props = {
-  drawOperations: Object,
+  drawOperations: Record<string, () => void>,
 }
+
+const StyledButton = styled.button`
+  width: 100%; 
+`;
+
+const Border = styled.div`
+  width: 100%; 
+  border-color: grey;
+  border-style: solid;
+`;
 
 const DrawPanel = (props: Props) => {
   const [selected, setSelected] = useState('none');
@@ -36,15 +44,5 @@ const DrawPanel = (props: Props) => {
     </Border>
   );
 };
-
-const StyledButton = styled.button`
-  width: 100%; 
-`;
-
-const Border = styled.div`
-  width: 100%; 
-  border-color: grey;
-  border-style: solid;
-`;
 
 export default DrawPanel;

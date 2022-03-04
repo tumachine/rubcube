@@ -1,12 +1,7 @@
-/* eslint-disable max-len */
-import RubikOperations from '../operations';
 import { Side as s, Side } from '../utils';
-import { FindReturn } from './d';
 import RubikSolutionBase from './rubikSolutionBase';
-import MoveActions from '../moveActions';
-import RubikState from '../state';
-import RubikStructures from '../structures';
 import RubikModel from '../model';
+import { MoveInterface } from '../moveActions';
 
 interface RotateFunc {
   (): void;
@@ -26,31 +21,31 @@ interface Edge {
 }
 
 class SolveEdgesRubik extends RubikSolutionBase {
-  public UF: Edge;
+  public UF!: Edge;
 
-  public UR: Edge;
+  public UR!: Edge;
 
-  public UB: Edge;
+  public UB!: Edge;
 
-  public UL: Edge;
+  public UL!: Edge;
 
-  public DF: Edge;
+  public DF!: Edge;
 
-  public DR: Edge;
+  public DR!: Edge;
 
-  public DB: Edge;
+  public DB!: Edge;
 
-  public DL: Edge;
+  public DL!: Edge;
 
-  public RB: Edge;
+  public RB!: Edge;
 
-  public BL: Edge;
+  public BL!: Edge;
 
-  public LF: Edge;
+  public LF!: Edge;
 
-  public FR: Edge;
+  public FR!: Edge;
 
-  public edges: Edge[];
+  public edges!: Edge[];
 
   public correctEdges: boolean[] = [];
 
@@ -218,7 +213,7 @@ class SolveEdgesRubik extends RubikSolutionBase {
     }
   };
 
-  getNextParity = (): ParityInfo => {
+  getNextParity = (): ParityInfo | null => {
     const parityIndexes = [];
     for (let i = 0; i < this.edges.length; i += 1) {
       let found = false;
@@ -233,7 +228,7 @@ class SolveEdgesRubik extends RubikSolutionBase {
         return { edge: this.edges[i], parities: parityIndexes };
       }
     }
-    return { edge: null, parities: null };
+    return null;
   };
 
   rotateFirstHalf = (parityIndexes: number[], move: MoveInterface, clockwise: boolean = true) => {
@@ -244,10 +239,12 @@ class SolveEdgesRubik extends RubikSolutionBase {
 
   solveParities = () => {
     for (let i = 0; i < 8; i += 1) {
-      const { edge, parities } = this.getNextParity();
-      if (edge === null) {
+      const parity = this.getNextParity();
+      if (parity === null) {
         break;
       }
+
+      const { edge, parities } = parity;
 
       // console.log(`Parity: ${i + 1}`);
       edge.rotateCorrect();

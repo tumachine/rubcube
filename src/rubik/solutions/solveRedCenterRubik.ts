@@ -1,9 +1,7 @@
-/* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
 import { Side as s } from '../utils';
 import { FindReturn } from './d';
 import RubikModel from '../model';
-import MoveActions from '../moveActions';
 
 class SolveRedCenterRubik extends RubikSolutionBase {
   public constructor(r: RubikModel) {
@@ -106,7 +104,7 @@ class SolveRedCenterRubik extends RubikSolutionBase {
   }
 
 
-  solveDown = (row, column) => {
+  solveDown = (row: number, column: number) => {
     if (this.baseFind(row, column, this.ls.d, this.solveDownBuild)) {
       this.solveUp(row, column);
       return true;
@@ -114,7 +112,7 @@ class SolveRedCenterRubik extends RubikSolutionBase {
     return false;
   }
 
-  solveFront = (row, column) => {
+  solveFront = (row: number, column: number) => {
     if (this.baseFind(row, column, this.ls.f, this.solveFrontBuild)) {
       this.solveUp(row, column);
       return true;
@@ -122,7 +120,7 @@ class SolveRedCenterRubik extends RubikSolutionBase {
     return false;
   }
 
-  solveBack = (row, column) => {
+  solveBack = (row: number, column: number) => {
     // console.log('RED CENTER: solving back');
 
     const futurePos = row + (this.sideLength - 1 - column) * this.sideLength;
@@ -158,7 +156,7 @@ class SolveRedCenterRubik extends RubikSolutionBase {
     return true;
   }
 
-  solveUp = (row, column) => this.baseFind(row, column, this.ls.u, this.solveUpBuild);
+  solveUp = (row: number, column: number) => this.baseFind(row, column, this.ls.u, this.solveUpBuild);
 
   solveOrder = [
     this.solveFront,
@@ -167,7 +165,7 @@ class SolveRedCenterRubik extends RubikSolutionBase {
     this.solveBack,
   ]
 
-  solveCube = (row, column) => {
+  solveCube = (row: number, column: number) => {
     if (!this.check(this.ls.f, this.getFaceDirection(row, column), this.ls.d)) {
       for (let i = 0; i < this.solveOrder.length; i += 1) {
         if (this.solveOrder[i](row, column)) {
@@ -222,7 +220,7 @@ class SolveRedCenterRubik extends RubikSolutionBase {
   }
 
 
-  solveDownFirst = (row, column) => {
+  solveDownFirst = (row: number, column: number) => {
     if (this.baseFind(row, column, this.ls.d, this.solveDownFirstBuild)) {
       this.solveFrontFirst(row, column);
       return true;
@@ -230,9 +228,9 @@ class SolveRedCenterRubik extends RubikSolutionBase {
     return false;
   }
 
-  solveFrontFirst = (row, column) => this.baseFind(row, column, this.ls.f, this.solveFrontFirstBuild);
+  solveFrontFirst = (row: number, column: number) => this.baseFind(row, column, this.ls.f, this.solveFrontFirstBuild);
 
-  solveUpFirst = (row, column) => this.baseFind(row, column, this.ls.u, this.solveUpFirstBuild);
+  solveUpFirst = (row: number, column: number) => this.baseFind(row, column, this.ls.u, this.solveUpFirstBuild);
 
   solveFirstOrder = [
     this.solveDownFirst,
@@ -240,7 +238,7 @@ class SolveRedCenterRubik extends RubikSolutionBase {
     this.solveUpFirst,
   ]
 
-  solveFirstCube = (column) => {
+  solveFirstCube = (column: number) => {
     const opposite = this.sideLength - column - 1;
     // console.log(`Opposite: ${opposite}`);
     if (!this.check(this.ls.f, this.getFaceDirection(opposite, opposite), this.ls.d)) {

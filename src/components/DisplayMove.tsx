@@ -1,9 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useEffect, ChangeEvent, FocusEvent } from 'react';
 import styled from 'styled-components';
-import { MoveHistory } from '../rubik/utils';
-import RubikView from '../rubik/view';
-import { Jump } from '../d';
+import { Jump, MoveHistory } from '../rubik/utils';
+
+const InputStyle = styled.input<{ correct: boolean }>`
+  ${({ correct }) => (correct ? 'background-color: transparent;' : 'background-color: orange;')};
+  width: 50%;
+  box-sizing: border-box;
+  height: 40%;
+  font-size: 25px;
+  outline: none;
+  color: white;
+  text-align: right;
+`;
+
+const SpanStyle = styled.span`
+  color: white;
+  width: 50%;
+  height: 40%;
+  font-size: 25px;
+  display: inline-block;
+  text-align: left;
+`;
 
 type DisplayMoveProps = {
   moveHistory: MoveHistory[],
@@ -15,7 +32,7 @@ const DisplayMove = (props: DisplayMoveProps) => {
   const [value, setValue] = useState(props.currentMove.toString());
   const [correctValue, setCorrectValue] = useState(true);
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const inputHistoryIndex = Number(e.target.value);
 
     if (!Number.isNaN(inputHistoryIndex)) {
@@ -34,36 +51,16 @@ const DisplayMove = (props: DisplayMoveProps) => {
     setValue(props.currentMove.toString());
   }, [props.currentMove]);
 
-  const handleFocus = (e) => {
-    e.target.select();
+  const handleFocus = (e: FocusEvent<HTMLInputElement>) => {
+    e.target?.select();
   };
 
   return (
     <>
-      <InputStyle correct={correctValue} type='text' value={value} onFocus={handleFocus} onChange={handleChange}></InputStyle>
+      <InputStyle correct={correctValue} type='text' value={value} onFocus={handleFocus} onChange={handleChange} />
       <SpanStyle>/{props.moveHistory.length - 1}</SpanStyle>
     </>
   );
 };
-
-const InputStyle = styled.input`
-  ${({ correct }) => (correct ? 'background-color: transparent;' : 'background-color: orange;')}}
-  width: 50%;
-  box-sizing: border-box;
-  height: 40%;
-  font-size: 25;
-  outline: none;
-  color: white;
-  text-align: right;
-`;
-
-const SpanStyle = styled.span`
-  color: white;
-  width: 50%;
-  height: 40%;
-  font-size: 25;
-  display: inline-block;
-  text-align: left;
-`;
 
 export default DisplayMove;

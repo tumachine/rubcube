@@ -1,7 +1,4 @@
-/* eslint-disable max-len */
 import { Side } from '../utils';
-import RubikOperations from '../operations';
-import Face from '../face';
 import MoveActions from '../moveActions';
 import { OperationAfterFound, HighestPos } from './d';
 import RubikModel from '../model';
@@ -20,19 +17,18 @@ class RubikSolutionBase {
 
     public sideLength: number
 
-    public primaryColor: number
+    public primaryColor!: number
 
     public middle: number
 
     public lineLength: number
 
-    public ls: LocalSides
+    public ls!: LocalSides;
 
-    public m: MoveActions
+    public m!: MoveActions
 
     public r: RubikModel
 
-    // public constructor(rubik: RubikOperations) {
     public constructor(rubikModel: RubikModel) {
       this.r = rubikModel;
 
@@ -66,9 +62,9 @@ class RubikSolutionBase {
 
     public getHash = (face: number): number => Side.getHash(face);
 
-    public getFaceDirection = (row, col) => col + row * this.sideLength;
+    public getFaceDirection = (row: number, col: number) => col + row * this.sideLength;
 
-    public getLineCubeColor = (line, num) => this.sideLength * (num + 1) + 1 + line;
+    public getLineCubeColor = (line: number, num: number) => this.sideLength * (num + 1) + 1 + line;
 
     public findHighestPos = (row: number, column: number, side: number): HighestPos => {
       let nextPos = this.getFaceDirection(row, column);

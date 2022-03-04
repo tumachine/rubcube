@@ -1,15 +1,8 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import Scene from './components/Scene';
 import { createGlobalStyle } from 'styled-components';
-import Scene from './Scene';
 
-const App = (props) => {
-  return (
-    <Scene />
-  );
-};
-
-const Global = createGlobalStyle`
+const GlobalCSS = createGlobalStyle`
   * {
     box-sizing: border-box;
   }
@@ -40,5 +33,11 @@ const Global = createGlobalStyle`
   }
 `;
 
+const App = () => (
+  <>
+    <GlobalCSS />
+    <Scene />;
+  </>
+)
 
 export default App;

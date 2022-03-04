@@ -1,6 +1,5 @@
-/* eslint-disable max-len */
 import RubikSolutionBase from './rubikSolutionBase';
-import MoveActions from '../moveActions';
+import MoveActions, { MoveInterface } from '../moveActions';
 import { Side as s, Side } from '../utils';
 import RubikModel from '../model';
 import Face from '../face';
@@ -463,7 +462,7 @@ class SolveStandardRubik extends RubikSolutionBase {
     // do the algorithm 2 or 4 times, until faces yellow
     const firstSide = this.sideOrient[0];
 
-    const applyAlgo = (num) => {
+    const applyAlgo = (num: number) => {
       for (let i = 0; i < num; i += 1) {
         this.solveOrientLastLayerCornersCase(firstSide);
       }
@@ -588,6 +587,7 @@ class SolveStandardRubik extends RubikSolutionBase {
     for (let i = 0; i < 10; i += 1) {
       findCorrectCube();
       if (totalCorrect !== 4) {
+        // @ts-ignore
         this.solvePositionYellowCornersCase(this.sideOrient[(correctPos + 1) % 4]);
       } else {
         // console.log('solved it');
@@ -775,7 +775,7 @@ class SolveStandardRubik extends RubikSolutionBase {
     // console.log('Middle case RIGHT');
   }
 
-  solveMiddleLayerSide = (fc, sc) => {
+  solveMiddleLayerSide = (fc: number[], sc: number[]) => {
     // rotate until color is the same, and
     // depending on the second color, use algorithm
 

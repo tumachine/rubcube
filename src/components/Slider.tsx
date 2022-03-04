@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 import RubikView from '../rubik/view';
 
 type RubikProps = {
   rubik: RubikView,
 }
 
+const TextDisplay = styled.div`
+  font-size: 30px;
+  text-align: center;
+`;
+
+const SliderStyle = styled.input`
+  width: 100%;
+`;
+
 const Slider = (props: RubikProps) => {
   const [speed, setSpeed] = useState(props.rubik.speed);
 
-  const onInput = (e) => {
+  const onInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-    setSpeed(value);
+    setSpeed(+value);
   };
 
   useEffect(() => {
@@ -30,14 +38,5 @@ const Slider = (props: RubikProps) => {
     </div>
   );
 };
-
-const TextDisplay = styled.div`
-  font-size: 30;
-  text-align: center;
-`;
-
-const SliderStyle = styled.input`
-  width: 100%;
-`;
 
 export default Slider;
